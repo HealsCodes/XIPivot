@@ -1,0 +1,7 @@
+LIBRARY XIPivot.dll;
+
+EXPORTS
+	GetInterfaceVersion
+	CreatePluginInfo
+	CreatePlugin
+

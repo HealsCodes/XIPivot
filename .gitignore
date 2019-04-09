@@ -1,0 +1,10 @@
+.vs/
+build/
+
+*.suo
+*.sln.docstates
+*.user
+*.userosscache
+*.vspscc
+*.vssscc
+*.exp

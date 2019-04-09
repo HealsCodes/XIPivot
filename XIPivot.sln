@@ -1,0 +1,67 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.421
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3rdParty", "3rdParty", "{A011245C-735F-400A-B2F5-7D9FF91AE3AE}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XIPivot.Core", "XIPivot.Core\XIPivot.Core.vcxproj", "{55298B14-2A3F-4A50-AACC-D32A1945E100}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AC4450E5-41C1-4FE3-B1A5-E710F496C276} = {AC4450E5-41C1-4FE3-B1A5-E710F496C276}
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "addons", "addons", "{280831E1-FA88-4926-8496-A2DB8CFFAF61}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XIPivot.Ashita", "XIPivot.Ashita\XIPivot.Ashita.vcxproj", "{85BC8434-595C-455E-93AD-B7FB7DA7C45A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{55298B14-2A3F-4A50-AACC-D32A1945E100} = {55298B14-2A3F-4A50-AACC-D32A1945E100}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "XIPivot.Windower", "XIPivot.Windower\XIPivot.Windower.vcxproj", "{ACDD5009-55EF-47B9-A998-31ADD2D4256B}"
+	ProjectSection(ProjectDependencies) = postProject
+		{55298B14-2A3F-4A50-AACC-D32A1945E100} = {55298B14-2A3F-4A50-AACC-D32A1945E100}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Microsoft.Detours", "3rdParty\Microsoft.Detours\Microsoft.Detours.vcxproj", "{AC4450E5-41C1-4FE3-B1A5-E710F496C276}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9DF10BDE-8768-4BA6-8C6A-A7D202989DEB}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE.txt = LICENSE.txt
+		README.md = README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{55298B14-2A3F-4A50-AACC-D32A1945E100}.Debug|x86.ActiveCfg = Debug|Win32
+		{55298B14-2A3F-4A50-AACC-D32A1945E100}.Debug|x86.Build.0 = Debug|Win32
+		{55298B14-2A3F-4A50-AACC-D32A1945E100}.Release|x86.ActiveCfg = Release|Win32
+		{55298B14-2A3F-4A50-AACC-D32A1945E100}.Release|x86.Build.0 = Release|Win32
+		{85BC8434-595C-455E-93AD-B7FB7DA7C45A}.Debug|x86.ActiveCfg = Debug|Win32
+		{85BC8434-595C-455E-93AD-B7FB7DA7C45A}.Debug|x86.Build.0 = Debug|Win32
+		{85BC8434-595C-455E-93AD-B7FB7DA7C45A}.Release|x86.ActiveCfg = Release|Win32
+		{85BC8434-595C-455E-93AD-B7FB7DA7C45A}.Release|x86.Build.0 = Release|Win32
+		{ACDD5009-55EF-47B9-A998-31ADD2D4256B}.Debug|x86.ActiveCfg = Debug|Win32
+		{ACDD5009-55EF-47B9-A998-31ADD2D4256B}.Debug|x86.Build.0 = Debug|Win32
+		{ACDD5009-55EF-47B9-A998-31ADD2D4256B}.Release|x86.ActiveCfg = Release|Win32
+		{ACDD5009-55EF-47B9-A998-31ADD2D4256B}.Release|x86.Build.0 = Release|Win32
+		{AC4450E5-41C1-4FE3-B1A5-E710F496C276}.Debug|x86.ActiveCfg = Debug|Win32
+		{AC4450E5-41C1-4FE3-B1A5-E710F496C276}.Debug|x86.Build.0 = Debug|Win32
+		{AC4450E5-41C1-4FE3-B1A5-E710F496C276}.Release|x86.ActiveCfg = Release|Win32
+		{AC4450E5-41C1-4FE3-B1A5-E710F496C276}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{85BC8434-595C-455E-93AD-B7FB7DA7C45A} = {280831E1-FA88-4926-8496-A2DB8CFFAF61}
+		{ACDD5009-55EF-47B9-A998-31ADD2D4256B} = {280831E1-FA88-4926-8496-A2DB8CFFAF61}
+		{AC4450E5-41C1-4FE3-B1A5-E710F496C276} = {A011245C-735F-400A-B2F5-7D9FF91AE3AE}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C6B0C04D-54EB-4B34-91C6-F117ABD7E006}
+	EndGlobalSection
+EndGlobal

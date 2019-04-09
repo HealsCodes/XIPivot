@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+    <!-- overlays: string - a comma (,) separated list of overlays to load, overlays are searched in order -->
+    <setting name="overlays">XI-Vision,XI-View,FFXI-HD</setting>
+
+    <!-- enabled: bool - can be used to disable XIPivot without removing it from the Ashita plugin list -->
+    <setting name="enabled">true</setting>
+</settings>

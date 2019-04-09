@@ -1,0 +1,5 @@
+LIBRARY _XIPivot.dll;
+
+EXPORTS
+	luaopen__XIPivot
+
