@@ -28,27 +28,26 @@
 
 _addon.name = 'XIPivot'
 _addon.author = 'Heals'
-_addon.version = '0.1.1'
+_addon.version = '0.1.2'
 _addon.command = 'pivot'
 
 config = require('config')
 require('pack')
 require('lists')
 
--- try to figure out wherever we are..
-addon_dir = string.match(debug.getinfo(1,"S").source, "^@(.+/)[%a%-%d_]+%.lua$")
+-- package.cpath somehow doesn't appreciate backslashes
+local addon_path = windower.addon_path:gsub('\\', '/')
 
 defaults = T{}
 defaults.enabled   = true
-defaults.root_path = addon_dir .. 'data/DATs'
+defaults.root_path = addon_path .. 'data/DATs'
 defaults.overlays  = L{}
 
 settings = config.load(defaults)
 config.save(settings, 'all')
 
 if settings.enabled == true then
-
-	package.cpath = package.cpath .. ';' .. addon_dir .. '/libs/?.dll'
+	package.cpath = package.cpath .. ';' .. addon_path .. '/libs/?.dll'
 	require("_XIPivot")
 end
 
