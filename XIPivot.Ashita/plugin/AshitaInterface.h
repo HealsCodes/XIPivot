@@ -64,7 +64,6 @@ namespace XiPivot
 			bool load(IConfigurationManager *config);
 			void save(IConfigurationManager *config);
 
-			bool enabled;
 			std::string rootPath;
 			std::vector<std::string> overlays;
 		};

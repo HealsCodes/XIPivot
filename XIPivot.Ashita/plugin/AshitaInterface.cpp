@@ -91,7 +91,7 @@ namespace XiPivot
 
 		if (m_config != nullptr)
 		{
-			if (m_settings.load(m_config) && m_settings.enabled)
+			if (m_settings.load(m_config))
 			{
 				instance().setRootPath(m_settings.rootPath);
 				for (const auto &path : m_settings.overlays)
@@ -122,7 +122,6 @@ namespace XiPivot
 
 				if (args[1] == "a" || args[1] == "add")
 				{
-					chatPrintf("$cs(19)adding '$cs(9)%s$cs(19)' to overlays..$cr", args[2].c_str());
 					if (instance().addOverlay(args[2]))
 					{
 						m_settings.overlays.emplace_back(args[2]);
@@ -138,7 +137,6 @@ namespace XiPivot
 				{
 					std::vector<std::string>::iterator it;
 
-					chatPrintf("$cs(19)removing '$cs(9)%s$cs(19)' from overlays..$cr", args[2].c_str());
 					instance().removeOverlay(args[2]);
 
 					it = std::find(m_settings.overlays.begin(), m_settings.overlays.end(), args[2].c_str());
@@ -152,7 +150,7 @@ namespace XiPivot
 			else if (args.size() == 2 && (args[1] == "s" || args[1] == "status"))
 			{
 				chatPrintf("$cs(16)diagnostics:$cr");
-				chatPrintf("  $cs(16)enabled   $cs(19): %s$cr", m_settings.enabled ? "$cs(13)true" : "$cs(7)false");
+				chatPrintf("  $cs(16)enabled   $cs(19): %s$cr", hooksActive() ? "$cs(13)true" : "$cs(7)false");
 				chatPrintf("  $cs(16)root_path $cs(19): '$cs(9)%s$cs(9)'$cr", m_settings.rootPath.c_str());
 				chatPrintf("  $cs(16)overlays  $cs(19):$cr");
 
@@ -165,19 +163,12 @@ namespace XiPivot
 			else
 			{
 				chatPrintf("$cs(16)%s$cs(19) v.$cs(16)%.2f$cs(19) by $cs(14)%s$cr", s_pluginInfo->Name, s_pluginInfo->PluginVersion, s_pluginInfo->Author);
-				if (m_settings.enabled == false)
-				{
-					chatPrintf("$cs(19)   loaded, but $cs(7)disabled$cs(19) -- check your XIPivot.xml$cr");
-				}
-				else
-				{
-					chatPrintf("   $cs(9)a$cs(16)dd overlay_dir $cs(19)- Adds a path to be searched for DAT overlays$cr");
-					chatPrintf("   $cs(9)r$cs(16)emove overlay_dir $cs(19)- Removes a path from the DAT overlays$cr");
-					chatPrintf("   $cs(9)s$cs(16)tatus $cs(19)- Print status and diagnostic info$cr");
-					chatPrintf("   $cs(16)-$cr");
-					chatPrintf("   $cs(19)Adding or removing overlays at runtime can cause $cs(16)all kinds unexpected behaviour.$cr");
-					chatPrintf("   $cs(19)It is recommended to use XIPivot.xml instead - $cs(16)you have been warned.$cr");
-				}
+				chatPrintf("   $cs(9)a$cs(16)dd overlay_dir $cs(19)- Adds a path to be searched for DAT overlays$cr");
+				chatPrintf("   $cs(9)r$cs(16)emove overlay_dir $cs(19)- Removes a path from the DAT overlays$cr");
+				chatPrintf("   $cs(9)s$cs(16)tatus $cs(19)- Print status and diagnostic info$cr");
+				chatPrintf("   $cs(16)-$cr");
+				chatPrintf("   $cs(19)Adding or removing overlays at runtime can cause $cs(16)all kinds unexpected behaviour.$cr");
+				chatPrintf("   $cs(19)It is recommended to use XIPivot.xml instead - $cs(16)you have been warned.$cr");
 			}
 			return true;
 		}
@@ -187,7 +178,7 @@ namespace XiPivot
 
 	/* private parts below */
 
-	AshitaInterface::Settings::Settings() : enabled(true)
+	AshitaInterface::Settings::Settings()
 	{
 		char workPath[MAX_PATH];
 
@@ -205,7 +196,6 @@ namespace XiPivot
 			const char *rP = config->get_string("XIPivot", "root_path");
 			const char *oL = config->get_string("XIPivot", "overlays");
 
-			enabled = config->get_bool("XIPivot", "enabled", true);
 			rootPath = (rP ? rP : "");
 
 			overlays.clear();
@@ -220,8 +210,6 @@ namespace XiPivot
 
 	void AshitaInterface::Settings::save(IConfigurationManager *config)
 	{
-		//config->Remove("XIPivot");
-		config->set_value("XIPivot", "enabled", enabled ? "true" : "false");
 		config->set_value("XIPivot", "root_path", rootPath.c_str());
 		config->set_value("XIPivot", "overlays", join(overlays.begin(), overlays.end(), ",").c_str());
 		config->Save("XIPivot", "XIPivot");
