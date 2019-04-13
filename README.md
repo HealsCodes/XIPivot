@@ -7,6 +7,7 @@ It provides support for multiple overlay directories as well as runtime controls
 of which overlays are loaded and used by the game.
 
 The goals behind XIPivot are simple:
+
 - no modifications to the original DAT files
 - no more huge folder with thousands of anonymous DAT files
 - the ability to sort Mods into separate folders for each mod
@@ -14,18 +15,20 @@ The goals behind XIPivot are simple:
 
 ## Compatibility
 
-XIPivot works together with Ashita v3 as well as Windower4.
+XIPivot works together with [Ashita v3](https://www.ashitaxi.com) as well as [Windower 4](http://www.windower.net).
 
 ## Installation
 
-- Head over to the Releases page and pick the ZIP that matches your launcher
+- Head over to the [Releases page](https://github.com/Shirk/XIPivot/releases) and pick the ZIP that matches your launcher
 - Follow the README.md inside the archive  for setup and configuration instructions
 
 ## Modifications / Contribution
 
-If you would like to build XIPivot from source you need the Visual Studio 2017 (community edition is free).
+If you would like to build XIPivot from source you need the Visual Studio 2017.
+The Community Edition is available for free from [Microsoft](https://visualstudio.microsoft.com/vs/community/).
 
 Otherwise it's just these three steps:
+
 - clone the repository
 - open the solution
 - chose "Build -> Rebuild Solution" .

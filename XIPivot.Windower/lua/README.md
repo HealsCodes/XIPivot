@@ -7,6 +7,7 @@ It provides support for multiple overlay directories as well as runtime controls
 of which overlays are loaded and used by the game.
 
 The goals behind XIPivot are simple:
+
 - no modifications to the original DAT files
 - no more huge folder with thousands of anonymous DAT files
 - the ability to sort Mods into separate folders for each mod
@@ -14,15 +15,16 @@ The goals behind XIPivot are simple:
 
 ## Setup
 
-1) Copy the XIPivot folder into your Windower addons folder.
-2) Create a subdirectory inside the data/DATs folder for each overlay you want to use
-3) Edit data/settings.xml (see settings.sample.xml):
+- 1) Copy the XIPivot folder into your Windower addons folder.
+- 2) Create a subdirectory inside the `data/DATs` folder for each overlay you want to use
+- 3) Edit `data/settings.xml` (see `settings.sample.xml`):
    - add the directory names from 2) for each overlay that should be enabled, separated by ','
    - *order matters* - overlays will be used in order, with the first hit for a file being used.
 
 ### Example - XI-View, XI-Vision and Ammelia's HD-Remake:
 
 Directory structure:
+
 ```
 <Windower Install>
    +-- addons/
@@ -51,8 +53,8 @@ Directory structure:
                   |        +-- ROM3/
                   |
                   +-- settings.xml 
-
 ```
+
 
 settings.xml:
 
@@ -66,8 +68,8 @@ settings.xml:
 </settings>
 ```
 
-XIPivot defaults to look for your overlays in the data/DATs/ directory inside the XIPivot/ bundle.
-If you perefer a different path you can add the key 'root_path' to settings.xml like so:
+XIPivot defaults to look for your overlays in the `data/DATs/` directory inside the `XIPivot/` bundle.
+If you prefer a different path you can add the key `'root_path'` to `settings.xml` like so:
 
 ```xml
 <?xml version="1.1" ?>
@@ -80,11 +82,11 @@ If you perefer a different path you can add the key 'root_path' to settings.xml 
 </settings>
 ```
 
-This instructs to XIPivot to seach for overlays inside "C:\my\awesome\addons" instead.
+This instructs to XIPivot to seach for overlays inside `"C:\my\awesome\addons"` instead.
 
 ## In-Game commands
 
-XIPivot makes the in-game command "//pivot" available to load and unload overlays at runtime.
+XIPivot makes the in-game command `//pivot` available to load and unload overlays at runtime.
 The following parameters are supported:
 
 - a/add overlay_path     -- will load 'overlay_name' as last entry to the overlay list
@@ -93,11 +95,11 @@ The following parameters are supported:
 - h/help                 -- print this text
 
 These commands all support a short first letter version (a/r/s/h).
-Changes made with add / remove will be reflected in settings.xml.
+Changes made with add / remove will be reflected in `settings.xml`.
 
 Please note that adding and removing overlays way after the game launches can have side effects.
 XI will load some DAT files right at the start and then never look at them again (some menu and landscape textures)
-other DAT files are loaded on-demand and overlay changes are visible once that happens (maps, some menu icons, Mog Hous and a few other locations)
+other DAT files are loaded on-demand and overlay changes are visible once that happens (maps, some menu icons, Mog House and a few other locations)
 
 ## Limitations
 
@@ -105,6 +107,7 @@ As a result of how Windower loads this addon some DAT files will already be load
 Currently this affects Mods that try to replace the initial menu textures or fonts.
 
 Known affected Mods:
+
 - XI-View -- no replaced fonts or menu textures, HQ icons work
 
 ## Disclaimer

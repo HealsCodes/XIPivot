@@ -7,6 +7,7 @@ It provides support for multiple overlay directories as well as runtime controls
 of which overlays are loaded and used by the game.
 
 The goals behind XIPivot are simple:
+
 - no modifications to the original DAT files
 - no more huge folder with thousands of anonymous DAT files
 - the ability to sort Mods into separate folders for each mod
@@ -14,17 +15,18 @@ The goals behind XIPivot are simple:
 
 ## Setup
 
-1) Copy the XIPivot.dll and the DATs folder into Ashita's plugins/ directory.
-2) Copy XIPivot.sample.dll to Ashita's config/ directory and rename it to XIPivot.xml
-3) Create a subdirectory inside the DATs/ folder for each overlay you want to use
-4) Edit XIPivot.xml:
+- 1) Copy the `XIPivot.dll` and the `DATs` folder into Ashita's `plugins/` directory.
+- 2) Copy `XIPivot.sample.xml` to Ashita's `config/` directory and rename it to `XIPivot.xml`
+- 3) Create a subdirectory inside the `DATs/` folder for each overlay you want to use
+- 4) Edit `XIPivot.xml`:
    - add the directory names from 3) for each overlay that should be enabled, separated by comma ','
    - *order matters* - overlays will be used in order, with the first hit for a file being used.
-5) Add '/load xipivot' as the first line to your setup script (before any /wait or other lines)
+- 5) Add `/load xipivot` as the first line to your setup script (before any /wait or other lines)
 
 ### Example - XI-View, XI-Vision and Ammelia's HD-Remake:
 
 Directory structure:
+
 ```
 <Ashita Install>
    +-- config/
@@ -48,7 +50,6 @@ Directory structure:
                   +-- ROM/
                   +-- ROM2/
                   +-- ROM3/
-
 ```
 
 XIPivot.xml:
@@ -61,8 +62,8 @@ XIPivot.xml:
 </settings>
 ```
 
-XIPivot defaults to look for your overlays inside the DATs/ directory next to the plugin.
-If you perefer a different path you can add the key 'root_path' to XIPivot.xml like so:
+XIPivot defaults to look for your overlays inside the `DATs/` directory next to the `XIPivot.dll`.
+If you prefer a different path you can add the key `'root_path'` to `XIPivot.xml` like so:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -73,11 +74,11 @@ If you perefer a different path you can add the key 'root_path' to XIPivot.xml l
 </settings>
 ```
 
-This instructs to XIPivot to seach for overlays inside "C:\my\awesome\addons" instead.
+This instructs to XIPivot to search for overlays inside `"C:\my\awesome\addons"` instead.
 
 ## In-Game commands
 
-XIPivot makes the in-game command "/pivot" available to load and unload overlays at runtime.
+XIPivot makes the in-game command `/pivot` available to load and unload overlays at runtime.
 The following parameters are supported:
 
 - a/add overlay_path     -- will load 'overlay_name' as last entry to the overlay list
@@ -86,11 +87,11 @@ The following parameters are supported:
 - h/help                 -- print this text
 
 These commands all support a short first letter version (a/r/s/h).
-Changes made with add / remove will be reflected in XIPivot.xml.
+Changes made with add / remove will be reflected in `XIPivot.xml`.
 
 Please note that adding and removing overlays way after the game launches can have side effects.
 XI will load some DAT files right at the start and then never look at them again (some menu and landscape textures)
-other DAT files are loaded on-demand and overlay changes are visible once that happens (maps, some menu icons, Mog Hous and a few other locations)
+other DAT files are loaded on-demand and overlay changes are visible once that happens (maps, some menu icons, Mog House and a few other locations)
 
 ## Limitations
 
