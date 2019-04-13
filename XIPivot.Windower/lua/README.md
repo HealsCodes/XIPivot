@@ -62,7 +62,6 @@ settings.xml:
 <?xml version="1.1" ?>
 <settings>
     <global>
-        <enabled>true</enabled>
 	<overlays>XI-View,XI-Vision,FFXI-HD</overlays>
     </global>
 </settings>
@@ -75,7 +74,6 @@ If you prefer a different path you can add the key `'root_path'` to `settings.xm
 <?xml version="1.1" ?>
 <settings>
     <global>
-        <enabled>true</enabled>
 	<overlays>XI-View,XI-Vision,FFXI-HD</overlays>
 	<root_path>C:/my/awesome/adds<root_path>
     </global>

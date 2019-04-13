@@ -39,60 +39,47 @@ require('lists')
 local addon_path = windower.addon_path:gsub('\\', '/')
 
 defaults = T{}
-defaults.enabled   = true
 defaults.root_path = addon_path .. 'data/DATs'
 defaults.overlays  = L{}
 
 settings = config.load(defaults)
 config.save(settings, 'all')
+	
+package.cpath = package.cpath .. ';' .. addon_path .. '/libs/?.dll'
+require('_XIPivot')
 
-if settings.enabled == true then
-	package.cpath = package.cpath .. ';' .. addon_path .. '/libs/?.dll'
-	require("_XIPivot")
-end
-
-windower.register_event('load', function()
-	if settings.enabled then
-		print('XIPivot: initialising..')
-		_XIPivot.set_root_path(settings.root_path)
-		for i,path in ipairs(settings.overlays) do
-			if _XIPivot.add_overlay(path) == true then
-				print('  registered overlay[' .. i .. '] - "' .. path .. '"')
-			else
-				print('  failed to register overlay "' .. path .. '"')
-			end
-		end
-
-		print('XIPivot: enabling overlays..')
-		_XIPivot.enable()
+config.register(settings, function(_settings)
+	_XIPivot.disable()
+	-- try to unload any active overlays in case this is not the first call
+	for _,overlay in ipairs(_XIPivot.diagnostics()['overlays']) do
+		_XIPivot.remove_overlay(overlay)
 	end
+
+	-- setup things
+	_XIPivot.set_root_path(_settings.root_path)
+	for i,path in ipairs(_settings.overlays) do
+		if _XIPivot.add_overlay(path) == false then
+			windower.add_to_chat(8, 'failed to register overlay "' .. path .. '"')
+		end
+	end
+
+	-- and finally (re)enable
+	_XIPivot.enable()
 end)
 
 windower.register_event('unload', function()
-	if settings.enabled then
-		print('XIPivot: disabling overlays..')
-		_XIPivot.disable()
-	end
+	_XIPivot.disable()
 end)
 
 windower.register_event('addon command', function(command, ...)
 	command = command and command:lower() or 'help'
 	local args = L{...}
 
-	if settings.enabled == false then
-		print(_addon.name .. ' v.' .. _addon.version)
-		print('   loaded, but disabled -- check your settings.xml')
-		return
-	end
-
 	if command == 'help' or command == 'h' then
-		print(_addon.name .. ' v.' .. _addon.version)
-		print('   \\cs(51, 153, 255)a\\cs(153, 204, 255)dd overlay_dir\\cr - Adds a path to be searched for DAT overlays')
-		print('   \\cs(51, 153, 255)r\\cs(153, 204, 255)emove overlay_dir\\cr - Removes a path from the DAT overlays')
-		print('   \\cs(51, 153, 255)s\\cs(153, 204, 255)tatus\\cr - Print status and diagnostic info')
-		print(' ')
-		print('   \\cs(51, 153, 255)Adding or removing overlays at runtime can cause all kinds unexpected behaviour.\\cr')
-		print('   \\cs(51, 153, 255)It is recommended to use settings.xml instead - you have been warned.\\cr')
+		windower.add_to_chat(8, _addon.name .. ' v.' .. _addon.version)
+		windower.add_to_chat(8, '   add overlay_dir - Adds a path to be searched for DAT overlays')
+		windower.add_to_chat(8, '   remove overlay_dir - Removes a path from the DAT overlays')
+		windower.add_to_chat(8, '   status - Print status and diagnostic info')
 
 	elseif command == 'add' or command == 'a' then
 		if not args[1] then
@@ -100,12 +87,11 @@ windower.register_event('addon command', function(command, ...)
 			return
 		end
 
-	  	print('adding "' .. args[1] .. '" to overlays..')
 		if _XIPivot.add_overlay(args[1]) == true then
 			list.append(settings.overlays, args[1])
-			config.save(settings, 'all')
+			config.save(settings)
 		else
-			print('failed to add "' .. args[1] .. '"')
+			windower.add_to_chat(8, 'failed to add "' .. args[1] .. '"')
 		end
 	elseif command == 'remove' or command == 'r' then
 		if not args[1] then
@@ -116,25 +102,24 @@ windower.register_event('addon command', function(command, ...)
 		_XIPivot.remove_overlay(args[1])
 		for i,path in ipairs(settings.overlays) do
 			if path == args[1] then
-	  			print('removing "' .. args[1] .. '" from overlays')
 				list.remove(settings.overlays, i)
 				break
 			end
 		end
-		config.save(settings, 'all')
+		config.save(settings)
 
 	elseif command == 'status' or command == 's' then
 		local stats = _XIPivot.diagnostics()
-		print('- diagnostics')
+		windower.add_to_chat(127,'- diagnostics')
 		if stats['enabled'] then
-			print('-  enabled  : true')
+			windower.add_to_chat(127, '-  enabled  : true')
 		else
-			print('-  enabled  : false')
+			windower.add_to_chat(127'-  enabled  : false')
 		end
-		print('-  root_path: "' .. stats['root_path'] .. '"')
-		print('-  overlays :')
+		windower.add_to_chat(127, '-  root_path: "' .. stats['root_path'] .. '"')
+		windower.add_to_chat(127, '-  overlays :')
 		for prio, path in ipairs(stats['overlays']) do
-			print('-      [' .. prio .. ']: ' .. path)
+			windower.add_to_chat(127, '-      [' .. prio .. ']: ' .. path)
 		end
 	end
 end)

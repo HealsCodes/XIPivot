@@ -1,7 +1,6 @@
 <?xml version="1.1" ?>
 <settings>
     <global>
-        <enabled>true</enabled>
         <overlays>XI-View,XI-Vision,FFXI-HD</overlays>
     </global>
 </settings>
