@@ -31,6 +31,12 @@
 
 #include <algorithm>
 
+#ifdef _DEBUG
+#	define _dbgLog(...) this->dbgLog(__VA_ARGS__)
+#else
+#	define _dbgLog(...)
+#endif
+
 namespace XiPivot
 {
 	namespace Core
@@ -87,11 +93,24 @@ namespace XiPivot
 			GetCurrentDirectoryA(sizeof(workDir), workDir);
 
 			m_rootPath = workDir;
+
+#ifdef _DEBUG
+			fopen_s(&m_dbgLog, "XIPivot.dbg.log", "a");
+#endif
 		}
 
 		Redirector::~Redirector()
 		{
 			releaseHooks(); // just in case
+
+#ifdef _DEBUG
+			if (m_dbgLog != nullptr)
+			{
+				fflush(m_dbgLog);
+				fclose(m_dbgLog);
+				m_dbgLog = nullptr;
+			}
+#endif
 		}
 
 		bool Redirector::setupHooks(void)
@@ -362,5 +381,19 @@ namespace XiPivot
 			}
 			return romIndex;
 		}
+
+#ifdef _DEBUG
+		void Redirector::dbgLog(const char *fmt, ...)
+		{
+			if (m_dbgLog != nullptr)
+			{
+				va_list args;
+				va_start(args, fmt);
+				vfprintf_s(m_dbgLog, fmt, args);
+				fflush(m_dbgLog);
+				va_end(args);
+			}
+		}
+#endif
 	}
 }

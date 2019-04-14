@@ -134,20 +134,10 @@ namespace XiPivot
 			std::vector<std::string>       m_overlayPaths;
 			std::map<int32_t, std::string> m_resolvedPaths;
 
-			FILE *m_log;
-			void log(const char *fmt, ...) {
-				if (m_log == nullptr)
-				{
-					return;
-				}
-
-				va_list args;
-				va_start(args, fmt);
-				vfprintf_s(m_log, fmt, args);
-				fflush(m_log);
-
-				va_end(args);
-			}
+#ifdef _DEBUG
+			FILE *m_dbgLog;
+			void dbgLog(const char *fmt, ...);
+#endif
 		};
 	}
 }
