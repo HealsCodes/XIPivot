@@ -1,15 +1,15 @@
 ## About
 
-XIPivot is an addon that allows to dynamically override parts of the DAT files
-of your FFXI client without touching the actual files.
+XIPivot is an addon that allows to dynamically override parts of the ROM / sound
+files of your FFXI client without touching the actual files.
 
 It provides support for multiple overlay directories as well as runtime controls
 of which overlays are loaded and used by the game.
 
 The goals behind XIPivot are simple:
 
-- no modifications to the original DAT files
-- no more huge folder with thousands of anonymous DAT files
+- no modifications to the original DAT / spw / bgw files
+- no more huge folder with thousands of anonymous files
 - the ability to sort Mods into separate folders for each mod
 - the ability to control which Mods take precedence
 
@@ -107,6 +107,13 @@ Currently this affects Mods that try to replace the initial menu textures or fon
 Known affected Mods:
 
 - XI-View -- no replaced fonts or menu textures, HQ icons work
+
+## Overlays with sound / music files
+
+XI is pretty unforgiving when replacing BGW music files at runtime and will crash if you do something stupid.
+
+**It is not advised to have sound Mods in <global> or change them at runtime**
+**Support for sound / music overlays is considered EXPERIMENTAL**
 
 ## Disclaimer
 
