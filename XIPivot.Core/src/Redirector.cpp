@@ -126,8 +126,11 @@ namespace XiPivot
 				DetourAttach(&(PVOID&)Redirector::s_procFindFirstFileA, Redirector::dFindFirstFileA);
 
 				m_hooksSet = DetourTransactionCommit() == NO_ERROR;
+
+				_dbgLog("m_hooksSet = %s\n", m_hooksSet ? "true" : "false");
 				return m_hooksSet;
 			}
+			_dbgLog("hooks already set\n");
 			return false;
 		}
 
@@ -143,8 +146,11 @@ namespace XiPivot
 				DetourDetach(&(PVOID&)Redirector::s_procFindFirstFileA, Redirector::dFindFirstFileA);
 
 				m_hooksSet = (DetourTransactionCommit() == NO_ERROR) ? false : true;
+
+				_dbgLog("m_hooksSet = %s\n", m_hooksSet ? "true" : "false");
 				return m_hooksSet;
 			}
+			_dbgLog("hooks already removed\n");
 			return false;
 		}
 
@@ -152,6 +158,8 @@ namespace XiPivot
 		{
 			m_rootPath = newRoot;
 			m_resolvedPaths.clear();
+
+			_dbgLog("m_rootPath = '%s'", m_rootPath.c_str());
 			for (const auto& overlay : m_overlayPaths)
 			{
 				std::string localPath = m_rootPath + "/" + overlay;
@@ -161,15 +169,18 @@ namespace XiPivot
 
 		bool Redirector::addOverlay(const std::string &overlayPath)
 		{
+			_dbgLog("'%s'\n", overlayPath.c_str());
 			if (std::find(m_overlayPaths.begin(), m_overlayPaths.end(), overlayPath) == m_overlayPaths.end())
 			{
 				std::string localPath = m_rootPath + "/" + overlayPath;
 				if (scanOverlayPath(localPath))
 				{
 					m_overlayPaths.emplace_back(overlayPath);
+					_dbgLog("=> success\n");
 					return true;
 				}
 			}
+			_dbgLog("=> failed\n");
 			return false;
 		}
 
@@ -177,6 +188,7 @@ namespace XiPivot
 		{
 			auto it = std::find(m_overlayPaths.begin(), m_overlayPaths.end(), overlayPath);
 
+			_dbgLog("'%s'\n");
 			if (it != m_overlayPaths.end())
 			{
 				m_resolvedPaths.clear();
@@ -186,6 +198,7 @@ namespace XiPivot
 					std::string localPath = m_rootPath + "/" + path;
 					scanOverlayPath(localPath);
 				}
+				_dbgLog("=> found, and removed\n");
 			}
 		}
 
@@ -194,6 +207,8 @@ namespace XiPivot
 		HANDLE __stdcall
 			Redirector::interceptCreateFileA(LPCSTR a0, DWORD a1, DWORD a2, LPSECURITY_ATTRIBUTES a3, DWORD a4, DWORD a5, HANDLE a6)
 		{
+			_dbgLog("lpFileName = '%s'\n", static_cast<const char*>(a0));
+
 			const char* path = findRedirect(a0);
 			return Redirector::s_procCreateFileA((LPCSTR)path, a1, a2, a3, a4, a5, a6);
 		}
@@ -201,6 +216,8 @@ namespace XiPivot
 		HANDLE __stdcall
 			Redirector::interceptFindFirstFileA(LPCSTR a0, LPWIN32_FIND_DATAA a1)
 		{
+			_dbgLog("lpFileName = '%s'\n", static_cast<const char*>(a0));
+
 			const char* path = findRedirect(a0);
 			return Redirector::s_procFindFirstFileA((LPCSTR)path, a1);
 		}
@@ -209,17 +226,40 @@ namespace XiPivot
 		const char *Redirector::findRedirect(const char *realPath)
 		{
 			const char *romPath = strstr(realPath, "//ROM");
-			if (romPath == nullptr)
+			const char *sfxPath;
+
+			if (strstr(realPath, "\\win\\se\\") != nullptr || strstr(realPath, "\\win\\music\\") != nullptr)
 			{
-				return realPath;
+				sfxPath = &(strstr(realPath, "\\win\\")[-1]);
+			}
+			else
+			{
+				sfxPath = nullptr;
 			}
 
-			int32_t romIndex = pathToIndex(romPath);
-			const auto res = m_resolvedPaths.find(romIndex);
-			
-			if(res != m_resolvedPaths.end())
+			_dbgLog("romPath = %d, sfxPath = %d\n", romPath != nullptr, sfxPath != nullptr);
+
+			if (romPath != nullptr)
 			{
-				return (*res).second.c_str();
+				int32_t romIndex = pathToIndex(romPath);
+				const auto res = m_resolvedPaths.find(romIndex);
+				
+				if(res != m_resolvedPaths.end())
+				{
+					_dbgLog("using overlay '%s'\n", (*res).second.c_str());
+					return (*res).second.c_str();
+				}
+			}
+			if (sfxPath != nullptr)
+			{
+				int32_t sfxIndex = pathToIndexAudio(sfxPath);
+				const auto res = m_resolvedPaths.find(sfxIndex);
+				
+				if(res != m_resolvedPaths.end())
+				{
+					_dbgLog("using overlay '%s'\n", (*res).second.c_str());
+					return (*res).second.c_str();
+				}
 			}
 			return realPath;
 		}
@@ -230,6 +270,8 @@ namespace XiPivot
 			 * in m_resolvedPaths.
 			 */
 			bool res = false;
+
+			_dbgLog("'%s'\n", basePath.c_str());
 
 			std::vector<std::string> romDirs;
 			if (collectSubPath(basePath, "//ROM*", romDirs, true))
@@ -242,13 +284,14 @@ namespace XiPivot
 						for (const auto &sp : subDirs)
 						{
 							std::vector<std::string> datFiles;
-							if (collectDatFiles(sp, datFiles))
+							if (collectDataFiles(sp, "*.DAT", datFiles))
 							{
 								for (const auto &dat : datFiles)
 								{
 									int32_t romIndex = pathToIndex(strstr(dat.c_str(), "//ROM"));
 									if (m_resolvedPaths.find(romIndex) == m_resolvedPaths.end())
 									{
+										_dbgLog("emplace %8d : '%s'\n", romIndex, dat.c_str());
 										m_resolvedPaths.emplace(romIndex, dat);
 									}
 								}
@@ -259,15 +302,66 @@ namespace XiPivot
 					}
 				}
 			}
+
+			std::vector<std::string> soundDirs;
+			if (collectSubPath(basePath, "/sound*", soundDirs))
+			{
+				for (const auto &p : soundDirs)
+				{
+					std::vector<std::string> sfxDirs;
+					if (collectSubPath(p, "/win/se", "/se*", sfxDirs))
+					{
+						for (const auto &sp : sfxDirs)
+						{
+							std::vector<std::string> sfxFiles;
+							if (collectDataFiles(sp, "*.spw", sfxFiles))
+							{
+								for (const auto &sfx : sfxFiles)
+								{
+									int32_t sfxIndex = pathToIndexAudio(&strstr(sfx.c_str(), "/win/se/")[-1]);
+									if (m_resolvedPaths.find(sfxIndex) == m_resolvedPaths.end())
+									{
+										_dbgLog("emplace %8d : '%s'\n", sfxIndex, sfx.c_str());
+										m_resolvedPaths.emplace(sfxIndex, sfx);
+									}
+								}
+								res = true;
+							}
+						}
+					}
+
+					std::vector<std::string> bgwFiles;
+					if (collectDataFiles(p, "/win/music/data", "*.bgw", bgwFiles))
+					{
+						for (const auto &bgw : bgwFiles)
+						{
+							int32_t bgwIndex = pathToIndexAudio(&strstr(bgw.c_str(), "/win/music/")[-1]);
+							if (m_resolvedPaths.find(bgwIndex) == m_resolvedPaths.end())
+							{
+								_dbgLog("emplace %8d : '%s'\n", bgwIndex, bgw.c_str());
+								m_resolvedPaths.emplace(bgwIndex, bgw);
+							}
+							res = true;
+						}
+					}
+				}
+			}
 			return res;
 		}
 
 		bool Redirector::collectSubPath(const std::string &basePath, const std::string &pattern, std::vector<std::string> &results, bool doubleDirSep)
 		{
+			return collectSubPath(basePath, "", pattern, results, doubleDirSep);
+		}
+
+		bool Redirector::collectSubPath(const std::string &basePath, const std::string &midPath, const std::string &pattern, std::vector<std::string> &results, bool doubleDirSep)
+		{
 			HANDLE handle;
 			WIN32_FIND_DATAA attrs;
 
-			std::string searchPath = std::string(basePath) + std::string(pattern);
+			std::string searchPath = basePath + midPath + pattern;
+		
+			_dbgLog("'%s', '%s', '%s', '%d'\n", basePath.c_str(), midPath.c_str(), pattern.c_str(), doubleDirSep);
 
 			results.clear();
 			handle = Redirector::s_procFindFirstFileA((LPCSTR)searchPath.c_str(), &attrs);
@@ -282,24 +376,34 @@ namespace XiPivot
 						if (doubleDirSep)
 						{
 							/* this is only used to keep the same //ROM notation XI uses */
-							results.emplace_back(basePath + "//" + attrs.cFileName);
+							_dbgLog("=> '%s'\n", (basePath + midPath + "//" + attrs.cFileName).c_str());
+							results.emplace_back(basePath + midPath + "//" + attrs.cFileName);
 						}
 						else
 						{
-							results.emplace_back(basePath + "/" + attrs.cFileName);
+							_dbgLog("=> '%s'\n", (basePath + midPath + "/" + attrs.cFileName).c_str());
+							results.emplace_back(basePath + midPath + "/" + attrs.cFileName);
 						}
 					}
 				} while (FindNextFileA(handle, &attrs));
 			}
+			_dbgLog("results.size() = %d\n", results.size());
 			return results.size() != 0;
 		}
 
-		bool Redirector::collectDatFiles(const std::string &parentPath, std::vector<std::string> &results)
+		bool Redirector::collectDataFiles(const std::string &parentPath, const std::string &pattern, std::vector<std::string> &results)
+		{
+			return collectDataFiles(parentPath, "", pattern, results);
+		}
+
+		bool Redirector::collectDataFiles(const std::string &parentPath, const std::string &midPath, const std::string &pattern, std::vector<std::string> &results)
 		{
 			HANDLE handle;
 			WIN32_FIND_DATAA attrs;
 
-			std::string searchPath = parentPath + "/*.DAT";
+			std::string searchPath = parentPath + midPath + "/" + pattern;
+
+			_dbgLog("'%s', '%s', '%s' => (%s)\n", parentPath.c_str(), midPath.c_str(), pattern.c_str(), searchPath.c_str());
 
 			results.clear();
 			handle = Redirector::s_procFindFirstFileA((LPCSTR)searchPath.c_str(), &attrs);
@@ -309,10 +413,12 @@ namespace XiPivot
 				{
 					if (attrs.dwFileAttributes != FILE_ATTRIBUTE_DIRECTORY)
 					{
-						results.emplace_back(parentPath + "/" + attrs.cFileName);
+						_dbgLog("=> '%s'\n", (parentPath + midPath + "/" + attrs.cFileName).c_str());
+						results.emplace_back(parentPath + midPath + "/" + attrs.cFileName);
 					}
 				} while (FindNextFileA(handle, &attrs));
 			}
+			_dbgLog("results.size() = %d\n", results.size());
 			return results.size() != 0;
 		}
 
@@ -340,7 +446,7 @@ namespace XiPivot
 			 * //ROM9/999/999.DAT   =>  9999999
 			 * - anything invalid - =>       -1
 			 */
-			int32_t romIndex = -1;
+			int32_t romIndex = 0;
 
 			/* start at the first character after "//ROM"
 			 * this is either a digit or '/' in case of the base "//ROM/"
@@ -353,7 +459,7 @@ namespace XiPivot
 			{
 				int subIndex = 0;
 				/* cut out the number and add it to romIndex */
-				for (; p && *p >= '0' && *p <= '9'; ++p)
+				for (; p && isdigit(*p); ++p)
 				{
 					subIndex *= 10;
 					subIndex += (*p) - '0';
@@ -380,6 +486,60 @@ namespace XiPivot
 				}
 			}
 			return romIndex;
+		}
+
+		int32_t Redirector::pathToIndexAudio(const char *soundPath)
+		{
+			int32_t soundIndex = 0;
+
+			/* start at the first character after "\\sound"
+			 * this is either a digit or '/' in case of the base directory "\\sound\\"
+			 * There is no specific check for paths shorter than that
+			 * characters, but then again, this method is not called on
+			 * random strings either.
+			 */
+			char *p = (char*)soundPath;
+
+			if (strstr(soundPath, "/win/music/data") == 0 && strstr(soundPath, "\\win\\music\\data") == 0)
+			{
+				/* sound subdir */
+				soundIndex = 10000000;
+
+				/* cut the sound directory number */
+				if (isdigit(soundPath[0]))
+				{
+					soundIndex += (soundPath[0] - '0') * 1000000;
+				}
+				/* cut out the 6 digits of the filename, they contain the subdir anyway 
+				* 9/win/se/seAAA/seAAABBB.spw
+				*/
+				soundIndex += (soundPath[17] - '0') * 100000;
+				soundIndex += (soundPath[18] - '0') * 10000;
+				soundIndex += (soundPath[19] - '0') * 1000;
+				soundIndex += (soundPath[20] - '0') * 100;
+				soundIndex += (soundPath[21] - '0') * 10;
+				soundIndex += (soundPath[22] - '0') * 1;
+			}
+			else
+			{
+				/* music subdir */
+				soundIndex = 20000000;
+
+				/* cut the sound directory number 
+				 * 9\win\music\data\music058.bgw
+				 */
+				if (isdigit(soundPath[0]))
+				{
+					soundIndex += (soundPath[0] - '0') * 1000000;
+				}
+				/* cut out the 3 digits of the filename
+				 * 9\win\music\data\music058.bgw
+				 */
+				soundIndex += (soundPath[22] - '0') * 100;
+				soundIndex += (soundPath[23] - '0') * 10;
+				soundIndex += (soundPath[24] - '0') * 1;
+			}
+			return soundIndex;
 		}
 
 #ifdef _DEBUG

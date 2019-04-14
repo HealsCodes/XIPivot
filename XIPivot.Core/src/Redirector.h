@@ -105,7 +105,7 @@ namespace XiPivot
 		protected:
 			/* globally unique instance pointer */
 			static Redirector* s_instance;
-				
+
 			/* it would be foolish to allow more than one Redirector to be created,
 			   as such this whole class is designed as a Singleton.
 			 */
@@ -121,11 +121,16 @@ namespace XiPivot
 			/* first-time scan of overlay directories - basically "find all dat paths and record them" */
 			bool scanOverlayPath(const std::string &overlayPath);
 
-			bool collectSubPath(const std::string &basePath, const std::string &pattern, std::vector<std::string> &result, bool doubleDirSep=false);
-			bool collectDatFiles(const std::string &parentPath, std::vector<std::string> &result);
+			bool collectSubPath(const std::string &basePath, const std::string &pattern, std::vector<std::string> &result, bool doubleDirSep = false);
+			bool collectSubPath(const std::string &basePath, const std::string &midPath, const std::string &pattern, std::vector<std::string> &result, bool doubleDirSep = false);
+
+			bool collectDataFiles(const std::string &parentPath, const std::string &pattern, std::vector<std::string> &result);
+			bool collectDataFiles(const std::string &parentPath, const std::string &midPath, const std::string &pattern, std::vector<std::string> &result);
 
 			/* an actual 32bit integer perfect hash for XI ROM paths >:3 */
 			int32_t pathToIndex(const char *romPath);
+			/* and the same for sound / music files */
+			int32_t pathToIndexAudio(const char *soundPath);
 
 
 			bool                           m_hooksSet;
