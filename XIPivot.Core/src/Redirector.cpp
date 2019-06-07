@@ -29,6 +29,7 @@
 #include "Redirector.h"
 #include "detours.h"
 
+#include <cctype>
 #include <algorithm>
 
 #ifdef _DEBUG
@@ -424,8 +425,11 @@ namespace XiPivot
 				{
 					if (attrs.dwFileAttributes != FILE_ATTRIBUTE_DIRECTORY)
 					{
-						_dbgLog("=> '%s'\n", (parentPath + midPath + "/" + attrs.cFileName).c_str());
-						results.emplace_back(parentPath + midPath + "/" + attrs.cFileName);
+						std::string finalPath = parentPath + midPath + "/" + attrs.cFileName;
+						std::transform(finalPath.begin(), finalPath.end(), finalPath.begin(), [](unsigned char c) { return std::toupper(c); });
+
+						_dbgLog("=> '%s'\n", finalPath.c_str());
+						results.emplace_back(finalPath);
 					}
 				} while (FindNextFileA(handle, &attrs));
 			}
