@@ -67,6 +67,9 @@ namespace XiPivot
 
 			bool hooksActive(void) const { return m_hooksSet; };
 
+			/* toggle debug logging on/off */
+			bool setDebugLog(bool state);
+
 			/* setup or change the base directory used to search for overlays
 			 * initially this will be set to the processes current working directory
 			 *
@@ -141,6 +144,7 @@ namespace XiPivot
 
 #ifdef _DEBUG
 			FILE *m_dbgLog;
+			bool m_doDbgLog;
 			void dbgLog(const char *fmt, ...);
 #endif
 		};

@@ -93,6 +93,7 @@ namespace XiPivot
 		{
 			if (m_settings.load(m_config))
 			{
+				instance().setDebugLog(m_settings.debugLog);
 				instance().setRootPath(m_settings.rootPath);
 				for (const auto &path : m_settings.overlays)
 				{
@@ -151,6 +152,7 @@ namespace XiPivot
 			{
 				chatPrintf("$cs(16)diagnostics:$cr");
 				chatPrintf("  $cs(16)enabled   $cs(19): %s$cr", hooksActive() ? "$cs(13)true" : "$cs(7)false");
+				chatPrintf("  $cs(16)debug_log $cs(19): %s$cr", m_settings.debugLog ? "$cs(13)true" : "$cs(7)false");
 				chatPrintf("  $cs(16)root_path $cs(19): '$cs(9)%s$cs(9)'$cr", m_settings.rootPath.c_str());
 				chatPrintf("  $cs(16)overlays  $cs(19):$cr");
 
@@ -187,6 +189,7 @@ namespace XiPivot
 		/* default to "plugin location"/DATs */
 		rootPath = std::string(workPath) + "/DATs";
 		overlays.clear();
+		debugLog = false;
 	}
 
 	bool AshitaInterface::Settings::load(IConfigurationManager *config)
@@ -195,7 +198,9 @@ namespace XiPivot
 		{
 			const char *rP = config->get_string("XIPivot", "root_path");
 			const char *oL = config->get_string("XIPivot", "overlays");
+			const bool dbg = config->get_bool("XIPivot", "debug_log", true);
 
+			debugLog = dbg;
 			rootPath = (rP ? rP : "");
 
 			overlays.clear();
@@ -212,6 +217,7 @@ namespace XiPivot
 	{
 		config->set_value("XIPivot", "root_path", rootPath.c_str());
 		config->set_value("XIPivot", "overlays", join(overlays.begin(), overlays.end(), ",").c_str());
+		config->set_value("XIPivot", "debug", debugLog ? "true" : "false");
 		config->Save("XIPivot", "XIPivot");
 	}
 

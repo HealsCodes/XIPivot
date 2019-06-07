@@ -154,6 +154,13 @@ namespace XiPivot
 			return false;
 		}
 
+		bool Redirector::setDebugLog(bool state)
+		{
+			m_doDbgLog = state;
+			_dbgLog("m_doDbgLog = %s", m_doDbgLog ? "true" : "false");
+			return m_doDbgLog;
+		}
+
 		void Redirector::setRootPath(const std::string &newRoot)
 		{
 			m_rootPath = newRoot;
@@ -293,6 +300,10 @@ namespace XiPivot
 									{
 										_dbgLog("emplace %8d : '%s'\n", romIndex, dat.c_str());
 										m_resolvedPaths.emplace(romIndex, dat);
+									}
+									else
+									{
+										_dbgLog("WARNING: %8d: ignoring '%s'\n", romIndex, dat.c_str());
 									}
 								}
 								/* at least one overlay file */
@@ -545,7 +556,7 @@ namespace XiPivot
 #ifdef _DEBUG
 		void Redirector::dbgLog(const char *fmt, ...)
 		{
-			if (m_dbgLog != nullptr)
+			if (m_dbgLog != nullptr && m_doDbgLog == true)
 			{
 				va_list args;
 				va_start(args, fmt);

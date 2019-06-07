@@ -42,7 +42,7 @@ extern "C" {
 		strcpy_s(info->Name, sizeof(info->Name), "XIPivot");
 
 		info->InterfaceVersion = ASHITA_INTERFACE_VERSION;
-		info->PluginVersion = 0.20f;
+		info->PluginVersion = 0.21f;
 		info->Priority = 0;
 	}
 
