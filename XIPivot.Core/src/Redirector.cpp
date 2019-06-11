@@ -157,9 +157,13 @@ namespace XiPivot
 
 		bool Redirector::setDebugLog(bool state)
 		{
+#if _DEBUG
 			m_doDbgLog = state;
 			_dbgLog("m_doDbgLog = %s", m_doDbgLog ? "true" : "false");
 			return m_doDbgLog;
+#else
+			return false;
+#endif
 		}
 
 		void Redirector::setRootPath(const std::string &newRoot)
@@ -383,7 +387,7 @@ namespace XiPivot
 				{
 					std::string filename = attrs.cFileName;
 
-					if (attrs.dwFileAttributes == FILE_ATTRIBUTE_DIRECTORY && filename != "." && filename != "..")
+					if ((attrs.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0 && filename != "." && filename != "..")
 					{
 						if (doubleDirSep)
 						{
@@ -423,7 +427,7 @@ namespace XiPivot
 			{
 				do
 				{
-					if (attrs.dwFileAttributes != FILE_ATTRIBUTE_DIRECTORY)
+					if ((attrs.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
 					{
 						std::string finalPath = parentPath + midPath + "/" + attrs.cFileName;
 						std::transform(finalPath.begin(), finalPath.end(), finalPath.begin(), [](unsigned char c) { return std::toupper(c); });
