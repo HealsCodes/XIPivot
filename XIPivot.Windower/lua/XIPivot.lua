@@ -28,7 +28,7 @@
 
 _addon.name = 'XIPivot'
 _addon.author = 'Heals'
-_addon.version = '0.2.0'
+_addon.version = '0.3.0'
 _addon.command = 'pivot'
 
 config = require('config')
