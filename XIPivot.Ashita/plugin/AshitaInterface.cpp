@@ -201,7 +201,7 @@ namespace XiPivot
 			const bool dbg = config->get_bool("XIPivot", "debug_log", true);
 
 			debugLog = dbg;
-			rootPath = (rP ? rP : "");
+			rootPath = (rP ? rP : rootPath);
 
 			overlays.clear();
 			if(oL != nullptr && strlen(oL) > 0)
@@ -215,7 +215,6 @@ namespace XiPivot
 
 	void AshitaInterface::Settings::save(IConfigurationManager *config)
 	{
-		config->set_value("XIPivot", "root_path", rootPath.c_str());
 		config->set_value("XIPivot", "overlays", join(overlays.begin(), overlays.end(), ",").c_str());
 		config->set_value("XIPivot", "debug", debugLog ? "true" : "false");
 		config->Save("XIPivot", "XIPivot");
