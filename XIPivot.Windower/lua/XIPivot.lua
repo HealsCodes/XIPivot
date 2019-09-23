@@ -37,9 +37,9 @@ require('lists')
 
 -- package.cpath somehow doesn't appreciate backslashes
 local addon_path = windower.addon_path:gsub('\\', '/')
-
+local root_path = addon_path .. 'data/DATs'
 defaults = T{}
-defaults.root_path = addon_path .. 'data/DATs'
+--defaults.root_path = root_path
 defaults.overlays  = L{}
 
 settings = config.load(defaults)
@@ -56,7 +56,8 @@ config.register(settings, function(_settings)
 	end
 
 	-- setup things
-	_XIPivot.set_root_path(_settings.root_path)
+	--_XIPivot.set_root_path(_settings.root_path)
+	_XIPivot.set_root_path(root_path)
 	for i,path in ipairs(_settings.overlays) do
 		if _XIPivot.add_overlay(path) == false then
 			windower.add_to_chat(8, 'failed to register overlay "' .. path .. '"')
