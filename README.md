@@ -35,6 +35,7 @@ Otherwise it's just these three steps:
 
 The addon and plugin versions will be placed inside the directory `build\Release\Windower` and `build\Release\Ashita`.
 
+**NOTE: Builds require VS2015 toolchain as well as the Windows 8.1 SDK**
 **NOTE: Chose "no" if Visual Studio offers to upgrade the project elements to Windows 10 SDK targets **
 
 ## Disclaimer
