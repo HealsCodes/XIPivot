@@ -32,7 +32,7 @@
 #include <cctype>
 #include <algorithm>
 
-#ifdef _DEBUG
+#if (_DEBUG || _TEST)
 #	define _dbgLog(...) this->dbgLog(__VA_ARGS__)
 #else
 #	define _dbgLog(...)
@@ -96,7 +96,12 @@ namespace XiPivot
 			m_rootPath = workDir;
 
 #ifdef _DEBUG
+#ifndef _TEST
 			fopen_s(&m_dbgLog, "XIPivot.dbg.log", "a");
+#endif
+#endif
+#ifdef _TEST
+			m_dbgLog = stdout;
 #endif
 		}
 
@@ -377,7 +382,7 @@ namespace XiPivot
 
 			std::string searchPath = basePath + midPath + pattern;
 		
-			_dbgLog("'%s', '%s', '%s', '%d'\n", basePath.c_str(), midPath.c_str(), pattern.c_str(), doubleDirSep);
+			_dbgLog("'%s', '%s', '%s', '%d' (%s)\n", basePath.c_str(), midPath.c_str(), pattern.c_str(), doubleDirSep, searchPath.c_str());
 
 			results.clear();
 			handle = Redirector::s_procFindFirstFileA((LPCSTR)searchPath.c_str(), &attrs);
@@ -561,7 +566,7 @@ namespace XiPivot
 			return soundIndex;
 		}
 
-#ifdef _DEBUG
+#if (_DEBUG || _TEST)
 		void Redirector::dbgLog(const char *fmt, ...)
 		{
 			if (m_dbgLog != nullptr && m_doDbgLog == true)
