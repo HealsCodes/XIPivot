@@ -58,7 +58,6 @@ XIPivot.xml:
 <?xml version="1.0" encoding="UTF-8"?>
 <settings>
     <setting name="overlays">XI-Vision,XI-View,FFXI-HD</setting>
-    <setting name="enabled">true</setting>
 </settings>
 ```
 
@@ -74,6 +73,7 @@ If you prefer a different path you can add the key `'root_path'` to `XIPivot.xml
 ```
 
 This instructs to XIPivot to search for overlays inside `"C:\my\awesome\addons"` instead.
+(If you're unsure **don't set this parameter** and things should just work).
 
 ## In-Game commands
 
