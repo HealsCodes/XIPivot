@@ -67,21 +67,6 @@ settings.xml:
 </settings>
 ```
 
-XIPivot defaults to look for your overlays in the `data/DATs/` directory inside the `XIPivot/` bundle.
-If you prefer a different path you can add the key `'root_path'` to `settings.xml` like so:
-
-```xml
-<?xml version="1.1" ?>
-<settings>
-    <global>
-	<overlays>XI-View,XI-Vision,FFXI-HD</overlays>
-	<root_path>C:/my/awesome/adds<root_path>
-    </global>
-</settings>
-```
-
-This instructs to XIPivot to seach for overlays inside `"C:\my\awesome\addons"` instead.
-
 ## In-Game commands
 
 XIPivot makes the in-game command `//pivot` available to load and unload overlays at runtime.
