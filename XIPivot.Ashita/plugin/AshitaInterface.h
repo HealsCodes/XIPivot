@@ -49,9 +49,13 @@ namespace XiPivot
 
 		bool HandleCommand(const char *command, int32_t type) override;
 
+		void Direct3DPreRender();
+		void Direct3DRender();
+
 		/* ILogProvider */
 		void logMessage(Core::ILogProvider::LogLevel level, std::string msg);
 		void logMessageF(Core::ILogProvider::LogLevel level, std::string msg, ...);
+
 	public:
 		static plugininfo_t *s_pluginInfo;
 
@@ -73,6 +77,16 @@ namespace XiPivot
 		};
 
 		Settings               m_settings;
+
+		/* UI state */
+		bool                     m_showConfigWindow;
+
+		struct
+		{
+			bool                     debugState;
+			std::vector<std::string> purgeOverlay;
+			char                     addOverlay[MAX_PATH];
+		} m_uiConfig;
 
 		/* Ashita runtime data */
 		uint32_t               m_pluginId;
