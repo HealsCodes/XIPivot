@@ -161,8 +161,8 @@ namespace XiPivot
 				chatPrintf("   $cs(9)a$cs(16)dd overlay_dir $cs(19)- Adds a path to be searched for DAT overlays$cr");
 				chatPrintf("   $cs(9)r$cs(16)emove overlay_dir $cs(19)- Removes a path from the DAT overlays$cr");
 				chatPrintf("   $cs(16)-$cr");
-				chatPrintf("   $cs(19)Adding or removing overlays at runtime can cause $cs(16)all kinds unexpected behaviour.$cr");
-				chatPrintf("   $cs(19)It is recommended to use XIPivot.xml instead - $cs(16)you have been warned.$cr");
+				chatPrintf("   $cs(19)Adding or removing overlays at runtime can cause $cs(16)all kinds of unexpected behaviour.$cr");
+				chatPrintf("   $cs(19)It is recommended to edit XIPivot.xml instead - $cs(16)you have been warned.$cr");
 			}
 			else
 			{
@@ -204,7 +204,7 @@ namespace XiPivot
 
 		if (m_showConfigWindow)
 		{
-			if (imgui->Begin(u8"XiPivot Setup", &m_showConfigWindow, ImVec2(600, 300)) == true)
+			if (imgui->Begin(u8"XiPivot Setup", &m_showConfigWindow, ImVec2(600, 350), -1.0f, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize) == true)
 			{
 				imgui->Checkbox(u8"debug log", &m_uiConfig.debugState);
 				imgui->LabelText(u8"root path", "%s", m_settings.rootPath.c_str());
@@ -239,6 +239,9 @@ namespace XiPivot
 						m_uiConfig.addOverlay[0] = '\0';
 					}
 				}
+				imgui->Separator();
+				imgui->TextDisabled(u8"Adding or removing overlays at runtime can cause all kinds of unexpected behaviour.");
+				imgui->TextDisabled(u8"It is recommended to edit XIPivot.xml instead");
 			}
 			imgui->End();
 		}
