@@ -164,7 +164,7 @@ namespace XiPivot
 			}
 			else
 			{
-				m_uiConfig.addOverlayPath[0] = '\0';
+				m_uiConfig.addOverlay[0] = '\0';
 				m_uiConfig.debugState = m_settings.debugLog;
 				m_uiConfig.purgeOverlay.clear();
 
@@ -315,7 +315,6 @@ namespace XiPivot
 	void AshitaInterface::Settings::save(IConfigurationManager *config)
 	{
 		config->set_value("XIPivot", "overlays", join(overlays.begin(), overlays.end(), ",").c_str());
-		config->set_value("XIPivot", "debug", debugLog ? "true" : "false");
 		config->Save("XIPivot", "XIPivot");
 	}
 
