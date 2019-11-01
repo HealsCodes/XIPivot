@@ -19,9 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\LogProvider.cpp" />
     <ClCompile Include="src\Redirector.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\LogProvider.h" />
     <ClInclude Include="src\Redirector.h" />
   </ItemGroup>
   <ItemGroup>

@@ -26,61 +26,22 @@
  * 	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
-
-#include "ADK/Ashita.h"
-#include "Redirector.h"
+#include "LogProvider.h"
 
 namespace XiPivot
 {
-	class AshitaInterface : public IPlugin, public Core::ILogProvider, private Core::Redirector
+	namespace Core
 	{
+		DummyLogProvider* DummyLogProvider::s_instance = nullptr;
 
-	public:
-		AshitaInterface(void);
-		virtual ~AshitaInterface(void) {};
-
-		/* Ashita plugin requirements */
-
-		plugininfo_t GetPluginInfo(void) override;
-
-		bool Initialize(IAshitaCore *core, ILogManager *log, uint32_t id) override;
-		void Release(void);
-
-		bool HandleCommand(const char *command, int32_t type) override;
-
-		/* ILogProvider */
-		void logMessage(Core::ILogProvider::LogLevel level, std::string msg);
-		void logMessageF(Core::ILogProvider::LogLevel level, std::string msg, ...);
-	public:
-		static plugininfo_t *s_pluginInfo;
-
-	private:
-		/* a little wrapper around Write() and Writef() with support for colours */
-		void chatPrint(const char *msg);
-		void chatPrintf(const char *fmt, ...);
-
-		struct Settings
+		DummyLogProvider* DummyLogProvider::instance()
 		{
-			Settings();
-
-			bool load(IConfigurationManager *config);
-			void save(IConfigurationManager *config);
-
-			bool debugLog;
-			std::string rootPath;
-			std::vector<std::string> overlays;
-		};
-
-		Settings               m_settings;
-
-		/* Ashita runtime data */
-		uint32_t               m_pluginId;
-
-		IAshitaCore           *m_ashitaCore;
-		ILogManager           *m_logManager;
-		IDirect3DDevice8      *m_direct3DDevice;
-		IConfigurationManager *m_config;
-	};
+			if (s_instance == nullptr)
+			{
+				s_instance = new DummyLogProvider();
+			}
+			return s_instance;
+		}
+	}
 }
 

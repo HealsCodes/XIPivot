@@ -28,6 +28,8 @@
 
 #pragma once
 
+#include "LogProvider.h"
+
 #include <Windows.h>
 
 #include <map>
@@ -61,14 +63,18 @@ namespace XiPivot
 		public:
 			virtual ~Redirector(void);
 
+
 			/* setup and tear-down of syscall hooks*/
 			bool setupHooks(void);
 			bool releaseHooks(void);
 
 			bool hooksActive(void) const { return m_hooksSet; };
 
+			/* change the active log provider reopining the log in the process */
+			void setLogProvider(ILogProvider *logProvider);
+
 			/* toggle debug logging on/off */
-			bool setDebugLog(bool state);
+			void setDebugLog(bool state);
 
 			/* setup or change the base directory used to search for overlays
 			 * initially this will be set to the processes current working directory
@@ -142,11 +148,8 @@ namespace XiPivot
 			std::vector<std::string>       m_overlayPaths;
 			std::map<int32_t, std::string> m_resolvedPaths;
 
-#ifdef _DEBUG
-			FILE *m_dbgLog;
-			bool m_doDbgLog;
-			void dbgLog(const char *fmt, ...);
-#endif
+			ILogProvider::LogLevel         m_logDebug;
+			ILogProvider*                  m_logger;
 		};
 	}
 }

@@ -28,59 +28,43 @@
 
 #pragma once
 
-#include "ADK/Ashita.h"
-#include "Redirector.h"
+#include <string>
 
 namespace XiPivot
 {
-	class AshitaInterface : public IPlugin, public Core::ILogProvider, private Core::Redirector
+	namespace Core
 	{
-
-	public:
-		AshitaInterface(void);
-		virtual ~AshitaInterface(void) {};
-
-		/* Ashita plugin requirements */
-
-		plugininfo_t GetPluginInfo(void) override;
-
-		bool Initialize(IAshitaCore *core, ILogManager *log, uint32_t id) override;
-		void Release(void);
-
-		bool HandleCommand(const char *command, int32_t type) override;
-
-		/* ILogProvider */
-		void logMessage(Core::ILogProvider::LogLevel level, std::string msg);
-		void logMessageF(Core::ILogProvider::LogLevel level, std::string msg, ...);
-	public:
-		static plugininfo_t *s_pluginInfo;
-
-	private:
-		/* a little wrapper around Write() and Writef() with support for colours */
-		void chatPrint(const char *msg);
-		void chatPrintf(const char *fmt, ...);
-
-		struct Settings
+		class ILogProvider
 		{
-			Settings();
+		public:
 
-			bool load(IConfigurationManager *config);
-			void save(IConfigurationManager *config);
+			enum class LogLevel
+			{
+				Discard = 0,
+				Debug   = 1,
+				Info    = 2,
+				Warn    = 3,
+				Error   = 4
+			};
 
-			bool debugLog;
-			std::string rootPath;
-			std::vector<std::string> overlays;
+			virtual void logMessage(LogLevel level, std::string message) = 0;
+			virtual void logMessageF(LogLevel level, std::string fmt, ...) = 0;
 		};
 
-		Settings               m_settings;
+		class DummyLogProvider : public ILogProvider
+		{
+		public:
 
-		/* Ashita runtime data */
-		uint32_t               m_pluginId;
+			virtual ~DummyLogProvider() {};
 
-		IAshitaCore           *m_ashitaCore;
-		ILogManager           *m_logManager;
-		IDirect3DDevice8      *m_direct3DDevice;
-		IConfigurationManager *m_config;
-	};
+			virtual void logMessage(LogLevel, std::string) {};
+			virtual void logMessageF(LogLevel, std::string, ...) {};
+
+			static DummyLogProvider* instance();
+
+		private:
+			static DummyLogProvider* s_instance;
+		};
+	}
 }
 

@@ -18,9 +18,15 @@
     <ClCompile Include="src\Redirector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\LogProvider.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Redirector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LogProvider.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

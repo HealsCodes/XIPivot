@@ -89,6 +89,8 @@ namespace XiPivot
 		m_pluginId = id;
 		m_config = (core ? core->GetConfigurationManager() : nullptr);
 
+		instance().setLogProvider(this);
+
 		if (m_config != nullptr)
 		{
 			if (m_settings.load(m_config))
@@ -178,6 +180,51 @@ namespace XiPivot
 		return false;
 	}
 
+
+	/* ILogProvider */
+	void AshitaInterface::logMessage(Core::ILogProvider::LogLevel level, std::string msg)
+	{
+		logMessageF(level, msg);
+	}
+
+	void AshitaInterface::logMessageF(Core::ILogProvider::LogLevel level, std::string msg, ...)
+	{
+		if (level != Core::ILogProvider::LogLevel::Discard)
+		{
+			char msgBuf[512];
+			Ashita::LogLevel ashitaLevel = Ashita::LogLevel::None;
+
+			switch (level)
+			{
+				case Core::ILogProvider::LogLevel::Discard: /* never acutally reached */
+					return;
+
+				case Core::ILogProvider::LogLevel::Debug:
+					ashitaLevel = Ashita::LogLevel::Debug;
+					break;
+
+				case Core::ILogProvider::LogLevel::Info:
+					ashitaLevel = Ashita::LogLevel::Information;
+					break;
+
+				case Core::ILogProvider::LogLevel::Warn:
+					ashitaLevel = Ashita::LogLevel::Warning;
+					break;
+
+				case Core::ILogProvider::LogLevel::Error:
+					ashitaLevel = Ashita::LogLevel::Error;
+					break;
+			}
+
+			va_list args;
+			va_start(args, msg);
+
+			vsnprintf_s(msgBuf, 511, msg.c_str(), args);
+			m_logManager->Log(static_cast<uint32_t>(ashitaLevel), "XiPivot", msgBuf);
+
+			va_end(args);
+		}
+	}
 	/* private parts below */
 
 	AshitaInterface::Settings::Settings()

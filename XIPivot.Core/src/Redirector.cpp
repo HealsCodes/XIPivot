@@ -32,12 +32,6 @@
 #include <cctype>
 #include <algorithm>
 
-#if (_DEBUG || _TEST)
-#	define _dbgLog(...) this->dbgLog(__VA_ARGS__)
-#else
-#	define _dbgLog(...)
-#endif
-
 namespace XiPivot
 {
 	namespace Core
@@ -94,29 +88,21 @@ namespace XiPivot
 			GetCurrentDirectoryA(sizeof(workDir), workDir);
 
 			m_rootPath = workDir;
-
-#ifdef _DEBUG
-#ifndef _TEST
-			fopen_s(&m_dbgLog, "XIPivot.dbg.log", "a");
-#endif
-#endif
-#ifdef _TEST
-			m_dbgLog = stdout;
-#endif
+			m_logger = DummyLogProvider::instance();
 		}
 
 		Redirector::~Redirector()
 		{
 			releaseHooks(); // just in case
+		}
 
-#ifdef _DEBUG
-			if (m_dbgLog != nullptr)
+		void Redirector::setLogProvider(ILogProvider* newLogProvider)
+		{
+			if (newLogProvider == nullptr)
 			{
-				fflush(m_dbgLog);
-				fclose(m_dbgLog);
-				m_dbgLog = nullptr;
+				return;
 			}
-#endif
+			m_logger = newLogProvider;
 		}
 
 		bool Redirector::setupHooks(void)
@@ -133,10 +119,10 @@ namespace XiPivot
 
 				m_hooksSet = DetourTransactionCommit() == NO_ERROR;
 
-				_dbgLog("m_hooksSet = %s\n", m_hooksSet ? "true" : "false");
+				m_logger->logMessageF(ILogProvider::LogLevel::Info, "m_hooksSet = %s", m_hooksSet ? "true" : "false");
 				return m_hooksSet;
 			}
-			_dbgLog("hooks already set\n");
+			m_logger->logMessage(m_logDebug, "hooks already set");
 			return false;
 		}
 
@@ -153,22 +139,17 @@ namespace XiPivot
 
 				m_hooksSet = (DetourTransactionCommit() == NO_ERROR) ? false : true;
 
-				_dbgLog("m_hooksSet = %s\n", m_hooksSet ? "true" : "false");
+				m_logger->logMessageF(ILogProvider::LogLevel::Info, "m_hooksSet = %s", m_hooksSet ? "true" : "false");
 				return m_hooksSet;
 			}
-			_dbgLog("hooks already removed\n");
+			m_logger->logMessage(m_logDebug, "hooks already removed");
 			return false;
 		}
 
-		bool Redirector::setDebugLog(bool state)
+		void Redirector::setDebugLog(bool state)
 		{
-#if _DEBUG
-			m_doDbgLog = state;
-			_dbgLog("m_doDbgLog = %s", m_doDbgLog ? "true" : "false");
-			return m_doDbgLog;
-#else
-			return false;
-#endif
+			m_logDebug = (state) ? ILogProvider::LogLevel::Debug : ILogProvider::LogLevel::Discard;
+			m_logger->logMessageF(ILogProvider::LogLevel::Info, "m_logDebug = ", state ? "Debug" : "Discard");
 		}
 
 		void Redirector::setRootPath(const std::string &newRoot)
@@ -176,7 +157,7 @@ namespace XiPivot
 			m_rootPath = newRoot;
 			m_resolvedPaths.clear();
 
-			_dbgLog("m_rootPath = '%s'", m_rootPath.c_str());
+			m_logger->logMessageF(ILogProvider::LogLevel::Info, "m_rootPath = '%s'", m_rootPath.c_str());
 			for (const auto& overlay : m_overlayPaths)
 			{
 				std::string localPath = m_rootPath + "/" + overlay;
@@ -186,18 +167,18 @@ namespace XiPivot
 
 		bool Redirector::addOverlay(const std::string &overlayPath)
 		{
-			_dbgLog("'%s'\n", overlayPath.c_str());
+			m_logger->logMessageF(ILogProvider::LogLevel::Info, "addOverlay: '%s'", overlayPath.c_str());
 			if (std::find(m_overlayPaths.begin(), m_overlayPaths.end(), overlayPath) == m_overlayPaths.end())
 			{
 				std::string localPath = m_rootPath + "/" + overlayPath;
 				if (scanOverlayPath(localPath))
 				{
 					m_overlayPaths.emplace_back(overlayPath);
-					_dbgLog("=> success\n");
+					m_logger->logMessage(ILogProvider::LogLevel::Info, "=> success");
 					return true;
 				}
 			}
-			_dbgLog("=> failed\n");
+			m_logger->logMessage(ILogProvider::LogLevel::Error, "=> failed");
 			return false;
 		}
 
@@ -205,7 +186,7 @@ namespace XiPivot
 		{
 			auto it = std::find(m_overlayPaths.begin(), m_overlayPaths.end(), overlayPath);
 
-			_dbgLog("'%s'\n");
+			m_logger->logMessageF(ILogProvider::LogLevel::Info, "removeOverlay: '%s'", overlayPath.c_str());
 			if (it != m_overlayPaths.end())
 			{
 				m_resolvedPaths.clear();
@@ -215,7 +196,7 @@ namespace XiPivot
 					std::string localPath = m_rootPath + "/" + path;
 					scanOverlayPath(localPath);
 				}
-				_dbgLog("=> found, and removed\n");
+				m_logger->logMessage(ILogProvider::LogLevel::Info, "=> found, and removed");
 			}
 		}
 
@@ -224,7 +205,7 @@ namespace XiPivot
 		HANDLE __stdcall
 			Redirector::interceptCreateFileA(LPCSTR a0, DWORD a1, DWORD a2, LPSECURITY_ATTRIBUTES a3, DWORD a4, DWORD a5, HANDLE a6)
 		{
-			_dbgLog("lpFileName = '%s'\n", static_cast<const char*>(a0));
+			m_logger->logMessageF(m_logDebug, "lpFileName = '%s'", static_cast<const char*>(a0));
 
 			const char* path = findRedirect(a0);
 			return Redirector::s_procCreateFileA((LPCSTR)path, a1, a2, a3, a4, a5, a6);
@@ -233,7 +214,7 @@ namespace XiPivot
 		HANDLE __stdcall
 			Redirector::interceptFindFirstFileA(LPCSTR a0, LPWIN32_FIND_DATAA a1)
 		{
-			_dbgLog("lpFileName = '%s'\n", static_cast<const char*>(a0));
+			m_logger->logMessageF(m_logDebug, "lpFileName = '%s'", static_cast<const char*>(a0));
 
 			const char* path = findRedirect(a0);
 			return Redirector::s_procFindFirstFileA((LPCSTR)path, a1);
@@ -254,7 +235,7 @@ namespace XiPivot
 				sfxPath = nullptr;
 			}
 
-			_dbgLog("romPath = %d, sfxPath = %d\n", romPath != nullptr, sfxPath != nullptr);
+			m_logger->logMessageF(m_logDebug, "romPath = %d, sfxPath = %d\n", romPath != nullptr, sfxPath != nullptr);
 
 			if (romPath != nullptr)
 			{
@@ -263,7 +244,7 @@ namespace XiPivot
 				
 				if(res != m_resolvedPaths.end())
 				{
-					_dbgLog("using overlay '%s'\n", (*res).second.c_str());
+					m_logger->logMessageF(m_logDebug, "using overlay '%s'\n", (*res).second.c_str());
 					return (*res).second.c_str();
 				}
 			}
@@ -274,7 +255,7 @@ namespace XiPivot
 				
 				if(res != m_resolvedPaths.end())
 				{
-					_dbgLog("using overlay '%s'\n", (*res).second.c_str());
+					m_logger->logMessageF(m_logDebug, "using overlay '%s'\n", (*res).second.c_str());
 					return (*res).second.c_str();
 				}
 			}
@@ -288,7 +269,7 @@ namespace XiPivot
 			 */
 			bool res = false;
 
-			_dbgLog("'%s'\n", basePath.c_str());
+			m_logger->logMessageF(m_logDebug, "scanOverlayPath '%s'", basePath.c_str());
 
 			std::vector<std::string> romDirs;
 			if (collectSubPath(basePath, "//ROM*", romDirs, true))
@@ -308,12 +289,12 @@ namespace XiPivot
 									int32_t romIndex = pathToIndex(strstr(dat.c_str(), "//ROM"));
 									if (m_resolvedPaths.find(romIndex) == m_resolvedPaths.end())
 									{
-										_dbgLog("emplace %8d : '%s'\n", romIndex, dat.c_str());
+										m_logger->logMessageF(m_logDebug, "emplace %8d : '%s'", romIndex, dat.c_str());
 										m_resolvedPaths.emplace(romIndex, dat);
 									}
 									else
 									{
-										_dbgLog("WARNING: %8d: ignoring '%s'\n", romIndex, dat.c_str());
+										m_logger->logMessageF(ILogProvider::LogLevel::Warn, "WARNING: %8d: ignoring '%s'", romIndex, dat.c_str());
 									}
 								}
 								/* at least one overlay file */
@@ -342,7 +323,7 @@ namespace XiPivot
 									int32_t sfxIndex = pathToIndexAudio(&strstr(sfx.c_str(), "/win/se/")[-1]);
 									if (m_resolvedPaths.find(sfxIndex) == m_resolvedPaths.end())
 									{
-										_dbgLog("emplace %8d : '%s'\n", sfxIndex, sfx.c_str());
+										m_logger->logMessageF(m_logDebug, "emplace %8d : '%s'", sfxIndex, sfx.c_str());
 										m_resolvedPaths.emplace(sfxIndex, sfx);
 									}
 								}
@@ -359,7 +340,7 @@ namespace XiPivot
 							int32_t bgwIndex = pathToIndexAudio(&strstr(bgw.c_str(), "/win/music/")[-1]);
 							if (m_resolvedPaths.find(bgwIndex) == m_resolvedPaths.end())
 							{
-								_dbgLog("emplace %8d : '%s'\n", bgwIndex, bgw.c_str());
+								m_logger->logMessageF(m_logDebug, "emplace %8d : '%s'", bgwIndex, bgw.c_str());
 								m_resolvedPaths.emplace(bgwIndex, bgw);
 							}
 							res = true;
@@ -382,7 +363,7 @@ namespace XiPivot
 
 			std::string searchPath = basePath + midPath + pattern;
 		
-			_dbgLog("'%s', '%s', '%s', '%d' (%s)\n", basePath.c_str(), midPath.c_str(), pattern.c_str(), doubleDirSep, searchPath.c_str());
+			m_logger->logMessageF(m_logDebug, "'%s', '%s', '%s', '%d' (%s)", basePath.c_str(), midPath.c_str(), pattern.c_str(), doubleDirSep, searchPath.c_str());
 
 			results.clear();
 			handle = Redirector::s_procFindFirstFileA((LPCSTR)searchPath.c_str(), &attrs);
@@ -397,18 +378,18 @@ namespace XiPivot
 						if (doubleDirSep)
 						{
 							/* this is only used to keep the same //ROM notation XI uses */
-							_dbgLog("=> '%s'\n", (basePath + midPath + "//" + attrs.cFileName).c_str());
+							m_logger->logMessageF(m_logDebug, "=> '%s'", (basePath + midPath + "//" + attrs.cFileName).c_str());
 							results.emplace_back(basePath + midPath + "//" + attrs.cFileName);
 						}
 						else
 						{
-							_dbgLog("=> '%s'\n", (basePath + midPath + "/" + attrs.cFileName).c_str());
+							m_logger->logMessageF(m_logDebug, "=> '%s'", (basePath + midPath + "/" + attrs.cFileName).c_str());
 							results.emplace_back(basePath + midPath + "/" + attrs.cFileName);
 						}
 					}
 				} while (FindNextFileA(handle, &attrs));
 			}
-			_dbgLog("results.size() = %d\n", results.size());
+			m_logger->logMessageF(m_logDebug, "results.size() = %d", results.size());
 			return results.size() != 0;
 		}
 
@@ -424,7 +405,7 @@ namespace XiPivot
 
 			std::string searchPath = parentPath + midPath + "/" + pattern;
 
-			_dbgLog("'%s', '%s', '%s' => (%s)\n", parentPath.c_str(), midPath.c_str(), pattern.c_str(), searchPath.c_str());
+			m_logger->logMessageF(m_logDebug, "'%s', '%s', '%s' => (%s)", parentPath.c_str(), midPath.c_str(), pattern.c_str(), searchPath.c_str());
 
 			results.clear();
 			handle = Redirector::s_procFindFirstFileA((LPCSTR)searchPath.c_str(), &attrs);
@@ -437,12 +418,12 @@ namespace XiPivot
 						std::string finalPath = parentPath + midPath + "/" + attrs.cFileName;
 						std::transform(finalPath.begin(), finalPath.end(), finalPath.begin(), [](unsigned char c) { return std::toupper(c); });
 
-						_dbgLog("=> '%s'\n", finalPath.c_str());
+						m_logger->logMessageF(m_logDebug, "=> '%s'", finalPath.c_str());
 						results.emplace_back(finalPath);
 					}
 				} while (FindNextFileA(handle, &attrs));
 			}
-			_dbgLog("results.size() = %d\n", results.size());
+			m_logger->logMessageF(m_logDebug, "results.size() = %d", results.size());
 			return results.size() != 0;
 		}
 
@@ -565,19 +546,5 @@ namespace XiPivot
 			}
 			return soundIndex;
 		}
-
-#if (_DEBUG || _TEST)
-		void Redirector::dbgLog(const char *fmt, ...)
-		{
-			if (m_dbgLog != nullptr && m_doDbgLog == true)
-			{
-				va_list args;
-				va_start(args, fmt);
-				vfprintf_s(m_dbgLog, fmt, args);
-				fflush(m_dbgLog);
-				va_end(args);
-			}
-		}
-#endif
 	}
 }
