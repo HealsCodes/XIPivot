@@ -1,4 +1,3 @@
-LIBRARY XIPivot.dll;
 
 EXPORTS
 	GetInterfaceVersion

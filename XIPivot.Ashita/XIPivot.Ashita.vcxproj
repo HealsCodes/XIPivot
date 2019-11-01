@@ -90,7 +90,7 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)build\_lib\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)build\_tmp\$(ProjectName)\$(Configuration)\</IntDir>
-    <TargetName>XIPivot</TargetName>
+    <TargetName>XIPivotDev</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
