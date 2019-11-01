@@ -77,7 +77,9 @@ namespace XiPivot
 		 */
 		Redirector::s_instance = this;
 
-		memset(&m_uiConfig, 0, sizeof(m_uiConfig));
+		memset(m_uiConfig.addOverlay, 0, sizeof(m_uiConfig.addOverlay));
+		m_uiConfig.debugState = false;
+		m_uiConfig.purgeOverlay.clear();
 	}
 
 	plugininfo_t AshitaInterface::GetPluginInfo(void)
@@ -176,6 +178,12 @@ namespace XiPivot
 		return false;
 	}
 
+	bool AshitaInterface::Direct3DInitialize(IDirect3DDevice8* device)
+	{
+		m_direct3DDevice = device;
+		return true;
+	}
+
 	void AshitaInterface::Direct3DPreRender()
 	{
 		if (m_settings.debugLog != m_uiConfig.debugState)
@@ -185,10 +193,7 @@ namespace XiPivot
 		}
 		if (m_uiConfig.purgeOverlay.empty() == false)
 		{
-			for (const auto& path : m_uiConfig.purgeOverlay)
-			{
-				instance().removeOverlay(path);
-			}
+			instance().removeOverlay(m_uiConfig.purgeOverlay);
 			m_uiConfig.purgeOverlay.clear();
 		}
 	}
@@ -197,39 +202,46 @@ namespace XiPivot
 	{
 		const auto imgui = m_ashitaCore->GetGuiManager();
 
-		if (imgui->Begin(u8"XiPivot Status", &m_showConfigWindow) == true)
+		if (m_showConfigWindow)
 		{
-			imgui->Checkbox(u8"debug log", &m_uiConfig.debugState);
-			imgui->LabelText(u8"root path", "%s", m_settings.rootPath.c_str());
-			imgui->Separator();
-			imgui->BeginChild(u8"overlay_list");
+			if (imgui->Begin(u8"XiPivot Setup", &m_showConfigWindow, ImVec2(600, 300)) == true)
 			{
-				int prio = 0;
-				for (const auto& path : m_settings.overlays)
+				imgui->Checkbox(u8"debug log", &m_uiConfig.debugState);
+				imgui->LabelText(u8"root path", "%s", m_settings.rootPath.c_str());
+				imgui->BeginChild(u8"overlay_list", ImVec2(0, 200));
 				{
-					if (imgui->SmallButton("-"))
+					if (m_uiConfig.purgeOverlay.empty())
 					{
-						m_uiConfig.purgeOverlay.emplace_back(path);
+						// prevent a race between purge and render
+						int prio = 0;
+						for (const auto& path : instance().overlayList())
+						{
+							char btnId[] = { '-', '#', '#', static_cast<char>(prio + 'a') };
+							if (imgui->Button(btnId))
+							{
+								m_uiConfig.purgeOverlay = path;
+							}
+							imgui->SameLine();
+							imgui->Text(u8"[%02d] %s", prio++, path.c_str());
+						}
 					}
-					imgui->SameLine();
-					imgui->Text(u8"[%02d] %s", prio++, path.c_str());
 				}
-			}
-			imgui->EndChild();
+				imgui->EndChild();
 
-			imgui->InputText("", m_uiConfig.addOverlay, sizeof(m_uiConfig.addOverlay));
-			imgui->SameLine();
-			if (imgui->SmallButton(u8"add"))
-			{
-				if (strlen(m_uiConfig.addOverlay) != 0)
+				imgui->InputText("", m_uiConfig.addOverlay, sizeof(m_uiConfig.addOverlay));
+				imgui->SameLine();
+				if (imgui->Button(u8"add"))
 				{
-					// FIXME: probably not the best place to do this
-					instance().addOverlay(m_uiConfig.addOverlay);
-					m_uiConfig.addOverlay[0] = '\0';
+					if (strlen(m_uiConfig.addOverlay) != 0)
+					{
+						// FIXME: probably not the best place to do this
+						instance().addOverlay(m_uiConfig.addOverlay);
+						m_uiConfig.addOverlay[0] = '\0';
+					}
 				}
 			}
+			imgui->End();
 		}
-		imgui->End();
 	}
 
 	/* ILogProvider */
