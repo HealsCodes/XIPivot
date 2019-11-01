@@ -18,12 +18,18 @@ The goals behind XIPivot are simple:
 - 1) Copy the `XIPivot.dll` and the `DATs` folder into Ashita's `plugins/` directory.
 - 2) Copy `XIPivot.sample.xml` to Ashita's `config/` directory and rename it to `XIPivot.xml`
 - 3) Create a subdirectory inside the `DATs/` folder for each overlay you want to use
-- 4) Edit `XIPivot.xml`:
+- 4) -- manual approach -- see 6 for in-game GUI version
+   - Edit `XIPivot.xml`:
    - add the directory names from 3) for each overlay that should be enabled, separated by comma ','
    - *order matters* - overlays will be used in order, with the first hit for a file being used.
 - 5) Add `/load xipivot` as the first line to your setup script (before any /wait or other lines)
+- 6) -- OPTIONAL --
+   - Instead of following 4) you can use the command `/pivot` in-game to open the configuration GUI
+   - enter the name of the overlay directory you want to add in the text box at the bottom of the
+     GUI window
+   - press 'add' in include the mod
 
-### Example - XI-View, XI-Vision and Ammelia's HD-Remake:
+### Example - XI-View, XI-Vision and Ammelila's HD-Remake:
 
 Directory structure:
 
@@ -78,15 +84,17 @@ This instructs to XIPivot to search for overlays inside `"C:\my\awesome\addons"`
 ## In-Game commands
 
 XIPivot makes the in-game command `/pivot` available to load and unload overlays at runtime.
+If the command `/pivot` is used without parameters it will open an in-game GUI for configuration.
+
 The following parameters are supported:
 
 - a/add overlay_path     -- will load 'overlay_name' as last entry to the overlay list
 - r/remove overlay_path  -- will unload 'overlay_name' and remove it from the overlay list
-- s/status               -- dumps XIPivot's global status and the list of active overlays
 - h/help                 -- print this text
 
 These commands all support a short first letter version (a/r/s/h).
 Changes made with add / remove will be reflected in `XIPivot.xml`.
+
 
 Please note that adding and removing overlays way after the game launches can have side effects.
 XI will load some DAT files right at the start and then never look at them again (some menu and landscape textures)
