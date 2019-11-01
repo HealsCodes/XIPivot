@@ -65,8 +65,9 @@ namespace XiPivot
 
 	AshitaInterface::AshitaInterface(void)
 	  : Core::Redirector(),
-		
-		m_pluginId(0),
+	
+	    m_showConfigWindow(false),
+	    m_pluginId(0),
 	    m_ashitaCore(nullptr),
 	    m_logManager(nullptr),
 	    m_direct3DDevice(nullptr)
@@ -75,6 +76,8 @@ namespace XiPivot
 		 * FIXME: .. I hope it does
 		 */
 		Redirector::s_instance = this;
+
+		memset(&m_uiConfig, 0, sizeof(m_uiConfig));
 	}
 
 	plugininfo_t AshitaInterface::GetPluginInfo(void)
@@ -150,29 +153,22 @@ namespace XiPivot
 					}
 				}
 			}
-			else if (args.size() == 2 && (args[1] == "s" || args[1] == "status"))
-			{
-				chatPrintf("$cs(16)diagnostics:$cr");
-				chatPrintf("  $cs(16)enabled   $cs(19): %s$cr", hooksActive() ? "$cs(13)true" : "$cs(7)false");
-				chatPrintf("  $cs(16)debug_log $cs(19): %s$cr", m_settings.debugLog ? "$cs(13)true" : "$cs(7)false");
-				chatPrintf("  $cs(16)root_path $cs(19): '$cs(9)%s$cs(9)'$cr", m_settings.rootPath.c_str());
-				chatPrintf("  $cs(16)overlays  $cs(19):$cr");
-
-				int prio = 0;
-				for (const auto& path : m_settings.overlays)
-				{
-					chatPrintf("      $cs(16)[$cs(19)%-2d$cs(16)]$cs(19): '$cs(9)%s$cs(19)'$cr", prio++, path.c_str());
-				}
-			}
-			else
+			else if (args.size() == 2 && (args[1] == "h" || args[1] == "help"))
 			{
 				chatPrintf("$cs(16)%s$cs(19) v.$cs(16)%.2f$cs(19) by $cs(14)%s$cr", s_pluginInfo->Name, s_pluginInfo->PluginVersion, s_pluginInfo->Author);
 				chatPrintf("   $cs(9)a$cs(16)dd overlay_dir $cs(19)- Adds a path to be searched for DAT overlays$cr");
 				chatPrintf("   $cs(9)r$cs(16)emove overlay_dir $cs(19)- Removes a path from the DAT overlays$cr");
-				chatPrintf("   $cs(9)s$cs(16)tatus $cs(19)- Print status and diagnostic info$cr");
 				chatPrintf("   $cs(16)-$cr");
 				chatPrintf("   $cs(19)Adding or removing overlays at runtime can cause $cs(16)all kinds unexpected behaviour.$cr");
 				chatPrintf("   $cs(19)It is recommended to use XIPivot.xml instead - $cs(16)you have been warned.$cr");
+			}
+			else
+			{
+				m_uiConfig.addOverlayPath[0] = '\0';
+				m_uiConfig.debugState = m_settings.debugLog;
+				m_uiConfig.purgeOverlay.clear();
+
+				m_showConfigWindow = true;
 			}
 			return true;
 		}
@@ -180,6 +176,61 @@ namespace XiPivot
 		return false;
 	}
 
+	void AshitaInterface::Direct3DPreRender()
+	{
+		if (m_settings.debugLog != m_uiConfig.debugState)
+		{
+			m_settings.debugLog = m_uiConfig.debugState;
+			instance().setDebugLog(m_settings.debugLog);
+		}
+		if (m_uiConfig.purgeOverlay.empty() == false)
+		{
+			for (const auto& path : m_uiConfig.purgeOverlay)
+			{
+				instance().removeOverlay(path);
+			}
+			m_uiConfig.purgeOverlay.clear();
+		}
+	}
+
+	void AshitaInterface::Direct3DRender()
+	{
+		const auto imgui = m_ashitaCore->GetGuiManager();
+
+		if (imgui->Begin(u8"XiPivot Status", &m_showConfigWindow) == true)
+		{
+			imgui->Checkbox(u8"debug log", &m_uiConfig.debugState);
+			imgui->LabelText(u8"root path", "%s", m_settings.rootPath.c_str());
+			imgui->Separator();
+			imgui->BeginChild(u8"overlay_list");
+			{
+				int prio = 0;
+				for (const auto& path : m_settings.overlays)
+				{
+					if (imgui->SmallButton("-"))
+					{
+						m_uiConfig.purgeOverlay.emplace_back(path);
+					}
+					imgui->SameLine();
+					imgui->Text(u8"[%02d] %s", prio++, path.c_str());
+				}
+			}
+			imgui->EndChild();
+
+			imgui->InputText("", m_uiConfig.addOverlay, sizeof(m_uiConfig.addOverlay));
+			imgui->SameLine();
+			if (imgui->SmallButton(u8"add"))
+			{
+				if (strlen(m_uiConfig.addOverlay) != 0)
+				{
+					// FIXME: probably not the best place to do this
+					instance().addOverlay(m_uiConfig.addOverlay);
+					m_uiConfig.addOverlay[0] = '\0';
+				}
+			}
+		}
+		imgui->End();
+	}
 
 	/* ILogProvider */
 	void AshitaInterface::logMessage(Core::ILogProvider::LogLevel level, std::string msg)
@@ -225,6 +276,7 @@ namespace XiPivot
 			va_end(args);
 		}
 	}
+
 	/* private parts below */
 
 	AshitaInterface::Settings::Settings()
