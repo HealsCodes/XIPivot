@@ -49,8 +49,9 @@ namespace XiPivot
 
 		bool HandleCommand(const char *command, int32_t type) override;
 
-		void Direct3DPreRender();
-		void Direct3DRender();
+		bool Direct3DInitialize(IDirect3DDevice8* device) override;
+		void Direct3DPreRender() override;
+		void Direct3DRender() override;
 
 		/* ILogProvider */
 		void logMessage(Core::ILogProvider::LogLevel level, std::string msg);
@@ -83,9 +84,9 @@ namespace XiPivot
 
 		struct
 		{
-			bool                     debugState;
-			std::vector<std::string> purgeOverlay;
-			char                     addOverlay[MAX_PATH];
+			bool        debugState;
+			std::string purgeOverlay;
+			char        addOverlay[MAX_PATH];
 		} m_uiConfig;
 
 		/* Ashita runtime data */

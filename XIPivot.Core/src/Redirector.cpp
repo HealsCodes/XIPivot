@@ -149,7 +149,7 @@ namespace XiPivot
 		void Redirector::setDebugLog(bool state)
 		{
 			m_logDebug = (state) ? ILogProvider::LogLevel::Debug : ILogProvider::LogLevel::Discard;
-			m_logger->logMessageF(ILogProvider::LogLevel::Info, "m_logDebug = ", state ? "Debug" : "Discard");
+			m_logger->logMessageF(ILogProvider::LogLevel::Info, "m_logDebug = %s", state ? "Debug" : "Discard");
 		}
 
 		void Redirector::setRootPath(const std::string &newRoot)
