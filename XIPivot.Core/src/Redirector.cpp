@@ -27,6 +27,7 @@
  */
 
 #include "Redirector.h"
+#include "MemCache.h"
 #include "detours.h"
 
 #include <cctype>
@@ -207,8 +208,9 @@ namespace XiPivot
 		{
 			m_logger->logMessageF(m_logDebug, "lpFileName = '%s'", static_cast<const char*>(a0));
 
-			const char* path = findRedirect(a0);
-			return Redirector::s_procCreateFileA((LPCSTR)path, a1, a2, a3, a4, a5, a6);
+			int32_t pathKey = -1;
+			const char* path = findRedirect(a0, pathKey);
+			return MemCache::instance().trackCacheObject(Redirector::s_procCreateFileA((LPCSTR)path, a1, a2, a3, a4, a5, a6), pathKey);
 		}
 
 		HANDLE __stdcall
@@ -216,12 +218,13 @@ namespace XiPivot
 		{
 			m_logger->logMessageF(m_logDebug, "lpFileName = '%s'", static_cast<const char*>(a0));
 
-			const char* path = findRedirect(a0);
+			int32_t _unusedPathKey = -1;
+			const char* path = findRedirect(a0, _unusedPathKey);
 			return Redirector::s_procFindFirstFileA((LPCSTR)path, a1);
 		}
 
 		/* private stuff */
-		const char *Redirector::findRedirect(const char *realPath)
+		const char *Redirector::findRedirect(const char *realPath, int32_t &outPathKey)
 		{
 			const char *romPath = strstr(realPath, "//ROM");
 			const char *sfxPath;
@@ -241,7 +244,8 @@ namespace XiPivot
 			{
 				int32_t romIndex = pathToIndex(romPath);
 				const auto res = m_resolvedPaths.find(romIndex);
-				
+			
+				outPathKey = romIndex;
 				if(res != m_resolvedPaths.end())
 				{
 					m_logger->logMessageF(m_logDebug, "using overlay '%s'\n", (*res).second.c_str());
@@ -253,6 +257,7 @@ namespace XiPivot
 				int32_t sfxIndex = pathToIndexAudio(sfxPath);
 				const auto res = m_resolvedPaths.find(sfxIndex);
 				
+				outPathKey = sfxIndex;
 				if(res != m_resolvedPaths.end())
 				{
 					m_logger->logMessageF(m_logDebug, "using overlay '%s'\n", (*res).second.c_str());

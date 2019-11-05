@@ -125,7 +125,7 @@ namespace XiPivot
 			HANDLE __stdcall interceptCreateFileA(LPCSTR a0, DWORD a1, DWORD a2, LPSECURITY_ATTRIBUTES a3, DWORD a4, DWORD a5, HANDLE a6);
 			HANDLE __stdcall interceptFindFirstFileA(LPCSTR a0, LPWIN32_FIND_DATAA a2);
 
-			const char *findRedirect(const char *realPath);
+			const char *findRedirect(const char *realPath, int32_t &outPathKey);
 
 			/* first-time scan of overlay directories - basically "find all dat paths and record them" */
 			bool scanOverlayPath(const std::string &overlayPath);

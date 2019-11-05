@@ -75,12 +75,18 @@ namespace XiPivot
 			bool debugLog;
 			std::string rootPath;
 			std::vector<std::string> overlays;
+
+			bool cacheEnabled;
+			int32_t cacheSize;
+			int32_t cachePurgeDelay;
 		};
 
 		Settings               m_settings;
+		time_t                 m_nextCachePurge;
 
 		/* UI state */
-		bool                     m_showConfigWindow;
+		bool                   m_showConfigWindow;
+		bool                   m_showCacheWindow;
 
 		struct
 		{

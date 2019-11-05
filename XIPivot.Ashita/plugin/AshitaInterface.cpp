@@ -27,6 +27,7 @@
  */
 
 #include "AshitaInterface.h"
+#include "MemCache.h"
 
 #include <regex>
 
@@ -89,6 +90,8 @@ namespace XiPivot
 
 	bool AshitaInterface::Initialize(IAshitaCore *core, ILogManager *log, uint32_t id)
 	{
+		bool initialized = true;
+
 		m_ashitaCore = core;
 		m_logManager = log;
 		m_pluginId = id;
@@ -106,15 +109,32 @@ namespace XiPivot
 				{
 					instance().addOverlay(path);
 				}
+
+				if (m_settings.cacheEnabled)
+				{
+					Core::MemCache::instance().setDebugLog(m_settings.debugLog);
+					Core::MemCache::instance().setCacheAllocation(m_settings.cacheSize);
+					initialized &= Core::MemCache::instance().setupHooks();
+
+					if (initialized)
+					{
+						m_nextCachePurge = time(nullptr) + m_settings.cachePurgeDelay;
+					}
+				}
 			}
 			m_settings.save(m_config);
 		}
 
-		return instance().setupHooks();
+		initialized &= instance().setupHooks();
+		return initialized;
 	}
 
 	void AshitaInterface::Release(void)
 	{
+		if (m_settings.cacheEnabled)
+		{
+			Core::MemCache::instance().releaseHooks();
+		}
 		instance().releaseHooks();
 	}
 
@@ -164,6 +184,10 @@ namespace XiPivot
 				chatPrintf("   $cs(19)Adding or removing overlays at runtime can cause $cs(16)all kinds of unexpected behaviour.$cr");
 				chatPrintf("   $cs(19)It is recommended to edit XIPivot.xml instead - $cs(16)you have been warned.$cr");
 			}
+			else if (args.size() == 2 && (args[1] == "c" || args[1] == "cache") && m_settings.cacheEnabled == true)
+			{
+				m_showCacheWindow = !m_showCacheWindow;
+			}
 			else
 			{
 				m_uiConfig.addOverlay[0] = '\0';
@@ -195,6 +219,16 @@ namespace XiPivot
 		{
 			instance().removeOverlay(m_uiConfig.purgeOverlay);
 			m_uiConfig.purgeOverlay.clear();
+		}
+
+		if (m_settings.cacheEnabled == true)
+		{
+			const time_t now = time(nullptr);
+			if (now > m_nextCachePurge)
+			{
+				m_nextCachePurge = now + m_settings.cachePurgeDelay;
+				Core::MemCache::instance().purgeCacheObjects(m_settings.cachePurgeDelay);
+			}
 		}
 	}
 
@@ -242,6 +276,25 @@ namespace XiPivot
 				imgui->Separator();
 				imgui->TextDisabled(u8"Adding or removing overlays at runtime can cause all kinds of unexpected behaviour.");
 				imgui->TextDisabled(u8"It is recommended to edit XIPivot.xml instead");
+			}
+			imgui->End();
+		}
+
+		if (m_showCacheWindow)
+		{
+			if (imgui->Begin(u8"XiPivot Cache", &m_showCacheWindow, ImVec2(0, 0), 0.25f, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar) == true)
+			{
+				const auto stats = Core::MemCache::instance().getCacheStats();
+				imgui->LabelText(u8"allocation", "%d.%2.2dmb", stats.allocation / 0x10000, stats.allocation % 0x10000);
+				imgui->LabelText(u8"used size", "%d.%2.2dmb", stats.used / 0x10000, stats.used % 0x10000);
+				imgui->LabelText(u8"objects", "%d", stats.activeObjects);
+				imgui->Separator();
+				if (stats.cacheHits != 0 || stats.cacheMisses != 0)
+				{
+					imgui->LabelText(u8"cache hits", "%d%%", stats.cacheHits * 100 / (stats.cacheHits + stats.cacheMisses));
+					imgui->Separator();
+				}
+				imgui->LabelText(u8"next purge in", "%ds", m_nextCachePurge - time(nullptr));
 			}
 			imgui->End();
 		}
@@ -304,6 +357,7 @@ namespace XiPivot
 		rootPath = std::string(workPath) + "/DATs";
 		overlays.clear();
 		debugLog = false;
+		cacheEnabled = false;
 	}
 
 	bool AshitaInterface::Settings::load(IConfigurationManager *config)
@@ -322,6 +376,11 @@ namespace XiPivot
 			{
 				overlays = split(oL, ",");
 			}
+
+			cacheEnabled = config->get_bool("XIPivot", "cache_enabled", false);
+			cacheSize = config->get_int32("XIPivot", "cache_size", 0x80000000); // 2gb
+			cachePurgeDelay = config->get_int32("XIPivot", "cache_max_age", 600); // 10min
+
 			return true;
 		}
 		return false;
