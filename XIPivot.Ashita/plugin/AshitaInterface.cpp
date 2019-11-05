@@ -103,6 +103,8 @@ namespace XiPivot
 		{
 			if (m_settings.load(m_config))
 			{
+				m_uiConfig.debugState = m_settings.debugLog;
+
 				instance().setDebugLog(m_settings.debugLog);
 				instance().setRootPath(m_settings.rootPath);
 				for (const auto &path : m_settings.overlays)
@@ -366,7 +368,7 @@ namespace XiPivot
 		{
 			const char *rP = config->get_string("XIPivot", "root_path");
 			const char *oL = config->get_string("XIPivot", "overlays");
-			const bool dbg = config->get_bool("XIPivot", "debug_log", true);
+			const bool dbg = config->get_bool("XIPivot", "debug_log", false);
 
 			debugLog = dbg;
 			rootPath = (rP ? rP : rootPath);
