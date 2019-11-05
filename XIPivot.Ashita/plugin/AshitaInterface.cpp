@@ -114,6 +114,7 @@ namespace XiPivot
 
 				if (m_settings.cacheEnabled)
 				{
+					Core::MemCache::instance().setLogProvider(this);
 					Core::MemCache::instance().setDebugLog(m_settings.debugLog);
 					Core::MemCache::instance().setCacheAllocation(m_settings.cacheSize);
 					initialized &= Core::MemCache::instance().setupHooks();
