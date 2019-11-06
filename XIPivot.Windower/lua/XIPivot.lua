@@ -28,7 +28,7 @@
 
 _addon.name = 'XIPivot'
 _addon.author = 'Heals'
-_addon.version = '0.3.1'
+_addon.version = '0.4.1'
 _addon.command = 'pivot'
 
 config = require('config')
@@ -39,8 +39,11 @@ require('lists')
 local addon_path = windower.addon_path:gsub('\\', '/')
 local root_path = addon_path .. 'data/DATs'
 defaults = T{}
---defaults.root_path = root_path
 defaults.overlays  = L{}
+
+defaults.cache_enabled = false
+defaults.cache_size = 0x80000000
+defaults.cache_max_age = 600
 
 settings = config.load(defaults)
 config.save(settings, 'all')
@@ -50,13 +53,14 @@ require('_XIPivot')
 
 config.register(settings, function(_settings)
 	_XIPivot.disable()
+	_XIPivot.setup_cache(_settings.cache_enabled, _settings.cache_size, _settings.cache_max_age)
+
 	-- try to unload any active overlays in case this is not the first call
 	for _,overlay in ipairs(_XIPivot.diagnostics()['overlays']) do
 		_XIPivot.remove_overlay(overlay)
 	end
 
 	-- setup things
-	--_XIPivot.set_root_path(_settings.root_path)
 	_XIPivot.set_root_path(root_path)
 	for i,path in ipairs(_settings.overlays) do
 		if _XIPivot.add_overlay(path) == false then
@@ -70,6 +74,10 @@ end)
 
 windower.register_event('unload', function()
 	_XIPivot.disable()
+end)
+
+windower.register_event('prerender', function()
+	_XIPivot.on_tick()
 end)
 
 windower.register_event('addon command', function(command, ...)
