@@ -288,15 +288,16 @@ namespace XiPivot
 			if (imgui->Begin(u8"XiPivot Cache", &m_showCacheWindow, ImVec2(0, 0), 0.25f, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar) == true)
 			{
 				const auto stats = Core::MemCache::instance().getCacheStats();
-				imgui->LabelText(u8"allocation", "%d.%2.2dmb", stats.allocation / 0x10000, stats.allocation % 0x10000);
-				imgui->LabelText(u8"used size", "%d.%2.2dmb", stats.used / 0x10000, stats.used % 0x10000);
-				imgui->LabelText(u8"objects", "%d", stats.activeObjects);
-				imgui->Separator();
 				if (stats.cacheHits != 0 || stats.cacheMisses != 0)
 				{
 					imgui->LabelText(u8"cache hits", "%d%%", stats.cacheHits * 100 / (stats.cacheHits + stats.cacheMisses));
 					imgui->Separator();
 				}
+				imgui->LabelText(u8"allocation", "%d.%2.2dmb", stats.allocation / 0x100000, stats.allocation % 0x100000);
+				imgui->LabelText(u8"used size", "%d.%2.2dmb", stats.used / 0x100000, stats.used % 0x100000);
+				imgui->LabelText(u8"objects", "%d", stats.activeObjects);
+				imgui->Separator();
+
 				imgui->LabelText(u8"next purge in", "%ds", m_nextCachePurge - time(nullptr));
 			}
 			imgui->End();
