@@ -32,7 +32,7 @@
 
 #include <Windows.h>
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <string>
 
@@ -157,15 +157,15 @@ namespace XiPivot
 
 			bool performCachedRead(HANDLE hRef, LPVOID lpBuffer, DWORD bytesToRead, LPDWORD bytesRead);
 
-			bool                             m_hooksSet;
+			bool                                       m_hooksSet;
 
-			CacheStatus                      m_stats;
+			CacheStatus                                m_stats;
 
-			std::map<HANDLE, CachePointer>   m_cachePointers;
-			std::map<int32_t, CacheObject*>  m_cacheObjects;
+			std::unordered_map<HANDLE, CachePointer>   m_cachePointers;
+			std::unordered_map<int32_t, CacheObject*>  m_cacheObjects;
 
-			ILogProvider::LogLevel           m_logDebug;
-			ILogProvider*                    m_logger;
+			ILogProvider::LogLevel                     m_logDebug;
+			ILogProvider*                              m_logger;
 		};
 	}
 }
