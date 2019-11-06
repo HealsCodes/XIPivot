@@ -76,14 +76,14 @@ namespace XiPivot
 			/* internally calls Redirector::addOverlayPath
 			 *
 			 * arguments: [1] - string: the relative overlay path
-			 * returns: a bolean representing the operation result
+			 * returns: a boolean representing the operation result
 			 */
 			static int lua_addOverlayPath(lua_State *L);
 
 			/* internally calls Redirector::removeOverlayPath
 			 *
 			 * arguments: [1] - string: the relative overlay path
-			 * returns: a bolean representing the operation result
+			 * returns: none
 			 */
 			static int lua_removeOverlayPath(lua_State *L);
 
@@ -99,8 +99,36 @@ namespace XiPivot
 			 */
 			static int lua_getDiagnostics(lua_State *L);
 
+			/* configure the internal memory cache for DAT files 
+			 *
+			 * arguments: [1] - bool: set caching enabled / disabled
+			 * arguments: [2] - int: max allowed cache allocation in byte
+			 * arguments: [3] - int: time between cache purges / max unused age (in seconds)
+			 * returns: none
+			 */
+			static int lua_setupCache(lua_State *L);
+
+			/* callback on each pre-render tick - used for internal time keeping 
+			 *
+			 * arguments: none
+			 * returns: none
+			 */
+			static int lua_onTick(lua_State *L);
+
 		protected:
 			WindowerInterface(void) : Redirector() {};
+
+		private:
+			/* local backup of the cache state */
+			struct
+			{
+				bool   enabled = false; /* cache state */
+
+				size_t allocation;  /* max allocation size in bytes*/
+
+				time_t maxAge;      /* max time in seconds between purges / max object age */
+				time_t nextPurge;   /* timestamp of the next purge */
+			} m_cacheConfig;
 	};
 }
 

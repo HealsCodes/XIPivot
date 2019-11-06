@@ -27,6 +27,9 @@
  */
 
 #include "WindowerInterface.h"
+#include "MemCache.h"
+
+#include <ctime>
 
 namespace XiPivot
 {
@@ -41,6 +44,9 @@ namespace XiPivot
 			{ "add_overlay"    , WindowerInterface::lua_addOverlayPath },
 			{ "remove_overlay" , WindowerInterface::lua_removeOverlayPath },
 
+			{ "setup_cache"    , WindowerInterface::lua_setupCache },
+			{ "on_tick"        , WindowerInterface::lua_onTick },
+
 			{ "diagnostics"    , WindowerInterface::lua_getDiagnostics },
 
 			{ NULL, NULL }
@@ -52,13 +58,40 @@ namespace XiPivot
 
 	int WindowerInterface::lua_enable(lua_State *L)
 	{
-		lua_pushboolean(L, instance().setupHooks() ? TRUE : FALSE);
+		bool res = true;
+		const auto self = static_cast<WindowerInterface&>(instance());
+
+		if (self.m_cacheConfig.enabled)
+		{
+			Core::MemCache::instance().setCacheAllocation(self.m_cacheConfig.allocation);
+			res &= Core::MemCache::instance().setupHooks();
+		}
+		else
+		{
+			Core::MemCache::instance().releaseHooks();
+			Core::MemCache::instance().setCacheAllocation(0);
+		}
+
+		res &= instance().setupHooks();
+
+		lua_pushboolean(L, res ? TRUE : FALSE);
 		return 1;
 	}
 
 	int WindowerInterface::lua_disable(lua_State *L)
 	{
-		lua_pushboolean(L, instance().releaseHooks() ? TRUE : FALSE);
+		bool res = true;
+		const auto self = static_cast<WindowerInterface&>(instance());
+
+		if (self.m_cacheConfig.enabled)
+		{
+			res &= Core::MemCache::instance().releaseHooks();
+			Core::MemCache::instance().setCacheAllocation(0);
+		}
+
+		res &= instance().releaseHooks();
+
+		lua_pushboolean(L, res ? TRUE : FALSE);
 		return 1;
 	}
 
@@ -121,6 +154,38 @@ namespace XiPivot
 
 		lua_setfield(L, -2, "overlays");
 		return 1;
+	}
+
+	int WindowerInterface::lua_setupCache(lua_State* L)
+	{
+		if (lua_gettop(L) != 3 || !lua_isboolean(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3))
+		{
+			lua_pushstring(L, "invalid arguments, expected `bool`,`number`,`number`");
+			lua_error(L);
+		}
+		auto self = static_cast<WindowerInterface&>(instance());
+		self.m_cacheConfig.enabled = lua_toboolean(L, 1) == TRUE;
+		self.m_cacheConfig.allocation = lua_tointeger(L, 2);
+		self.m_cacheConfig.maxAge = lua_tointeger(L, 3);
+
+		return 0;
+	}
+
+	int WindowerInterface::lua_onTick(lua_State* L)
+	{
+		auto self = static_cast<WindowerInterface&>(instance());
+
+		if (self.m_cacheConfig.enabled)
+		{
+			time_t now = time(nullptr);
+			if (now > self.m_cacheConfig.nextPurge)
+			{
+				self.m_cacheConfig.nextPurge = now + self.m_cacheConfig.maxAge;
+				Core::MemCache::instance().purgeCacheObjects(self.m_cacheConfig.maxAge);
+			}
+		}
+
+		return 0;
 	}
 }
 
