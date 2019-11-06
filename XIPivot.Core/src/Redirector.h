@@ -32,7 +32,7 @@
 
 #include <Windows.h>
 
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <string>
 
@@ -142,14 +142,14 @@ namespace XiPivot
 			int32_t pathToIndexAudio(const char *soundPath);
 
 
-			bool                           m_hooksSet;
+			bool                                     m_hooksSet;
 
-			std::string                    m_rootPath;
-			std::vector<std::string>       m_overlayPaths;
-			std::map<int32_t, std::string> m_resolvedPaths;
+			std::string                              m_rootPath;
+			std::vector<std::string>                 m_overlayPaths;
+			std::unordered_map<int32_t, std::string> m_resolvedPaths;
 
-			ILogProvider::LogLevel         m_logDebug;
-			ILogProvider*                  m_logger;
+			ILogProvider::LogLevel                   m_logDebug;
+			ILogProvider*                            m_logger;
 		};
 	}
 }
