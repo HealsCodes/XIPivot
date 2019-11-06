@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="module\lua_module.cpp" />
-    <ClCompile Include="module\Windowerinterface.cpp" />
+    <ClCompile Include="module\WindowerInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="module\WindowerInterface.h" />
