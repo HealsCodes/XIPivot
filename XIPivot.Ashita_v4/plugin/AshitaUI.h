@@ -1,10 +1,10 @@
 /*
  * 	Copyright © 2019-2020, Renee Koecher
  * 	All rights reserved.
- * 
+ *
  * 	Redistribution and use in source and binary forms, with or without
  * 	modification, are permitted provided that the following conditions are met :
- * 
+ *
  * 	* Redistributions of source code must retain the above copyright
  * 	  notice, this list of conditions and the following disclaimer.
  * 	* Redistributions in binary form must reproduce the above copyright
@@ -13,7 +13,7 @@
  * 	* Neither the name of XIPivot nor the
  * 	  names of its contributors may be used to endorse or promote products
  * 	  derived from this software without specific prior written permission.
- * 
+ *
  * 	THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
  * 	ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
  * 	WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -29,75 +29,71 @@
 #pragma once
 
 #include "ADK_v4/Ashita.h"
-
-#include "Redirector.h"
 #include "../IPolRemoteInterface.h"
 
 namespace XiPivot
 {
-	namespace Pol
+	namespace Plugin
 	{
-		class AshitaInterface : public IPolPlugin, public Plugin::IPolRemoteInterface, public Core::ILogProvider, private Core::Redirector
+		class AshitaUI : public IPlugin
 		{
 
 		public:
-			AshitaInterface(const char* args);
-			virtual ~AshitaInterface(void) {};
+			AshitaUI(const char* args);
+			virtual ~AshitaUI(void) {};
 
 			/* Ashita plugin requirements */
-			bool Initialize(IAshitaCore* core, ILogManager* log, uint32_t id) override;
-			void Release(void) override;
-
 			const char* GetName(void) const override;
 			const char* GetAuthor(void) const override;
 			const char* GetDescription(void) const override;
 			const char* GetLink(void) const override;
-
 			double GetVersion(void) const override;
+			double GetInterfaceVersion(void) const override;
+			int32_t GetPriority(void) const override;
+			uint32_t GetFlags(void) const override;
 
-			/* IPolRemoteInterface */
 
-			bool AddOverlay(const std::string& path) override;
-			bool RemoveOverlay(const std::string& path) override;
+			bool Initialize(IAshitaCore* core, ILogManager* log, uint32_t id) override;
+			void Release(void) override;
 
-			bool GetDebugLogState(void) const override;
-			std::string GetRootPath(void) const override;
-			const std::vector<std::string> GetOverlays(void) const override;
+			bool HandleCommand(int32_t mode, const char* command, bool injected) override;
 
-			void SetDebugLogState(bool enabled) override;
-
-			bool GetCacheState(void) const override;
-			struct Plugin::IPolRemoteInterface::CacheStatus GetCacheStats(void) const override;
-			uint32_t GetCacheSize(void) const override;
-			uint32_t GetCachePurgeDelay(void) const override;
-
-			void PurgeCacheObjects(time_t maxAge) override;
-			void SetCacheParams(bool state, uint32_t size, uint32_t maxAge) override;
-
-			/* ILogProvider */
-			void logMessage(Core::ILogProvider::LogLevel level, std::string msg);
-			void logMessageF(Core::ILogProvider::LogLevel level, std::string msg, ...);
+			bool Direct3DInitialize(IDirect3DDevice8* device) override;
+			void Direct3DEndScene(bool isRenderingBackBuffer) override;
+			void Direct3DPresent(const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion) override;
 
 		private:
+			bool getPolRemote(IPolRemoteInterface** remoteInterface) const;
 
-			struct Settings
+			/* helpers for GUI config */
+			void renderOverlayConfigUI(IGuiManager* imgui);
+			void renderMemCacheConfigUI(IGuiManager* imgui);
+			//void renderAboutUI(IGuiManager* imgui);
+			void renderCacheStatsUI(IGuiManager* imgui);
+
+			std::vector<std::string> listAvailableOverlays() const;
+
+			/* UI state */
+			bool                 m_showConfigWindow;
+			bool                 m_showCacheWindow;
+
+			struct
 			{
-				Settings();
+				int                      activeTab;
 
-				bool load(IConfigurationManager* config);
-				void save(IConfigurationManager* config);
+				/* overlays */
+				bool                     debugState;
+				std::string              purgeOverlay;
+				std::vector<std::string> allOverlays;
 
-				bool debugLog;
-				std::string rootPath;
-				std::vector<std::string> overlays;
+				/* cache */
+				bool                     cacheState;
+				int32_t                  cacheSizeMB;
+				int32_t                  cachePurgeDelay;
+				bool                     applyCacheChanges;
+			} m_uiConfig;
 
-				bool cacheEnabled;
-				uint32_t cacheSize;
-				uint32_t cachePurgeDelay;
-			};
-
-			std::string m_pluginArgs;
-			Settings    m_settings;
+			time_t m_nextCachePurge;
 		};
 	}
 }
