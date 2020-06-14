@@ -19,28 +19,23 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="polplugin\AshitaInterface.cpp" />
-    <ClCompile Include="polplugin\plugin.cpp" />
+    <ClCompile Include="plugin\AshitaUI.cpp" />
+    <ClCompile Include="plugin\plugin.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="plugin\AshitaUI.h" />
     <ClInclude Include="IPolRemoteInterface.h" />
-    <ClInclude Include="polplugin\AshitaInterface.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\XIPivot.Core\XIPivot.Core.vcxproj">
-      <Project>{55298b14-2a3f-4a50-aacc-d32a1945e100}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="polplugin\exports.def" />
+    <None Include="plugin\exports.def" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{85BC8434-595C-455E-93AD-B7FB7DA7C45B}</ProjectGuid>
+    <ProjectGuid>{85BC8434-595C-455E-93AD-B7FB7DA7C45C}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>XIpivotAshita</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>polplugin</ProjectName>
+    <ProjectName>plugin</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -100,7 +95,7 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)build\_lib\$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)build\_tmp\$(ProjectName)\$(Configuration)\</IntDir>
-    <TargetName>XIPivot.polcore</TargetName>
+    <TargetName>XIPivot</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -120,11 +115,11 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>polplugin\exports.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>plugin\exports.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /E /I /Y /Q "$(ProjectDir)resources" "$(SolutionDir)build\$(Configuration)\Ashita_v4"
-xcopy /Y /Q "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)build\$(Configuration)\Ashita_v4\polplugins\$(TargetName)$(TargetExt)*"</Command>
+xcopy /Y /Q "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)build\$(Configuration)\Ashita_v4\plugins\$(TargetName)$(TargetExt)*"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>echo "Ignore the following 'File not found' error"
@@ -168,15 +163,15 @@ rmdir /S /Q "$(SolutionDir)build\$(Configuration)\Ashita_v4"</Command>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ModuleDefinitionFile>polplugin\exports.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>plugin\exports.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /E /I /Y /Q "$(ProjectDir)resources" "$(SolutionDir)build\$(Configuration)\Ashita_v4"
-xcopy /Y /Q "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)build\$(Configuration)\Ashita_v4\polplugins\$(TargetName)$(TargetExt)*"</Command>
+xcopy /Y /Q "$(OutDir)$(TargetName)$(TargetExt)" "$(SolutionDir)build\$(Configuration)\Ashita_v4\plugins\$(TargetName)$(TargetExt)*"</Command>
     </PostBuildEvent>
     <PreBuildEvent>
       <Command>echo "Ignore the following 'File not found' error"
-rmdir /S /Q "$(SolutionDir)build\$(Configuration)\Ashita_v4\polplugins"</Command>
+rmdir /S /Q "$(SolutionDir)build\$(Configuration)\Ashita_v4\plugins"</Command>
     </PreBuildEvent>
     <PreBuildEvent>
       <Message>Clean up old Post-Build results</Message>

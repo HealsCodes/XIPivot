@@ -77,11 +77,6 @@ namespace XiPivot
 					Core::MemCache::instance().setLogProvider(this);
 					Core::MemCache::instance().setDebugLog(m_settings.debugLog);
 					Core::MemCache::instance().setCacheAllocation(m_settings.cacheSize);
-
-					if (initialized)
-					{
-						m_nextCachePurge = time(nullptr) + m_settings.cachePurgeDelay;
-					}
 				}
 				m_settings.save(config);
 			}
@@ -102,6 +97,104 @@ namespace XiPivot
 			}
 			instance().releaseHooks();
 			IPolPlugin::Release();
+		}
+
+		/* IPolRemoteInterface */
+		bool AshitaInterface::AddOverlay(const std::string& path)
+		{
+			if (instance().addOverlay(path))
+			{
+				m_settings.overlays = instance().overlayList();
+				m_settings.save(m_AshitaCore->GetConfigurationManager());
+				return true;
+			}
+			return false;
+		}
+
+		bool AshitaInterface::RemoveOverlay(const std::string& path)
+		{
+			std::vector<std::string>::iterator it;
+
+			instance().removeOverlay(path);
+
+			m_settings.overlays = instance().overlayList();
+			m_settings.save(m_AshitaCore->GetConfigurationManager());
+			return true;
+		}
+
+		bool AshitaInterface::GetDebugLogState(void) const
+		{
+			return m_settings.debugLog;
+		}
+
+		std::string AshitaInterface::GetRootPath(void) const
+		{
+			return instance().rootPath();
+		}
+
+		const std::vector<std::string> AshitaInterface::GetOverlays(void) const
+		{
+			return instance().overlayList();
+		}
+
+		void AshitaInterface::SetDebugLogState(bool enabled)
+		{
+			if (enabled != m_settings.debugLog)
+			{
+				m_settings.debugLog = enabled;
+				m_settings.save(m_AshitaCore->GetConfigurationManager());
+			}
+		}
+
+		bool AshitaInterface::GetCacheState(void) const
+		{
+			return m_settings.cacheEnabled;
+		}
+
+		struct Plugin::IPolRemoteInterface::CacheStatus AshitaInterface::GetCacheStats(void) const
+		{
+			struct Plugin::IPolRemoteInterface::CacheStatus res;
+			auto memCacheStats = Core::MemCache::instance().getCacheStats();
+
+			res.activeObjects = memCacheStats.activeObjects;
+			res.allocation = memCacheStats.allocation;
+			res.cacheHits = memCacheStats.cacheHits;
+			res.cacheMisses = memCacheStats.cacheMisses;
+			res.used = memCacheStats.used;
+
+			return res;
+		}
+
+		uint32_t AshitaInterface::GetCacheSize(void) const
+		{
+			return m_settings.cacheSize;
+		}
+
+		uint32_t AshitaInterface::GetCachePurgeDelay(void) const
+		{
+			return m_settings.cachePurgeDelay;
+		}
+
+		void AshitaInterface::PurgeCacheObjects(time_t maxAge)
+		{
+			Core::MemCache::instance().purgeCacheObjects(maxAge);
+		}
+
+		void AshitaInterface::SetCacheParams(bool state, uint32_t size, uint32_t maxAge)
+		{
+			m_settings.cacheEnabled = state;
+			m_settings.cacheSize = size;
+			m_settings.cachePurgeDelay = maxAge;
+
+			Core::MemCache::instance().setCacheAllocation(m_settings.cacheSize);
+			if (m_settings.cacheEnabled == true && Core::MemCache::instance().hooksActive() == false)
+			{
+				m_settings.cacheEnabled = Core::MemCache::instance().setupHooks();
+			}
+			else if (m_settings.cacheEnabled == false && Core::MemCache::instance().hooksActive() == true)
+			{
+				Core::MemCache::instance().releaseHooks();
+			}
 		}
 
 		/* ILogProvider */
