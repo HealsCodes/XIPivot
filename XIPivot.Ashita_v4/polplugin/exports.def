@@ -1,0 +1,4 @@
+LIBRARY "XIPivot.dll"
+EXPORTS
+	expCreatePolPlugin @1
+	expGetInterfaceVersion @2
