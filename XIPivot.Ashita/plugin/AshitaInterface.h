@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include "ADK/Ashita.h"
+#include "ADK_v3/Ashita.h"
 #include "Redirector.h"
 
 namespace XiPivot
