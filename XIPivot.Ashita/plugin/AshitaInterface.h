@@ -65,6 +65,14 @@ namespace XiPivot
 		void chatPrint(const char *msg);
 		void chatPrintf(const char *fmt, ...);
 
+		/* helpers for GUI config */
+		void renderOverlayConfigUI(IGuiManager* imgui);
+		void renderMemCacheConfigUI(IGuiManager* imgui);
+		void renderAboutUI(IGuiManager* imgui);
+		void renderCacheStatsUI(IGuiManager* imgui);
+
+		std::vector<std::string> listAvailableOverlays() const;
+
 		struct Settings
 		{
 			Settings();
@@ -77,8 +85,8 @@ namespace XiPivot
 			std::vector<std::string> overlays;
 
 			bool cacheEnabled;
-			int32_t cacheSize;
-			int32_t cachePurgeDelay;
+			uint32_t cacheSize;
+			uint32_t cachePurgeDelay;
 		};
 
 		Settings               m_settings;
@@ -90,9 +98,18 @@ namespace XiPivot
 
 		struct
 		{
-			bool        debugState;
-			std::string purgeOverlay;
-			char        addOverlay[MAX_PATH];
+			int                      activeTab;
+
+			/* overlays */
+			bool                     debugState;
+			std::string              purgeOverlay;
+			std::vector<std::string> allOverlays;
+
+			/* cache */
+			bool                     cacheState;
+			int32_t                  cacheSizeMB;
+			int32_t                  cachePurgeDelay;
+			bool                     applyCacheChanges;
 		} m_uiConfig;
 
 		/* Ashita runtime data */

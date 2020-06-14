@@ -35,6 +35,7 @@
 #include <unordered_map>
 #include <vector>
 #include <string>
+#include <atomic>
 
 namespace XiPivot
 {
@@ -84,12 +85,13 @@ namespace XiPivot
 				PBYTE    data;
 
 				time_t   lastUse;
+
+				std::atomic_int ref;
 			};
 
 			/* pointer from a HANDLE to a cache object */
 			struct CachePointer
 			{
-				DWORD    offset;
 				int32_t  pathKey;
 			};
 
@@ -157,15 +159,17 @@ namespace XiPivot
 
 			bool performCachedRead(HANDLE hRef, LPVOID lpBuffer, DWORD bytesToRead, LPDWORD bytesRead);
 
-			bool                                       m_hooksSet;
+			bool                                        m_hooksSet;
 
-			CacheStatus                                m_stats;
+			CacheStatus                                 m_stats;
+			std::atomic_bool                            m_inSyscall;
 
-			std::unordered_map<HANDLE, CachePointer>   m_cachePointers;
-			std::unordered_map<int32_t, CacheObject*>  m_cacheObjects;
+			std::unordered_map<ptrdiff_t, CachePointer> m_cachePointers;
+			std::unordered_map<int32_t, CacheObject*>   m_cacheObjects;
 
-			ILogProvider::LogLevel                     m_logDebug;
-			ILogProvider*                              m_logger;
+			ILogProvider::LogLevel                      m_logDebug;
+			ILogProvider*                               m_logger;
+
 		};
 	}
 }

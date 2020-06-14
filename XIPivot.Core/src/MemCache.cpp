@@ -154,7 +154,7 @@ namespace XiPivot
 		void MemCache::setCacheAllocation(size_t allocationSize)
 		{
 			/* this changes the allowed allocation but it does not trigger a cache purge */
-			m_logger->logMessageF(ILogProvider::LogLevel::Info, "changing cache allocation to %d.%dMB", allocationSize / 0x100000, allocationSize % 0x100000);
+			m_logger->logMessageF(ILogProvider::LogLevel::Info, "changing cache allocation to %dMB", allocationSize / 0x100000);
 			m_stats.allocation = allocationSize;
 		}
 	
@@ -163,11 +163,16 @@ namespace XiPivot
 		{
 			if (m_stats.allocation != 0 && hRef != nullptr && pathKey != -1)
 			{
-				if (m_cachePointers.find(hRef) == m_cachePointers.end()
-					&& getCachedObject(hRef, pathKey) != nullptr)
+				if (m_cachePointers.find(reinterpret_cast<ptrdiff_t>(hRef)) == m_cachePointers.end())
 				{
-					m_cachePointers.emplace(hRef, CachePointer({ 0, pathKey }));
-					m_logger->logMessageF(ILogProvider::LogLevel::Debug, "started to track HANDLE %p => %d", hRef, pathKey);
+
+					auto cacheObj = getCachedObject(hRef, pathKey);
+					if (cacheObj != nullptr)
+					{
+						++cacheObj->ref;
+						m_cachePointers.emplace(reinterpret_cast<ptrdiff_t>(hRef), CachePointer({ pathKey }));
+						m_logger->logMessageF(m_logDebug, "started to track HANDLE %p => %d", hRef, pathKey);
+					}
 				}
 			}
 			return hRef;
@@ -175,25 +180,34 @@ namespace XiPivot
 
 		size_t MemCache::purgeCacheObjects(time_t maxAge)
 		{
+			if (m_inSyscall)
+			{
+				return 0;
+			}
+
 			size_t objectsPurged = 0;
 			time_t oldAge = time(nullptr) - maxAge;
 
 			for (auto it = m_cacheObjects.cbegin(); it != m_cacheObjects.cend();)
 			{
-				if (it->second->lastUse < oldAge)
+				if (it->second->lastUse < oldAge && it->second->ref < 1)
 				{
-					m_logger->logMessageF(m_logDebug, "purgeCacheObjects: removing %d (%zd bytes)", it->first, it->second->size);
+					if (m_inSyscall == false)
+					{
 
-					auto obj = it->second;
-					m_cacheObjects.erase(it++);
+						m_logger->logMessageF(m_logDebug, "purgeCacheObjects: removing %d (%zd bytes)", it->first, it->second->size);
 
-					m_stats.used -= obj->size;
-					--m_stats.activeObjects;
+						auto obj = it->second;
+						m_cacheObjects.erase(it++);
 
-					delete[] obj->data;
-					delete obj;
+						m_stats.used -= obj->size;
+						--m_stats.activeObjects;
 
-					++objectsPurged;
+						delete[] obj->data;
+						delete obj;
+
+						++objectsPurged;
+					}
 				}
 				else
 				{
@@ -208,22 +222,33 @@ namespace XiPivot
 		BOOL __stdcall
 			MemCache::interceptReadFile(HANDLE a0, LPVOID a1, DWORD a2, LPDWORD a3, LPOVERLAPPED a4)
 		{
+			m_inSyscall.store(true);
 			if (performCachedRead(a0, a1, a2, a3) == true)
 			{
+				m_inSyscall.store(false);
 				return true;
 			}
+			m_inSyscall.store(false);
 			return MemCache::s_procReadFile(a0, a1, a2, a3, a4);
 		}
 
 		BOOL __stdcall
 			MemCache::interceptCloseHandle(HANDLE a0)
 		{
-			const auto it = m_cachePointers.find(a0);
+			m_inSyscall.store(true);
+			const auto it = m_cachePointers.find(reinterpret_cast<ptrdiff_t>(a0));
 			if (it != m_cachePointers.end())
 			{
 				m_logger->logMessageF(m_logDebug, "stopped tracking HANDLE %p", a0);
+
+				auto cacheObj = getCachedObject(nullptr, it->second.pathKey);
+				if (cacheObj != nullptr)
+				{
+					--cacheObj->ref;
+				}
 				m_cachePointers.erase(it);
 			}
+			m_inSyscall.store(false);
 			return MemCache::s_procCloseHandle(a0);
 		}
 
@@ -256,6 +281,7 @@ namespace XiPivot
 					memset(obj, 0, sizeof(CacheObject));
 					obj->data = new (std::nothrow) BYTE[size];
 					obj->size = size;
+					obj->ref = 0;
 
 					if (obj->data != nullptr)
 					{
@@ -326,7 +352,7 @@ namespace XiPivot
 				return false;
 			}
 
-			const auto pointer = m_cachePointers.find(hRef);
+			const auto pointer = m_cachePointers.find(reinterpret_cast<ptrdiff_t>(hRef));
 			if (pointer == m_cachePointers.end())
 			{
 				/* not tracked */
@@ -336,31 +362,33 @@ namespace XiPivot
 			const auto cacheObj = getCachedObject(nullptr, pointer->second.pathKey);
 			if (cacheObj == nullptr)
 			{
-				/* tracked but no longer cached */
-				m_logger->logMessageF(ILogProvider::LogLevel::Warn, "performCachedRead: cache object for %p (%d) vanished, untracking HANDLE.", hRef, pointer->second.pathKey);
+				/* tracked but no longer cached -- this should actually NEVER EVER HAPPEN */
+				m_logger->logMessageF(ILogProvider::LogLevel::Error, "performCachedRead: cache object for %p (%d) vanished, untracking HANDLE.", hRef, pointer->second.pathKey);
 				m_cachePointers.erase(pointer);
 
-				return false;
+				return MemCache::s_procReadFile(hRef, lpBuffer, bytesToRead, bytesRead, nullptr) == TRUE;
 			}
 
 			/* everything valid - touch the object to keep it alive */
 			cacheObj->lastUse = time(nullptr);
 
-			if (pointer->second.offset >= cacheObj->size)
+			/* update the stored offset in case the handle was seeked in */
+			DWORD fileOffset = SetFilePointer(hRef, 0, nullptr, FILE_CURRENT);
+			if (fileOffset >= cacheObj->size)
 			{
 				/* already at end of file */
 				bytesToRead = 0;
 			}
-			else if (pointer->second.offset + bytesToRead > cacheObj->size)
+			else if (fileOffset + bytesToRead > cacheObj->size)
 			{
 				/* read to end of file */
-				bytesToRead = cacheObj->size - pointer->second.offset;
+				bytesToRead = cacheObj->size - fileOffset;
 			}
 
 			if (bytesToRead > 0)
 			{
-				memcpy(lpBuffer, &cacheObj->data[pointer->second.offset], bytesToRead);
-				pointer->second.offset += bytesToRead;
+				memcpy(lpBuffer, &cacheObj->data[fileOffset], bytesToRead);
+				fileOffset += bytesToRead;
 			}
 
 			if (bytesRead != nullptr)
@@ -369,8 +397,7 @@ namespace XiPivot
 			}
 
 			/* update the real file pointer in case it is used with other API methods */
-			SetFilePointer(hRef, pointer->second.offset, nullptr, FILE_BEGIN);
-
+			SetFilePointer(hRef, bytesToRead, nullptr, FILE_CURRENT);
 			return true;
 		}
 	}

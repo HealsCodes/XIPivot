@@ -256,7 +256,8 @@ namespace XiPivot
 			{
 				int32_t sfxIndex = pathToIndexAudio(sfxPath);
 				const auto res = m_resolvedPaths.find(sfxIndex);
-				
+			
+				// disabled for music until I have time to look into why it creates audio garbage.
 				outPathKey = sfxIndex;
 				if(res != m_resolvedPaths.end())
 				{
