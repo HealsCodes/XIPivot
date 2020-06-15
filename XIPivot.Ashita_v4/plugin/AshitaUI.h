@@ -29,7 +29,7 @@
 #pragma once
 
 #include "ADK_v4/Ashita.h"
-#include "../IPolRemoteInterface.h"
+#include "PolRemoteInterface.h"
 
 #define IMGUI_FORMAT_WORKAROUND // right now needed because v4 has broken imgui format strings
 
@@ -68,7 +68,7 @@ namespace XiPivot
 #ifdef IMGUI_FORMAT_WORKAROUND
 			std::string formatStr(const char* format, ...);
 #endif
-			bool getPolRemote(IPolRemoteInterface** remoteInterface) const;
+			bool getPolRemote(PolRemoteInterface** remoteInterface) const;
 
 			/* helpers for GUI config */
 			void renderOverlayConfigUI(IGuiManager* imgui);
