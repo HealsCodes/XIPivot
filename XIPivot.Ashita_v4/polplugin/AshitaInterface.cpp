@@ -181,14 +181,14 @@ namespace XiPivot
 					snprintf(overlayIndexStr, sizeof(overlayIndexStr) - 1, "%d", overlayIndex++);
 					overlayName = const_cast<char*>(config->GetString("XIPivot", "overlays", overlayIndexStr));
 
-					if (overlayName != nullptr)
+					if (overlayName != nullptr && strcmp(overlayName, "") != 0)
 					{
 						overlays.push_back(overlayName);
 					}
 				} while (overlayName != nullptr);
 
 				cacheEnabled = config->GetBool("XIPivot", "cache", "enabled", false);
-				cacheSize = config->GetInt32("XIPivot", "cache", "size", 2048);
+				cacheSize = config->GetInt32("XIPivot", "cache", "size", 2048) * 0x100000;
 				cachePurgeDelay = config->GetInt32("XIPivot", "cache", "max_age", 600);
 
 				return true;
@@ -198,17 +198,32 @@ namespace XiPivot
 
 		void AshitaInterface::Settings::save(IConfigurationManager* config)
 		{
-			config->Remove("XIPivot");
+			//config->Remove("XIPivot");
+			//config->Save("XIPivot", "XIPivot");
 
 			config->SetValue("XIPivot", "settings", "root_path", rootPath.c_str());
 			config->SetValue("XIPivot", "settings", "debug_log", debugLog ? "true" : "false");
 
-			for (unsigned i = 0; i < overlays.size(); ++i)
+			for (unsigned i = 0; ; ++i)
 			{
 				char key[10];
 				snprintf(key, 9, "%d", i);
 
-				config->SetValue("XIPivot", "overlays", key, overlays.at(i).c_str());
+				if (i < overlays.size())
+				{
+					config->SetValue("XIPivot", "overlays", key, overlays.at(i).c_str());
+				}
+				else
+				{
+					if (config->GetString("XIPivot", "overlays", key) != nullptr)
+					{
+						config->SetValue("XIPivot", "overlays", key, "");
+					}
+					else
+					{
+						break;
+					}
+				}
 			}
 
 			config->SetValue("XIPivot", "cache", "enabled", cacheEnabled ? "true" : "false");
