@@ -291,7 +291,7 @@ namespace XiPivot
 		{
 			try
 			{
-				auto polPlugin = (IPolPlugin*)m_AshitaCore->GetPolPluginManager()->Get("XIPivot.polcore");
+				auto polPlugin = (IPolPlugin*)m_AshitaCore->GetPolPluginManager()->Get("XIPivotPol");
 				if (polPlugin != nullptr)
 				{
 					*remoteInterface = reinterpret_cast<Pol::AshitaInterface*>(polPlugin);
