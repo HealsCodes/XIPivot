@@ -36,6 +36,11 @@ extern "C" {
 
 	IPolPlugin* __stdcall expCreatePolPlugin(const char* args)
 	{
-		return static_cast<IPolPlugin*>(new XiPivot::Pol::AshitaInterface(args));
+		return new XiPivot::Pol::AshitaInterface(args);
+	}
+
+	XiPivot::Plugin::PolRemoteInterface* __stdcall expXiPivotPolBridge(void)
+	{
+		return &XiPivot::Plugin::PolRemoteInterface::instance();
 	}
 }

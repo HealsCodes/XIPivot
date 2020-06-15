@@ -31,8 +31,5 @@
     <ClInclude Include="plugin\AshitaUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="IPolRemoteInterface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

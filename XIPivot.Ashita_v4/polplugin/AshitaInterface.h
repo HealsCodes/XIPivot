@@ -31,13 +31,13 @@
 #include "ADK_v4/Ashita.h"
 
 #include "Redirector.h"
-#include "../IPolRemoteInterface.h"
+#include "PolRemoteInterface.h"
 
 namespace XiPivot
 {
 	namespace Pol
 	{
-		class AshitaInterface : public IPolPlugin, public Plugin::IPolRemoteInterface, public Core::ILogProvider, private Core::Redirector
+		class AshitaInterface : public IPolPlugin, public Core::ILogProvider, private Core::Redirector
 		{
 
 		public:
@@ -54,25 +54,6 @@ namespace XiPivot
 			const char* GetLink(void) const override;
 
 			double GetVersion(void) const override;
-
-			/* IPolRemoteInterface */
-
-			bool AddOverlay(const std::string& path) override;
-			bool RemoveOverlay(const std::string& path) override;
-
-			bool GetDebugLogState(void) const override;
-			std::string GetRootPath(void) const override;
-			const std::vector<std::string> GetOverlays(void) const override;
-
-			void SetDebugLogState(bool enabled) override;
-
-			bool GetCacheState(void) const override;
-			struct Plugin::IPolRemoteInterface::CacheStatus GetCacheStats(void) const override;
-			uint32_t GetCacheSize(void) const override;
-			uint32_t GetCachePurgeDelay(void) const override;
-
-			void PurgeCacheObjects(time_t maxAge) override;
-			void SetCacheParams(bool state, uint32_t size, uint32_t maxAge) override;
 
 			/* ILogProvider */
 			void logMessage(Core::ILogProvider::LogLevel level, std::string msg);
@@ -98,6 +79,8 @@ namespace XiPivot
 
 			std::string m_pluginArgs;
 			Settings    m_settings;
+
+			friend class Plugin::PolRemoteInterface;
 		};
 	}
 }

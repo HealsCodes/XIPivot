@@ -2,3 +2,4 @@ LIBRARY "XIPivotPol.dll"
 EXPORTS
 	expCreatePolPlugin @1
 	expGetInterfaceVersion @2
+	expXiPivotPolBridge @3
