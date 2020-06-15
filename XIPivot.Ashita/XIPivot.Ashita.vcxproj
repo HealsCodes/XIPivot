@@ -38,7 +38,7 @@
     <ProjectGuid>{85BC8434-595C-455E-93AD-B7FB7DA7C45A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>XIpivotAshita</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectName>XIPivot.Ashita</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
