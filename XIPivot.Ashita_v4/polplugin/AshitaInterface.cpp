@@ -46,11 +46,11 @@ namespace XiPivot
 			Redirector::s_instance = this;
 		}
 
-		const char* AshitaInterface::GetName(void) const { return u8"XIPivot"; }
-		const char* AshitaInterface::GetAuthor(void) const { return u8"Heals"; }
+		const char* AshitaInterface::GetName(void) const        { return u8"XIPivot"; }
+		const char* AshitaInterface::GetAuthor(void) const      { return u8"Heals"; }
 		const char* AshitaInterface::GetDescription(void) const { return u8"Runtime DAT / music replacement manager"; }
-		const char* AshitaInterface::GetLink(void) const { return u8"https://github.com/shirk/XIPivot"; }
-		double AshitaInterface::GetVersion(void) const { return 0.01; }
+		const char* AshitaInterface::GetLink(void) const        { return u8"https://github.com/shirk/XIPivot"; }
+		double AshitaInterface::GetVersion(void) const          { return 4.01; }
 
 		bool AshitaInterface::Initialize(IAshitaCore* core, ILogManager* log, uint32_t id)
 		{
@@ -138,7 +138,7 @@ namespace XiPivot
 				va_start(args, msg);
 
 				vsnprintf_s(msgBuf, 511, msg.c_str(), args);
-				m_LogManager->Log(static_cast<uint32_t>(ashitaLevel), "XiPivot", msgBuf);
+				m_LogManager->Log(static_cast<uint32_t>(ashitaLevel), GetName(), msgBuf);
 
 				va_end(args);
 			}
