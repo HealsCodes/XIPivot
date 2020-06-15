@@ -31,6 +31,8 @@
 #include "ADK_v4/Ashita.h"
 #include "../IPolRemoteInterface.h"
 
+#define IMGUI_FORMAT_WORKAROUND // right now needed because v4 has broken imgui format strings
+
 namespace XiPivot
 {
 	namespace Plugin
@@ -63,6 +65,9 @@ namespace XiPivot
 			void Direct3DPresent(const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion) override;
 
 		private:
+#ifdef IMGUI_FORMAT_WORKAROUND
+			std::string formatStr(const char* format, ...);
+#endif
 			bool getPolRemote(IPolRemoteInterface** remoteInterface) const;
 
 			/* helpers for GUI config */

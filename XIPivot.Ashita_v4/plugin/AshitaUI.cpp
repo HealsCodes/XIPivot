@@ -1,5 +1,5 @@
 /*
- * 	Copyright © 2019, Renee Koecher
+ * 	Copyright © 2019-2020, Renee Koecher
 * 	All rights reserved.
  * 
  * 	Redistribution and use in source and binary forms, with or without
@@ -31,14 +31,6 @@
 
 #include <regex>
 
-static constexpr auto _XI_RESET    = "\x1E\x01";
-static constexpr auto _XI_NORMAL   = "\x1E\x01";
-static constexpr auto _XI_LGREEN   = "\x1E\x02";
-static constexpr auto _XI_PINK     = "\x1E\x05";
-static constexpr auto _XI_DEEPBLUE = "\x1E\x05";
-static constexpr auto _XI_SEAFOAM  = "\x1E\x53";
-static constexpr auto _XI_CREAM    = "\x1F\x82";
-
 DEFINE_ENUMCLASS_OPERATORS(Ashita::PluginFlags);
 
 namespace XiPivot
@@ -54,13 +46,14 @@ namespace XiPivot
 			m_uiConfig.purgeOverlay.clear();
 		}
 
-		const char* AshitaUI::GetName(void) const { return u8"XIPivot"; }
-		const char* AshitaUI::GetAuthor(void) const { return u8"Heals"; }
-		const char* AshitaUI::GetDescription(void) const { return u8"configuration UI for XIPivot polplugin"; }
-		const char* AshitaUI::GetLink(void) const { return u8"https://github.com/Shirk/XIPivot"; }
-		double      AshitaUI::GetVersion(void) const { return 0.01; }
+		const char* AshitaUI::GetName(void) const        { return u8"XIPivot"; }
+		const char* AshitaUI::GetAuthor(void) const      { return u8"Heals"; }
+		const char* AshitaUI::GetDescription(void) const { return u8"configuration UI for XIPivotPol"; }
+		const char* AshitaUI::GetLink(void) const        { return u8"https://github.com/Shirk/XIPivot"; }
+		double      AshitaUI::GetVersion(void) const     { return 4.01; }
+
 		double      AshitaUI::GetInterfaceVersion(void) const { return ASHITA_INTERFACE_VERSION; }
-		int32_t     AshitaUI::GetPriority(void) const { return 0; }
+		int32_t     AshitaUI::GetPriority(void) const         { return 0; }
 
 		uint32_t AshitaUI::GetFlags(void) const { return (uint32_t)(Ashita::PluginFlags::UseCommands | Ashita::PluginFlags::UseDirect3D); }
 
@@ -71,10 +64,12 @@ namespace XiPivot
 			IPolRemoteInterface* polRemote = nullptr;
 			if (getPolRemote(&polRemote) == true)
 			{
-				//m_AshitaCore->GetChatManager()->Writef(1, false, "Got m_polRemote at %p - %s", (ptrdiff_t)polRemote, polRemote->GetRootPath().c_str());
 				return true;
 			}
-			m_AshitaCore->GetChatManager()->Write(1, false, Ashita::Chat::Error("XIPivot: error: please ensure XIPivot.polcore is loaded in your polplugins").c_str());
+
+			std::ostringstream msg;
+			msg << Ashita::Chat::Header(GetName()) << Ashita::Chat::Error("error: please ensure XIPivotPol is loaded in your polplugins");
+			m_AshitaCore->GetChatManager()->Write(1, false, msg.str().c_str());
 			return false;
 		}
 
@@ -99,13 +94,10 @@ namespace XiPivot
 					{
 						if (args[1] == "a" || args[1] == "add")
 						{
-							if (polRemote->AddOverlay(args[2]))
-							{
-							}
-							else
+							if (polRemote->AddOverlay(args[2]) == false)
 							{
 								msg.str(u8"");
-								msg << Ashita::Chat::Error(u8"failed to add ") << Ashita::Chat::Color1(3, args[2]);
+								msg << Ashita::Chat::Header(GetName()) << Ashita::Chat::Error(u8" failed to add ") << Ashita::Chat::Color1(3, args[2]);
 								m_AshitaCore->GetChatManager()->Write(1, false, msg.str().c_str());
 							}
 
@@ -119,9 +111,9 @@ namespace XiPivot
 					{
 						msg.str(u8"");
 						msg << Ashita::Chat::Color1(0x53, GetName())
-							<< Ashita::Chat::Color2(0x82, u8"v")
+							<< Ashita::Chat::Color2(0x82, u8" v")
 							<< Ashita::Chat::Color1(0x53, "%.2f")
-							<< Ashita::Chat::Color2(0x82, u8"by ")
+							<< Ashita::Chat::Color2(0x82, u8" by ")
 							<< Ashita::Chat::Color1(0x53, GetAuthor());
 						m_AshitaCore->GetChatManager()->Writef(1, false, msg.str().c_str(), GetVersion());
 
@@ -187,7 +179,7 @@ namespace XiPivot
 				}
 				else
 				{
-					m_AshitaCore->GetChatManager()->Write(1, false, Ashita::Chat::Error(u8"Unable to communicate with XIPivot.polcore polplugin.").c_str());
+					m_AshitaCore->GetChatManager()->Write(1, false, Ashita::Chat::Error(u8"Unable to communicate with XIPivotPol polplugin.").c_str());
 				}
 				return true;
 			}
@@ -245,7 +237,9 @@ namespace XiPivot
 
 			if (m_showConfigWindow)
 			{
-				if (imgui->Begin(u8"XiPivot Setup", &m_showConfigWindow, /*ImVec2(600, 550), -1.0f,*/ ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize) == true)
+				imgui->SetNextWindowBgAlpha(.9f);
+				imgui->SetNextWindowSize(ImVec2(600, 550));
+				if (imgui->Begin(u8"XiPivot Setup", &m_showConfigWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize) == true)
 				{
 					const char *tabTitles[] = { "overlays", "cache"/*, "about"*/, nullptr };
 					for (int i = 0; tabTitles[i] != nullptr; ++i)
@@ -277,7 +271,8 @@ namespace XiPivot
 
 			if (m_showCacheWindow)
 			{
-				if (imgui->Begin(u8"XiPivot Cache", &m_showCacheWindow,/* ImVec2(0, 0), 0.25f,*/ ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar) == true)
+				imgui->SetNextWindowBgAlpha(0.33f);
+				if (imgui->Begin(u8"XiPivot Cache", &m_showCacheWindow, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar) == true)
 				{
 					renderCacheStatsUI(imgui);
 				}
@@ -303,6 +298,20 @@ namespace XiPivot
 		}
 
 		/* GUI stuff */
+#ifdef IMGUI_FORMAT_WORKAROUND
+		std::string AshitaUI::formatStr(const char* format, ...)
+		{
+			char buffer[128];
+			va_list args;
+
+			va_start(args, format);
+			vsnprintf_s(buffer, sizeof(buffer), sizeof(buffer) - 1, format, args);
+			va_end(args);
+
+			return std::string(buffer);
+		}
+#endif
+
 		std::vector<std::string> AshitaUI::listAvailableOverlays() const
 		{
 			std::vector<std::string> res;
@@ -337,8 +346,9 @@ namespace XiPivot
 			IPolRemoteInterface* polRemote = nullptr;
 			if (getPolRemote(&polRemote) == true)
 			{
+
 				imgui->Checkbox(u8"debug log", &m_uiConfig.debugState);
-				imgui->LabelText(u8"root path", "%s", polRemote->GetRootPath().c_str());
+				imgui->LabelText(u8"root path", polRemote->GetRootPath().c_str());
 				imgui->Text(u8"active overlays:");
 				imgui->BeginChild(u8"overlay_list", ImVec2(0, 200));
 				{
@@ -347,13 +357,21 @@ namespace XiPivot
 						int prio = 0;
 						for (const auto& path : polRemote->GetOverlays())
 						{
+							/* each button in imgui needs a unique id (title##id)
+							 * since this list is generated at runtime button IDs default to ASCII 'a' + prio
+							 * this way the first list button will be ' - ##a', the second ' - ##b' and so on.
+							 */
 							char btnId[] = { ' ', '-', ' ', '#', '#', static_cast<char>(prio + 'a') };
 							if (imgui->Button(btnId))
 							{
 								m_uiConfig.purgeOverlay = path;
 							}
 							imgui->SameLine();
+#ifdef IMGUI_FORMAT_WORKAROUND
+							imgui->Text(formatStr(u8"[%02d] %s", prio++, path.c_str()).c_str());
+#else
 							imgui->Text(u8"[%02d] %s", prio++, path.c_str());
+#endif
 						}
 					}
 				}
@@ -376,7 +394,7 @@ namespace XiPivot
 								polRemote->AddOverlay(path);
 							}
 							imgui->SameLine();
-							imgui->Text(u8"%s", path.c_str());
+							imgui->Text(path.c_str());
 						}
 						++n;
 					}
@@ -385,11 +403,11 @@ namespace XiPivot
 
 				imgui->Separator();
 				imgui->TextDisabled(u8"Adding or removing overlays at runtime can cause all kinds of unexpected behaviour.");
-				imgui->TextDisabled(u8"It is recommended to edit XIPivot.xml instead");
+				imgui->TextDisabled(u8"You have been warned");
 			}
 			else
 			{
-				imgui->TextDisabled(u8"Unable to communicate with XIPivot.polcore polplugin.");
+				imgui->TextDisabled(u8"Unable to communicate with XIPivotPol polplugin.");
 			}
 		}
 
@@ -403,13 +421,13 @@ namespace XiPivot
 				imgui->SliderInt(u8"purge interval", &m_uiConfig.cachePurgeDelay, 1, 600, "%.0f sec");
 
 				imgui->Separator();
-				if (imgui->Button(u8"apply##cache settings", ImVec2(FLT_MAX, 0)))
+				if (imgui->Button(u8"apply##cache settings", ImVec2(500, 0)))
 				{
 					m_uiConfig.applyCacheChanges = true;
 				}
 				imgui->NewLine();
 				imgui->TextDisabled(u8"Reducing the cache size will not instantly take effect if the currently");
-				imgui->TextDisabled(u8"used cache size is larger then the new maximum.");
+				imgui->TextDisabled(u8"used cache size is larger than the new maximum.");
 				imgui->TextDisabled(u8"Cached files that have no open handle will be removed after the purge delay.");
 
 				if (polRemote->GetCacheState() == true)
@@ -421,7 +439,7 @@ namespace XiPivot
 			}
 			else
 			{
-				imgui->TextDisabled(u8"Unable to communicate with XIPivot.polcore polplugin.");
+				imgui->TextDisabled(u8"Unable to communicate with XIPivotPol polplugin.");
 			}
 		}
 
@@ -433,19 +451,32 @@ namespace XiPivot
 				const auto stats = polRemote->GetCacheStats();
 				if (stats.cacheHits != 0 || stats.cacheMisses != 0)
 				{
+#ifdef IMGUI_FORMAT_WORKAROUND
+					imgui->LabelText(u8"cache hits", formatStr("%d%%", stats.cacheHits * 100 / (stats.cacheHits + stats.cacheMisses)).c_str());
+#else
 					imgui->LabelText(u8"cache hits", "%d%%", stats.cacheHits * 100 / (stats.cacheHits + stats.cacheMisses));
+#endif
 					imgui->Separator();
 				}
+#ifdef IMGUI_FORMAT_WORKAROUND
+				imgui->LabelText(u8"allocation", formatStr("%.2fmb", stats.allocation / 1048576.0f).c_str());
+				imgui->LabelText(u8"used size", formatStr("%.2fmb", stats.used / 1048576.0f).c_str());
+				imgui->LabelText(u8"objects", formatStr("%d", stats.activeObjects).c_str());
+				imgui->Separator();
+
+				imgui->LabelText(u8"next purge in", formatStr("%ds", m_nextCachePurge - time(nullptr)).c_str());
+#else
 				imgui->LabelText(u8"allocation", "%.2fmb", stats.allocation / 1048576.0f);
 				imgui->LabelText(u8"used size", "%.2fmb", stats.used / 1048576.0f);
 				imgui->LabelText(u8"objects", "%d", stats.activeObjects);
 				imgui->Separator();
 
 				imgui->LabelText(u8"next purge in", "%ds", m_nextCachePurge - time(nullptr));
+#endif
 			}
 			else
 			{
-				imgui->TextDisabled(u8"Unable to communicate with XIPivot.polcore polplugin.");
+				imgui->TextDisabled(u8"Unable to communicate with XIPivotPol polplugin.");
 			}
 		}
 	}
