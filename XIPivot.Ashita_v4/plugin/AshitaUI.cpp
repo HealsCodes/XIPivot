@@ -61,8 +61,7 @@ namespace XiPivot
 		bool AshitaUI::Initialize(IAshitaCore* core, ILogManager* log, uint32_t id)
 		{
 			IPlugin::Initialize(core, log, id);
-			IPolRemoteInterface* polRemote = nullptr;
-			if (getPolRemote(&polRemote) == true)
+			if (getPolRemote(nullptr) == true)
 			{
 				return true;
 			}
@@ -86,7 +85,7 @@ namespace XiPivot
 
 			HANDLECOMMAND("/pivot")
 			{
-				IPolRemoteInterface* polRemote = nullptr;
+				PolRemoteInterface* polRemote = nullptr;
 				if (getPolRemote(&polRemote) == true)
 				{
 
@@ -129,16 +128,10 @@ namespace XiPivot
 							<< Ashita::Chat::Color2(0x82, u8" - Removes a path from the DAT overlays");
 						m_AshitaCore->GetChatManager()->Write(1, false, msg.str().c_str());
 
-						msg.str(Ashita::Chat::Color1(0x53, u8"-"));
-						m_AshitaCore->GetChatManager()->Write(1, false, msg.str().c_str());
-
 						msg.str(u8"");
 						msg << Ashita::Chat::Color1(0x47, u8"c")
 							<< Ashita::Chat::Color1(0x52, u8"ache")
 							<< Ashita::Chat::Color2(0x82, u8" - show cache statistics overlay");
-						m_AshitaCore->GetChatManager()->Write(1, false, msg.str().c_str());
-
-						msg.str(Ashita::Chat::Color1(0x53, u8"-"));
 						m_AshitaCore->GetChatManager()->Write(1, false, msg.str().c_str());
 
 						msg.str(u8"");
@@ -199,7 +192,7 @@ namespace XiPivot
 				return;
 			}
 
-			IPolRemoteInterface* polRemote = nullptr;
+			PolRemoteInterface* polRemote = nullptr;
 			if (getPolRemote(&polRemote) == true)
 			{
 				if (polRemote->GetDebugLogState() != m_uiConfig.debugState)
@@ -282,18 +275,39 @@ namespace XiPivot
 
 		/* private parts below */
 
-		bool AshitaUI::getPolRemote(IPolRemoteInterface** remoteInterface) const
+		bool AshitaUI::getPolRemote(PolRemoteInterface** remoteInterface) const
 		{
-			try
+			static PolRemoteInterface* cachedHandle = nullptr;
+
+			HMODULE hXiPivotPol = GetModuleHandle((LPCWSTR)L"XIPivotPol");
+			if (hXiPivotPol != nullptr)
 			{
-				auto polPlugin = (IPolPlugin*)m_AshitaCore->GetPolPluginManager()->Get("XIPivotPol");
-				if (polPlugin != nullptr)
+				if (cachedHandle == nullptr)
 				{
-					*remoteInterface = reinterpret_cast<Pol::AshitaInterface*>(polPlugin);
+					//m_AshitaCore->GetChatManager()->Writef(1, false, "got handle to XIPivotPol.dll %p", hXiPivotPol);
+					auto bridgeConstructor = (PolRemoteInterface::pFnXiPivotPolRemote)GetProcAddress(hXiPivotPol, (LPCSTR)u8"expXiPivotPolBridge");
+					if (bridgeConstructor != nullptr)
+					{
+						//m_AshitaCore->GetChatManager()->Writef(1, false, "got proc entry for expXiPivotPolBridge %p", bridgeConstructor);
+						cachedHandle = bridgeConstructor();
+						//if (cachedHandle != nullptr)
+						//{
+						//	m_AshitaCore->GetChatManager()->Writef(1, false, "got PolRemoteBridge %p", cachedHandle);
+						//}
+					}
+				}
+				
+				CloseHandle(hXiPivotPol);
+
+				if(cachedHandle != nullptr)
+				{
+					if (remoteInterface != nullptr)
+					{
+						*remoteInterface = cachedHandle;
+					}
 					return true;
 				}
 			}
-			catch(...) { }
 			return false;
 		}
 
@@ -315,7 +329,7 @@ namespace XiPivot
 		std::vector<std::string> AshitaUI::listAvailableOverlays() const
 		{
 			std::vector<std::string> res;
-			IPolRemoteInterface* polRemote = nullptr;
+			PolRemoteInterface* polRemote = nullptr;
 
 			if (getPolRemote(&polRemote) == true)
 			{
@@ -343,10 +357,9 @@ namespace XiPivot
 
 		void AshitaUI::renderOverlayConfigUI(IGuiManager* imgui)
 		{
-			IPolRemoteInterface* polRemote = nullptr;
+			PolRemoteInterface* polRemote = nullptr;
 			if (getPolRemote(&polRemote) == true)
 			{
-
 				imgui->Checkbox(u8"debug log", &m_uiConfig.debugState);
 				imgui->LabelText(u8"root path", polRemote->GetRootPath().c_str());
 				imgui->Text(u8"active overlays:");
@@ -413,7 +426,7 @@ namespace XiPivot
 
 		void AshitaUI::renderMemCacheConfigUI(IGuiManager* imgui)
 		{
-			IPolRemoteInterface* polRemote = nullptr;
+			PolRemoteInterface* polRemote = nullptr;
 			if (getPolRemote(&polRemote) == true)
 			{
 				imgui->Checkbox(u8"use cache", &m_uiConfig.cacheState);
@@ -445,7 +458,7 @@ namespace XiPivot
 
 		void AshitaUI::renderCacheStatsUI(IGuiManager* imgui)
 		{
-			IPolRemoteInterface* polRemote = nullptr;
+			PolRemoteInterface* polRemote = nullptr;
 			if (getPolRemote(&polRemote) == true)
 			{
 				const auto stats = polRemote->GetCacheStats();

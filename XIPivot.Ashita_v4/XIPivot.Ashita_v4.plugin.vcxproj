@@ -24,7 +24,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="plugin\AshitaUI.h" />
-    <ClInclude Include="IPolRemoteInterface.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="plugin\exports.def" />
@@ -108,7 +107,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;XIPIVOTASHITA_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)XIPivot.Core\src;$(SolutionDir)3rdParty\SDKs\Ashita\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)XIPivot.Ashita_v4\shared;$(SolutionDir)XIPivot.Core\src;$(SolutionDir)3rdParty\SDKs\Ashita\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>Async</ExceptionHandling>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -154,7 +153,7 @@ rmdir /S /Q "$(SolutionDir)build\$(Configuration)\Ashita_v4"</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;XIPIVOTASHITA_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)XIPivot.Core\src;$(SolutionDir)3rdParty\SDKs\Ashita\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)XIPivot.Ashita_v4\shared;$(SolutionDir)XIPivot.Core\src;$(SolutionDir)3rdParty\SDKs\Ashita\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>Async</ExceptionHandling>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>

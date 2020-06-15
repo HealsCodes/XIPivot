@@ -35,7 +35,7 @@ namespace XiPivot
 {
 	namespace Plugin
 	{
-		class IPolRemoteInterfaceBase
+		class PolRemoteInterface
 		{
 			public:
 				struct CacheStatus
@@ -49,80 +49,34 @@ namespace XiPivot
 					unsigned activeObjects;
 				};
 
-				virtual bool AddOverlay(const std::string& path) = 0;
-				virtual bool RemoveOverlay(const std::string& path) = 0;
+				typedef PolRemoteInterface* (__stdcall* pFnXiPivotPolRemote)(void);
+
+				virtual bool AddOverlay(const std::string& path);
+				virtual bool RemoveOverlay(const std::string& path);
 	
-				virtual bool GetDebugLogState(void) const = 0;
-				virtual std::string GetRootPath(void) const = 0;
-				virtual const std::vector<std::string> GetOverlays(void) const = 0;
+				virtual bool GetDebugLogState(void) const;
+				virtual std::string GetRootPath(void) const;
+				virtual const std::vector<std::string> GetOverlays(void) const;
 
-				virtual void SetDebugLogState(bool state) = 0;
+				virtual void SetDebugLogState(bool state);
 
-				virtual bool GetCacheState(void) const = 0;
-				virtual struct CacheStatus GetCacheStats(void) const = 0;
-				virtual uint32_t GetCacheSize(void) const = 0;
-				virtual uint32_t GetCachePurgeDelay(void) const = 0;
+				virtual bool GetCacheState(void) const;
+				virtual struct CacheStatus GetCacheStats(void) const;
+				virtual uint32_t GetCacheSize(void) const;
+				virtual uint32_t GetCachePurgeDelay(void) const;
 	
-				virtual void PurgeCacheObjects(time_t maxAge) = 0;
-				virtual void SetCacheParams(bool state, uint32_t size, uint32_t maxAge) = 0;
-		};
+				virtual void PurgeCacheObjects(time_t maxAge);
+				virtual void SetCacheParams(bool state, uint32_t size, uint32_t maxAge);
 
-		class IPolRemoteInterface : public IPolRemoteInterfaceBase
-		{
+#ifdef POLPLUGIN
 			public:
+				/* access or create the actual Redirector instance */
+				static PolRemoteInterface& instance(void);
 
-				bool AddOverlay(const std::string& path) override
-				{
-					return false;
-				}
-
-				bool RemoveOverlay(const std::string& path) override
-				{
-					return false;
-				}
-	
-				bool GetDebugLogState(void) const override
-				{
-					return false;
-				}
-
-				std::string GetRootPath(void) const override
-				{
-					return u8"/dummy/path";
-				}
-
-				const std::vector<std::string> GetOverlays(void) const override
-				{
-					return {};
-				}
-		
-				bool GetCacheState(void) const override
-				{
-					return false;
-				}
-
-				struct CacheStatus GetCacheStats(void) const override
-				{
-					return {};
-				};
-
-				uint32_t GetCacheSize(void) const override
-				{
-					return 0;
-				}
-
-				uint32_t GetCachePurgeDelay(void) const override
-				{
-					return 0;
-				}
-		
-				void PurgeCacheObjects(time_t maxAge) override
-				{
-				}
-
-				void SetCacheParams(bool state, uint32_t size, uint32_t maxAge) override
-				{
-				}
+			protected:
+				/* globally unique instance pointer */
+				static PolRemoteInterface* s_instance;
+#endif
 		};
 	}
 }
