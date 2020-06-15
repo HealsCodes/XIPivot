@@ -27,7 +27,6 @@
  */
 
 #include "AshitaUI.h"
-#include "..\polplugin\AshitaInterface.h"
 
 #include <regex>
 
@@ -231,7 +230,7 @@ namespace XiPivot
 			if (m_showConfigWindow)
 			{
 				imgui->SetNextWindowBgAlpha(.9f);
-				imgui->SetNextWindowSize(ImVec2(600, 550));
+				imgui->SetNextWindowSize(ImVec2(600, 580));
 				if (imgui->Begin(u8"XiPivot Setup", &m_showConfigWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize) == true)
 				{
 					const char *tabTitles[] = { "overlays", "cache"/*, "about"*/, nullptr };
