@@ -54,6 +54,7 @@ namespace XiPivot
 			const char* GetLink(void) const override;
 
 			double GetVersion(void) const override;
+			uint32_t GetFlags(void) const override;
 
 			/* ILogProvider */
 			void logMessage(Core::ILogProvider::LogLevel level, std::string msg);
