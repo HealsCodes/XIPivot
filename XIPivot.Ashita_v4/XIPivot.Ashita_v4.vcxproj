@@ -20,10 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="polplugin\AshitaInterface.cpp" />
+    <ClCompile Include="polplugin\UserInterface.cpp" />
     <ClCompile Include="polplugin\plugin.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="polplugin\AshitaInterface.h" />
+    <ClInclude Include="polplugin\UserInterface.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\XIPivot.Core\XIPivot.Core.vcxproj">
