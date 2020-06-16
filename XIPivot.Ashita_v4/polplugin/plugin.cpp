@@ -38,9 +38,4 @@ extern "C" {
 	{
 		return new XiPivot::Pol::AshitaInterface(args);
 	}
-
-	XiPivot::Plugin::PolRemoteInterface* __stdcall expXiPivotPolBridge(void)
-	{
-		return &XiPivot::Plugin::PolRemoteInterface::instance();
-	}
 }
