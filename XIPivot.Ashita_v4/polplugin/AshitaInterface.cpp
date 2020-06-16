@@ -31,6 +31,8 @@
 
 #include <regex>
 
+DEFINE_ENUMCLASS_OPERATORS(Ashita::PluginFlags);
+
 namespace XiPivot
 {
 	namespace Pol
@@ -51,6 +53,8 @@ namespace XiPivot
 		const char* AshitaInterface::GetDescription(void) const { return u8"Runtime DAT / music replacement manager"; }
 		const char* AshitaInterface::GetLink(void) const        { return u8"https://github.com/shirk/XIPivot"; }
 		double AshitaInterface::GetVersion(void) const          { return 4.01; }
+
+		uint32_t AshitaInterface::GetFlags(void) const          { return (uint32_t)Ashita::PluginFlags::None; }
 
 		bool AshitaInterface::Initialize(IAshitaCore* core, ILogManager* log, uint32_t id)
 		{
