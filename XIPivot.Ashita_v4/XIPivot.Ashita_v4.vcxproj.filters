@@ -7,9 +7,6 @@
     <ClCompile Include="polplugin\plugin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="polplugin\PolRemoteInterface.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
@@ -32,9 +29,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="polplugin\AshitaInterface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="shared\PolRemoteInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
