@@ -31,7 +31,6 @@
 #include "ADK_v4/Ashita.h"
 
 #include "Redirector.h"
-#include "PolRemoteInterface.h"
 
 namespace XiPivot
 {
@@ -80,8 +79,6 @@ namespace XiPivot
 
 			std::string m_pluginArgs;
 			Settings    m_settings;
-
-			friend class Plugin::PolRemoteInterface;
 		};
 	}
 }
