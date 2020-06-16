@@ -16,8 +16,8 @@ The goals behind XIPivot are simple:
 ## Setup
 
 - 1) Copy the `XIPivotPol.dll` and the `DATs` folder into Ashita's `polplugis/` directory (create it if it doesn't exist).
-- 2) Copy the `XIPivot.dll` into Ashita's `plugins/` directory.
-- 3) Copy `XIPivot.ini` to Ashita's `config/` directory.
+- 2) Copy `XIPivot.ini` to Ashita's `config/` directory.
+- 3) Add 'XIPivotPol' to the list of plugins to load in your ashiti profiles `[ashita.polplugins]` list
 - 4) Create a subdirectory inside the `DATs/` folder for each overlay you want to use
 - 5) -- manual approach -- jump to 6 for in-game GUI version
    - Edit `XIPivot.ini`:
@@ -25,8 +25,6 @@ The goals behind XIPivot are simple:
      - _I_ in the above example is a positive number, starting at 0 that determines when to load this overlay
      - numbers mist be successive as loading will stop at the first number not listed
    - *order matters* - overlays will be used in order, with the first hit for a file being used.
-- 6) Add 'XIPivotPol' to the list of plugins to load in your ashiti profiles `[ashita.polplugins]` list
-- 7) Add `/load xipivot` to your setup script
 - 8) -- OPTIONAL --
    - Instead of following 5) you can use the command `/pivot` in-game to open the configuration GUI
 
