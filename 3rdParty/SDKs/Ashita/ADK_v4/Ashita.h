@@ -1067,8 +1067,8 @@ interface IKeyboard
     virtual bool IsBound(uint32_t key, bool down, bool alt, bool apps, bool ctrl, bool shift, bool win)                   = 0;
 
     // Methods (Callbacks)
-    virtual void AddCallback(const char* alias, getdevicedatacallback_f datacb, getdevicestatecallback_f statecb, keyboardcallback_f keyboardcb) = 0;
-    virtual void RemoveCallback(const char* alias)                                                                                               = 0;
+    virtual void AddCallback(const char* alias, const getdevicedatacallback_f& datacb, const getdevicestatecallback_f& statecb, const keyboardcallback_f& keyboardcb) = 0;
+    virtual void RemoveCallback(const char* alias)                                                                                                                    = 0;
 
     // Methods (Key Conversions)
     virtual uint32_t V2D(uint32_t key) const    = 0;
@@ -1236,6 +1236,9 @@ interface IPolPluginManager
     virtual void* Get(const char* name)     = 0;
     virtual void* Get(uint32_t index)       = 0;
     virtual uint32_t Count(void)            = 0;
+
+    // Methods (Events)
+    virtual void RaiseEvent(const char* eventName, const void* eventData, const uint32_t eventSize) = 0;
 };
 
 interface IPointerManager
@@ -2243,10 +2246,22 @@ interface IPolPluginBase
     virtual const char* GetLink(void) const        = 0;
     virtual double GetVersion(void) const          = 0;
     virtual double GetInterfaceVersion(void) const = 0;
+    virtual uint32_t GetFlags(void) const          = 0;
 
     // Methods
     virtual bool Initialize(IAshitaCore*, ILogManager*, uint32_t) = 0;
     virtual void Release(void)                                    = 0;
+
+    // Event Callbacks: PolPluginManager
+    virtual void HandleEvent(const char*, const void*, const uint32_t) = 0;
+
+    // Event Callbacks: ChatManager
+    virtual bool HandleCommand(int32_t, const char*, bool) = 0;
+
+    // Event Callbacks: Direct3D
+    virtual void Direct3DBeginScene(bool)                                        = 0;
+    virtual void Direct3DEndScene(bool)                                          = 0;
+    virtual void Direct3DPresent(const RECT*, const RECT*, HWND, const RGNDATA*) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2339,6 +2354,30 @@ public:
         return ASHITA_INTERFACE_VERSION;
     }
 
+    /**
+     * Returns the plugins flags.
+     *
+     * @return {uint32_t} The plugins flags.
+     * @notes
+     * 
+     *      Unlike normal plugins, POL plugins have a limited amount of access to the events fired within Ashita. These plugins are not meant
+     *      to be used as standard plugins, and therefore do not need access to everything normal plugins can do. However, there is still a
+     *      reason to avoid unneeded overhead in calling events the POL plugin does not make use of.
+     *
+     *      Please also understand that some events are bare-minimum implementations for POL plugins, such as the Direct3D events. While POL
+     *      plugins will gain access to BeginScene, EndScene and Present calls, they are not given calls for initialization or releasing. It
+     *      is up to you to manage your resources properly.
+     *
+     *      Plugins should explicitly state which flags they plan to make use of and avoid using 'All' flags.
+     *      This can help with the performance of the game for lower end machines.
+     *      
+     *      See the 'Ashita::PluginFlags' enumeration for more information on what each flag does.
+     */
+    uint32_t GetFlags(void) const override
+    {
+        return (uint32_t)Ashita::PluginFlags::None;
+    }
+
 public:
     /**
      * Event invoked when the POL plugin is being loaded and initialized.
@@ -2375,6 +2414,125 @@ public:
      */
     void Release(void) override
     {}
+
+public:
+    /**
+     * Event invoked when another plugin has raised a custom event for other plugins to handle.
+     *
+     * @param {const char*} eventName - The name of the custom event being raised.
+     * @param {const void*} eventData - The custom event data to pass through the event.
+     * @param {uint32_t} eventSize - The size of the custom event data buffer.
+     * 
+     * @notes
+     * 
+     *      Only invoked if Ashita::PluginFlags::UsePluginEvents flag is set.
+     *
+     *      Plugins can make use of the custom event system as a way to talk to other plugins in a safe manner.
+     *      Events can be raised via the PluginManager::RaiseEvent method which will cause this handler to be
+     *      invoked in all loaded plugins with the given event information.
+     */
+    void HandleEvent(const char* eventName, const void* eventData, const uint32_t eventSize) override
+    {
+        UNREFERENCED_PARAMETER(eventName);
+        UNREFERENCED_PARAMETER(eventData);
+        UNREFERENCED_PARAMETER(eventSize);
+    }
+
+public:
+    /**
+     * Event invoked when an input command is being processed by the game client.
+     *
+     * @param {int32_t} mode - The mode of the command. (See: Ashita::CommandMode)
+     * @param {const char*} command - The raw command string.
+     * @param {bool} injected - Flag if the command was injected from an Ashita related resource. (Addon, plugin or internally.)
+     * @return {bool} True if handled and should be blocked, false otherwise.
+     *
+     * @notes
+     * 
+     *      Only invoked if Ashita::PluginFlags::UseCommands flag is set.
+     *      
+     *      Any commands sent through the games input handler will be passed to plugins to be processed first allowing plugins to intercept
+     *      and handle any kind of command they wish. This includes commands typed into the chat bar, commands invoked from macros, menu items
+     *      and so on. Commands that have been injected by Ashita or another plugin will be marked via the injected parameter.
+     *      
+     *      If a plugin returns true, the command is blocked from further processing by Ashita or the game client and is considered handled.
+     *      
+     *      Plugins should return true for any commands they have handled or reacted to when appropriate. To prevent deadlocks by trying to
+     *      inject another command here, plugins should instead use the IChatManager::QueueCommand function for any manual command inserts
+     *      back into the game.
+     */
+    bool HandleCommand(int32_t mode, const char* command, bool injected) override
+    {
+        UNREFERENCED_PARAMETER(mode);
+        UNREFERENCED_PARAMETER(command);
+        UNREFERENCED_PARAMETER(injected);
+
+        return false;
+    }
+
+public:
+    /**
+     * Event invoked when the Direct3D device is beginning a scene.
+     *
+     * @param {bool} isRenderingBackBuffer - Flag set if the scene is being rendered to the back buffer.
+     *
+     * @notes
+     *
+     *      Only invoked if Ashita::PluginFlags::UseDirect3D flag is set.
+     *
+     *      This event is invoked before the actual IDirect3DDevice8::BeginScene call is invoked.
+     *
+     *      Multiple scenes can be rendered each frame, thus the isRenderingBackBuffer flag is available to determine when the scene is being
+     *      rendered to the back buffer render target. (Previous Ashita versions only invoked this event when this flag would be true.)
+     */
+    void Direct3DBeginScene(bool isRenderingBackBuffer) override
+    {
+        UNREFERENCED_PARAMETER(isRenderingBackBuffer);
+    }
+
+    /**
+     * Event invoked when the Direct3D device is ending a scene.
+     *
+     * @param {bool} isRenderingBackBuffer - Flag set if the scene is being rendered to the back buffer.
+     *
+     * @notes
+     *
+     *      Only invoked if Ashita::PluginFlags::UseDirect3D flag is set.
+     *
+     *      This event is invoked before the actual IDirect3DDevice8::EndScene call is invoked.
+     *
+     *      Multiple scenes can be rendered each frame, thus the isRenderingBackBuffer flag is available to determine when the scene is being
+     *      rendered to the back buffer render target. (Previous Ashita versions only invoked this event when this flag would be true.)
+     */
+    void Direct3DEndScene(bool isRenderingBackBuffer) override
+    {
+        UNREFERENCED_PARAMETER(isRenderingBackBuffer);
+    }
+
+    /**
+     * Event invoked when the Direct3D device is presenting a scene.
+     *
+     * @param {const RECT*} pSourceRect - The source rect being presented.
+     * @param {const RECT*} pDestRect - The destination rect being presented into.
+     * @param {HWND} hDestWindowOverride - The override window handle to present into.
+     * @param {const RGNDATA*} pDirtyRegion - The present dirty regions.
+     *
+     * @notes
+     *
+     *      Only invoked if Ashita::PluginFlags::UseDirect3D flag is set.
+     *
+     *      This event is invoked before the actual IDirect3DDevice8::Present call is invoked.
+     *
+     *      For best results of custom Direct3D rendering, it is best to do your own custom drawing here to draw over-top of all game related
+     *      scenes and objects. Usage of ImGui should be done here as well.
+     */
+    void Direct3DPresent(const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion) override
+    {
+        UNREFERENCED_PARAMETER(pSourceRect);
+        UNREFERENCED_PARAMETER(pDestRect);
+        UNREFERENCED_PARAMETER(hDestWindowOverride);
+        UNREFERENCED_PARAMETER(pDirtyRegion);
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
