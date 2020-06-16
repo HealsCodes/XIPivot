@@ -39,13 +39,9 @@ namespace XiPivot
 	{
 
 		AshitaInterface::AshitaInterface(const char* args)
-			: Core::Redirector(), IPolPlugin(),
+			: IPolPlugin(),
 			m_pluginArgs(args ? args : "")
 		{
-			/* FIXME: does this play anywhere nice with reloads?
-			 * FIXME: .. I hope it does
-			 */
-			Redirector::s_instance = this;
 		}
 
 		const char* AshitaInterface::GetName(void) const        { return u8"XIPivot"; }
@@ -60,46 +56,50 @@ namespace XiPivot
 		{
 			bool initialized = true;
 
+			auto& memCache   = Core::MemCache::instance();
+			auto& redirector = Core::Redirector::instance();
+
 			IPolPlugin::Initialize(core, log, id);
-			instance().setLogProvider(this);
+
+			redirector.setLogProvider(this);
 
 			auto config = m_AshitaCore->GetConfigurationManager();
 			if (config != nullptr)
 			{
 				if (m_settings.load(config))
 				{
-					instance().setDebugLog(m_settings.debugLog);
-					instance().setRootPath(m_settings.rootPath);
+					redirector.setDebugLog(m_settings.debugLog);
+					redirector.setRootPath(m_settings.rootPath);
 					for (const auto& path : m_settings.overlays)
 					{
-						instance().addOverlay(path);
+						redirector.addOverlay(path);
 					}
 				}
 
 				if (m_settings.cacheEnabled)
 				{
-					Core::MemCache::instance().setLogProvider(this);
-					Core::MemCache::instance().setDebugLog(m_settings.debugLog);
-					Core::MemCache::instance().setCacheAllocation(m_settings.cacheSize);
+					memCache.setLogProvider(this);
+					memCache.setDebugLog(m_settings.debugLog);
+					memCache.setCacheAllocation(m_settings.cacheSize);
 				}
 				m_settings.save(config);
 			}
 
 			if (m_settings.cacheEnabled)
 			{
-				initialized &= Core::MemCache::instance().setupHooks();
+				initialized &= memCache.setupHooks();
 			}
-			initialized &= instance().setupHooks();
+			initialized &= redirector.setupHooks();
 			return initialized;
 		}
 
 		void AshitaInterface::Release(void)
 		{
-			if (m_settings.cacheEnabled)
+			if (Core::MemCache::instance().hooksActive() == true)
 			{
 				Core::MemCache::instance().releaseHooks();
 			}
-			instance().releaseHooks();
+			Core::Redirector::instance().releaseHooks();
 			IPolPlugin::Release();
 		}
 
