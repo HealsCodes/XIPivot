@@ -76,6 +76,9 @@ namespace XiPivot
 			/* toggle debug logging on/off */
 			void setDebugLog(bool state);
 
+			/* get the current state for debug logging */
+			bool getDebugLog(void) const { return m_logDebug != ILogProvider::LogLevel::Discard; }
+
 			/* setup or change the base directory used to search for overlays
 			 * initially this will be set to the processes current working directory
 			 *
