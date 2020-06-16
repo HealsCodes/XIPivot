@@ -306,7 +306,7 @@ namespace XiPivot
 				}
 				else
 				{
-					m_logger->logMessageF(ILogProvider::LogLevel::Warn, "getCachedObject: chace limit exceeded");
+					m_logger->logMessageF(ILogProvider::LogLevel::Warn, "getCachedObject: cache limit exceeded");
 				}
 				delete obj;
 			}

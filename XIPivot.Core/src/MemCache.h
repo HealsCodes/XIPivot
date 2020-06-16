@@ -53,7 +53,7 @@ namespace XiPivot
 		class MemCache
 		{
 			/* signature types for the Win32 API methods we're going to hook */
-
+		private:
 			typedef BOOL(WINAPI * pFnReadFile)(
 				HANDLE       hRef,
 				LPVOID       lpBuffer,
@@ -65,18 +65,6 @@ namespace XiPivot
 			typedef BOOL(WINAPI* pFnCloseHandle)(
 				HANDLE       hRef
 				);
-
-			/* internal statistics tracking */
-			struct CacheStatus
-			{
-				size_t   used;
-				size_t   allocation;
-
-				unsigned cacheHits;
-				unsigned cacheMisses;
-
-				unsigned activeObjects;
-			};
 
 			/* representation of a single cached file */
 			struct CacheObject
@@ -96,6 +84,19 @@ namespace XiPivot
 			};
 
 		public:
+			/* internal statistics tracking */
+			struct CacheStatus
+			{
+				size_t   used;
+				size_t   allocation;
+
+				unsigned cacheHits;
+				unsigned cacheMisses;
+
+				unsigned activeObjects;
+			};
+
+		public:
 			virtual ~MemCache(void);
 
 			/* setup and tear-down of syscall hooks*/
@@ -110,8 +111,14 @@ namespace XiPivot
 			/* toggle debug logging on/off */
 			void setDebugLog(bool state);
 
+			/* get the current state of debug logging */
+			bool getDebugLog(void) const { return m_logDebug != ILogProvider::LogLevel::Discard; }
+
 			/* change the maximum allowed cache size (in byte) */
 			void setCacheAllocation(size_t allocationSize);
+
+			/* get the current maximum allowed cache size (in byte) */
+			size_t getCacheAllocation(void) const { return m_stats.allocation; }
 		
 			/* track and cache a file handle for a given key */
 			HANDLE trackCacheObject(HANDLE hRef, int32_t pathKey);
