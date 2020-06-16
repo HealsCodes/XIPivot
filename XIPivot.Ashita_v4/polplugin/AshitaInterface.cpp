@@ -44,13 +44,13 @@ namespace XiPivot
 		{
 		}
 
-		const char* AshitaInterface::GetName(void) const        { return u8"XIPivot"; }
-		const char* AshitaInterface::GetAuthor(void) const      { return u8"Heals"; }
-		const char* AshitaInterface::GetDescription(void) const { return u8"Runtime DAT / music replacement manager"; }
-		const char* AshitaInterface::GetLink(void) const        { return u8"https://github.com/shirk/XIPivot"; }
-		double AshitaInterface::GetVersion(void) const          { return 4.01; }
+		const char* AshitaInterface::GetName(void) const        { return PluginName; }
+		const char* AshitaInterface::GetAuthor(void) const      { return PluginAuthor; }
+		const char* AshitaInterface::GetDescription(void) const { return PluginDescr; }
+		const char* AshitaInterface::GetLink(void) const        { return PluginUrl; }
+		double AshitaInterface::GetVersion(void) const          { return PluginVersion; }
 
-		uint32_t AshitaInterface::GetFlags(void) const          { return (uint32_t)Ashita::PluginFlags::None; }
+		uint32_t AshitaInterface::GetFlags(void) const          { return (uint32_t)(Ashita::PluginFlags::UsePluginEvents | Ashita::PluginFlags::UseCommands | Ashita::PluginFlags::UseDirect3D); }
 
 		bool AshitaInterface::Initialize(IAshitaCore* core, ILogManager* log, uint32_t id)
 		{
@@ -74,6 +74,8 @@ namespace XiPivot
 					{
 						redirector.addOverlay(path);
 					}
+
+					m_ui.setCachePurgeDelay(m_settings.cachePurgeDelay);
 				}
 
 				if (m_settings.cacheEnabled)
@@ -103,7 +105,52 @@ namespace XiPivot
 			IPolPlugin::Release();
 		}
 
+		bool AshitaInterface::HandleCommand(int32_t /*type*/, const char* command, bool /*injected*/)
+		{
+			std::vector<std::string> args;
+			Ashita::Commands::GetCommandArgs(command, &args);
+
+			HANDLECOMMAND(u8"/pivot")
+			{
+				args.erase(args.begin());
+				return m_ui.HandleCommand(m_AshitaCore->GetChatManager(), args);
+			}
+			return false;
+		}
+
+		void AshitaInterface::HandleEvent(const char* eventName, const void* eventData, const uint32_t eventSize)
+		{
+		}
+
+		void AshitaInterface::Direct3DEndScene(bool isRenderingBackBuffer)
+		{
+			if (isRenderingBackBuffer == true)
+			{
+				if (m_settings.dirty == true)
+				{
+					/* settings have changed during the last EndScene or Present */
+					m_settings.debugLog = Core::Redirector::instance().getDebugLog();
+					m_settings.rootPath = Core::Redirector::instance().rootPath();
+					m_settings.overlays = Core::Redirector::instance().overlayList();
+
+					m_settings.cacheEnabled    = Core::MemCache::instance().hooksActive();
+					m_settings.cacheSize       = Core::MemCache::instance().getCacheAllocation();
+					m_settings.cachePurgeDelay = m_ui.getCachePurgeDelay();
+
+					m_settings.save(m_AshitaCore->GetConfigurationManager());
+				}
+
+				m_ui.ProcessUI(m_settings.dirty);
+			}
+		}
+
+		void AshitaInterface::Direct3DPresent(const RECT*, const RECT*, HWND, const RGNDATA*)
+		{
+			m_ui.RenderUI(m_AshitaCore->GetGuiManager());
+		}
+
 		/* ILogProvider */
+
 		void AshitaInterface::logMessage(Core::ILogProvider::LogLevel level, std::string msg)
 		{
 			logMessageF(level, msg);
@@ -147,6 +194,7 @@ namespace XiPivot
 				va_end(args);
 			}
 		}
+
 		/* private parts below */
 
 		AshitaInterface::Settings::Settings()
@@ -155,21 +203,23 @@ namespace XiPivot
 
 			GetCurrentDirectoryA(MAX_PATH, static_cast<LPSTR>(workPath));
 
-			/* default to "plugin location"/DATs */
-			rootPath = std::string(workPath) + "/DATs";
+			/* default to "plugin location"\\DATs */
+			rootPath = std::string(workPath) + u8"\\DATs";
 			overlays.clear();
 			debugLog = false;
 			cacheEnabled = false;
 			cacheSize = 0;
 			cachePurgeDelay = 600;
+			dirty = false;
 		}
 
 		bool AshitaInterface::Settings::load(IConfigurationManager* config)
 		{
-			if (config->Load("XIPivot", "XIPivot"))
+			dirty = false;
+			if (config->Load(PluginName, PluginName))
 			{
-				const char* rP = config->GetString("XIPivot", "settings", "root_path");
-				const bool dbg = config->GetBool("XIPivot", "settings", "debug_log", true);
+				const char* rP = config->GetString(PluginName, u8"settings", u8"root_path");
+				const bool dbg = config->GetBool(PluginName, u8"settings", u8"debug_log", true);
 
 				debugLog = dbg;
 				rootPath = (rP ? rP : rootPath);
@@ -182,18 +232,18 @@ namespace XiPivot
 
 				do
 				{
-					snprintf(overlayIndexStr, sizeof(overlayIndexStr) - 1, "%d", overlayIndex++);
-					overlayName = const_cast<char*>(config->GetString("XIPivot", "overlays", overlayIndexStr));
+					snprintf(overlayIndexStr, sizeof(overlayIndexStr) - 1, u8"%d", overlayIndex++);
+					overlayName = const_cast<char*>(config->GetString(PluginName, u8"overlays", overlayIndexStr));
 
-					if (overlayName != nullptr && strcmp(overlayName, "") != 0)
+					if (overlayName != nullptr && strcmp(overlayName, u8"") != 0)
 					{
 						overlays.push_back(overlayName);
 					}
 				} while (overlayName != nullptr);
 
-				cacheEnabled = config->GetBool("XIPivot", "cache", "enabled", false);
-				cacheSize = config->GetInt32("XIPivot", "cache", "size", 2048) * 0x100000;
-				cachePurgeDelay = config->GetInt32("XIPivot", "cache", "max_age", 600);
+				cacheEnabled = config->GetBool(PluginName, u8"cache", u8"enabled", false);
+				cacheSize = config->GetInt32(PluginName, u8"cache", u8"size", 2048) * 0x100000;
+				cachePurgeDelay = config->GetInt32(PluginName, u8"cache", u8"max_age", 600);
 
 				return true;
 			}
@@ -202,26 +252,23 @@ namespace XiPivot
 
 		void AshitaInterface::Settings::save(IConfigurationManager* config)
 		{
-			//config->Remove("XIPivot");
-			//config->Save("XIPivot", "XIPivot");
-
-			config->SetValue("XIPivot", "settings", "root_path", rootPath.c_str());
-			config->SetValue("XIPivot", "settings", "debug_log", debugLog ? "true" : "false");
+			config->SetValue(PluginName, u8"settings", u8"root_path", rootPath.c_str());
+			config->SetValue(PluginName, u8"settings", u8"debug_log", debugLog ? u8"true" : u8"false");
 
 			for (unsigned i = 0; ; ++i)
 			{
 				char key[10];
-				snprintf(key, 9, "%d", i);
+				snprintf(key, 9, u8"%d", i);
 
 				if (i < overlays.size())
 				{
-					config->SetValue("XIPivot", "overlays", key, overlays.at(i).c_str());
+					config->SetValue(PluginName, u8"overlays", key, overlays.at(i).c_str());
 				}
 				else
 				{
-					if (config->GetString("XIPivot", "overlays", key) != nullptr)
+					if (config->GetString(PluginName, u8"overlays", key) != nullptr)
 					{
-						config->SetValue("XIPivot", "overlays", key, "");
+						config->SetValue(PluginName, u8"overlays", key, u8"");
 					}
 					else
 					{
@@ -230,18 +277,17 @@ namespace XiPivot
 				}
 			}
 
-			config->SetValue("XIPivot", "cache", "enabled", cacheEnabled ? "true" : "false");
+			config->SetValue(PluginName, u8"cache", u8"enabled", cacheEnabled ? u8"true" : u8"false");
 
 			char val[32];
-			snprintf(val, 31, "%u", cacheSize / 0x100000);
-			config->SetValue("XIPivot", "cache", "size", val);
+			snprintf(val, 31, u8"%u", cacheSize / 0x100000);
+			config->SetValue(PluginName, u8"cache", u8"size", val);
 
+			snprintf(val, 31, u8"%u", cachePurgeDelay);
+			config->SetValue(PluginName, u8"cache", u8"max_age", val);
 
-			snprintf(val, 31, "%u", cachePurgeDelay);
-			config->SetValue("XIPivot", "cache", "max_age", val);
-
-
-			config->Save("XIPivot", "XIPivot");
+			config->Save(PluginName, PluginName);
+			dirty = false;
 		}
 	}
 }

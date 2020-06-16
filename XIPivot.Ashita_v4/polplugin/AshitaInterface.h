@@ -31,12 +31,19 @@
 #include "ADK_v4/Ashita.h"
 
 #include "Redirector.h"
+#include "UserInterface.h"
 
 namespace XiPivot
 {
 	namespace Pol
 	{
-		class AshitaInterface : public IPolPlugin, public Core::ILogProvider, private Core::Redirector
+		static constexpr auto PluginName = u8"XIPivot";
+		static constexpr auto PluginAuthor = u8"Heals";
+		static constexpr auto PluginVersion = 4.002;
+		static constexpr auto PluginUrl = u8"https://github.com/Shirk/XIPivot";
+		static constexpr auto PluginDescr = u8"Runtime DAT, sfx and bgm replacement manager.";
+		static constexpr auto PluginCommand = u8"pivot";
+
 		class AshitaInterface : public IPolPlugin, public Core::ILogProvider
 		{
 		public:
@@ -54,6 +61,13 @@ namespace XiPivot
 
 			double GetVersion(void) const override;
 			uint32_t GetFlags(void) const override;
+
+			/* Required handlers based an flags */
+			bool HandleCommand(int32_t type, const char* command, bool injected) override;
+			void HandleEvent(const char*, const void*, const uint32_t) override;
+
+			void Direct3DEndScene(bool isRenderingBackBuffer) override;
+			void Direct3DPresent(const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion) override;
 
 			/* ILogProvider */
 			void logMessage(Core::ILogProvider::LogLevel level, std::string msg);
@@ -75,10 +89,13 @@ namespace XiPivot
 				bool cacheEnabled;
 				uint32_t cacheSize;
 				uint32_t cachePurgeDelay;
+
+				bool dirty;
 			};
 
-			std::string m_pluginArgs;
-			Settings    m_settings;
+			std::string   m_pluginArgs;
+			Settings      m_settings;
+			UserInterface m_ui;
 		};
 	}
 }
