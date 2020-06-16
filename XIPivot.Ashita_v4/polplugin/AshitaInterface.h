@@ -37,8 +37,8 @@ namespace XiPivot
 	namespace Pol
 	{
 		class AshitaInterface : public IPolPlugin, public Core::ILogProvider, private Core::Redirector
+		class AshitaInterface : public IPolPlugin, public Core::ILogProvider
 		{
-
 		public:
 			AshitaInterface(const char* args);
 			virtual ~AshitaInterface(void) {};
