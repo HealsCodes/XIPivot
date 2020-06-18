@@ -37,7 +37,6 @@ namespace XiPivot
 {
 	namespace Pol
 	{
-
 		AshitaInterface::AshitaInterface(const char* args)
 			: IPolPlugin(),
 			m_pluginArgs(args ? args : "")
@@ -92,6 +91,7 @@ namespace XiPivot
 				initialized &= memCache.setupHooks();
 			}
 			initialized &= redirector.setupHooks();
+
 			return initialized;
 		}
 
