@@ -37,9 +37,9 @@ namespace XiPivot
 {
 	namespace Pol
 	{
-		static constexpr auto PluginName = u8"XIPivot";
+		static constexpr auto PluginName = u8"pivot";
 		static constexpr auto PluginAuthor = u8"Heals";
-		static constexpr auto PluginVersion = 4.002;
+		static constexpr auto PluginVersion = 4.003;
 		static constexpr auto PluginUrl = u8"https://github.com/Shirk/XIPivot";
 		static constexpr auto PluginDescr = u8"Runtime DAT, sfx and bgm replacement manager.";
 		static constexpr auto PluginCommand = u8"pivot";
@@ -74,7 +74,6 @@ namespace XiPivot
 			void logMessageF(Core::ILogProvider::LogLevel level, std::string msg, ...);
 
 		private:
-
 			struct Settings
 			{
 				Settings();

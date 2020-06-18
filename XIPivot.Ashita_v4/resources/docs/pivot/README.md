@@ -15,18 +15,17 @@ The goals behind XIPivot are simple:
 
 ## Setup
 
-- 1) Copy the `XIPivotPol.dll` and the `DATs` folder into Ashita's `polplugis/` directory (create it if it doesn't exist).
-- 2) Copy `XIPivot.ini` to Ashita's `config/` directory.
-- 3) Add 'XIPivotPol' to the list of plugins to load in your ashiti profiles `[ashita.polplugins]` list
-- 4) Create a subdirectory inside the `DATs/` folder for each overlay you want to use
-- 5) -- manual approach -- jump to 6 for in-game GUI version
-   - Edit `XIPivot.ini`:
-   - add the directory names from 4) for each overlay that should be enabled in the form "I=overlay_name".
+- 1) Add 'pivot' to the list of plugins to load in your ashita profile's `[ashita.polplugins]` section
+- 2) If this is your first time setting up pivot rename `pivot.sample.ini` in Ashita's `config/` directory to `pivot.ini`.
+- 3) Create a subdirectory inside the `polplugin\DATs\` folder for each overlay you want to use
+- 4) -- manual approach -- jump to 6 for in-game GUI version
+   - Edit `pivot.ini`:
+   - add the directory names from 3) for each overlay that should be enabled in the form "I=overlay_name".
      - _I_ in the above example is a positive number, starting at 0 that determines when to load this overlay
      - numbers mist be successive as loading will stop at the first number not listed
    - *order matters* - overlays will be used in order, with the first hit for a file being used.
-- 8) -- OPTIONAL --
-   - Instead of following 5) you can use the command `/pivot` in-game to open the configuration GUI
+- 5) -- OPTIONAL --
+   - Instead of following 4) you can use the command `/pivot` in-game to open the configuration GUI
 
 ### Example - XI-View, XI-Vision and Ammelila's HD-Remake:
 
@@ -35,10 +34,14 @@ Directory structure:
 ```
 <Ashita Install>
    +-- config/
-   |    +-- XIPivot.xml
+   |    +-- pivot.ini
    |
-   +-- plugins/
-        +-- XIPivot.dll
+   +-- docs/
+   |    +-- pivot/
+   |         +-- README.md
+   |
+   +-- polplugins/
+        +-- pivot.dll
         +-- DATs/
              +-- README.txt
              +-- XI-View/
@@ -57,7 +60,7 @@ Directory structure:
                   +-- ROM3/
 ```
 
-XIPivot.xml:
+pivot.ini:
 
 ```ini
 [settings]
@@ -74,13 +77,13 @@ max_age=600
 size=512
 ```
 
-XIPivot defaults to look for your overlays inside the `DATs/` directory next to the `XIPivotPol.dll`.
-If you prefer a different path you can add the key `'root_path'` to `XIPivot.ini` like so:
+XIPivot defaults to look for your overlays inside the `DATs/` directory next to the `pivot.dll`.
+If you prefer a different path you can add the key `'root_path'` to `pivot.ini` like so:
 
 ```ini
 [settings]
 debug_log=false
-root_path=C:\my\awesome\addans
+root_path=C:\my\awesome\addons
 
 [overlays]
 0=XI-View
@@ -109,7 +112,7 @@ The following parameters are supported:
 - h/help                 -- print this text
 
 These commands all support a short first letter version (a/r/c/h).
-Changes made with add / remove will be reflected in `XIPivot.ini`.
+Changes made with add / remove will be reflected in `pivot.ini`.
 
 
 Please note that adding and removing overlays way after the game launches can have side effects.
