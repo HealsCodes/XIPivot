@@ -324,8 +324,9 @@ namespace XiPivot
 							std::vector<std::string> sfxFiles;
 							if (collectDataFiles(sp, "*.spw", sfxFiles))
 							{
-								for (const auto &sfx : sfxFiles)
+								for (auto &sfx : sfxFiles)
 								{
+									std::transform(sfx.begin(), sfx.end(), sfx.begin(), [](unsigned char c) { return std::tolower(c); });
 									int32_t sfxIndex = pathToIndexAudio(&strstr(sfx.c_str(), "/win/se/")[-1]);
 									if (m_resolvedPaths.find(sfxIndex) == m_resolvedPaths.end())
 									{
@@ -341,8 +342,9 @@ namespace XiPivot
 					std::vector<std::string> bgwFiles;
 					if (collectDataFiles(p, "/win/music/data", "*.bgw", bgwFiles))
 					{
-						for (const auto &bgw : bgwFiles)
+						for (auto &bgw : bgwFiles)
 						{
+							std::transform(bgw.begin(), bgw.end(), bgw.begin(), [](unsigned char c) { return std::tolower(c); });
 							int32_t bgwIndex = pathToIndexAudio(&strstr(bgw.c_str(), "/win/music/")[-1]);
 							if (m_resolvedPaths.find(bgwIndex) == m_resolvedPaths.end())
 							{
