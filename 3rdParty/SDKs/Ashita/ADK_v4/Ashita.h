@@ -217,12 +217,12 @@ namespace Ashita
      */
     enum class LogLevel : uint32_t
     {
-        None     = 0,
-        Info     = 1,
-        Warn     = 2,
-        Error    = 3,
-        Critical = 4,
-        Debug    = 5,
+        None     = 0, // Logging will output: None
+        Critical = 1, // Logging will output: Critical
+        Error    = 2, // Logging will output: Critical, Error
+        Warn     = 3, // Logging will output: Critical, Error, Warn
+        Info     = 4, // Logging will output: Critical, Error, Warn, Info
+        Debug    = 5, // Logging will output: Critical, Error, Warn, Info, Debug
     };
 
     /**
@@ -346,6 +346,7 @@ namespace Ashita
     }
 
     // Attach operator overrides to needed enums..
+    DEFINE_ENUMCLASS_OPERATORS(Ashita::PluginFlags);
     DEFINE_ENUMCLASS_OPERATORS(Ashita::FrameAnchor);
     DEFINE_ENUMCLASS_OPERATORS(Ashita::FontBorderFlags);
     DEFINE_ENUMCLASS_OPERATORS(Ashita::FontCreateFlags);

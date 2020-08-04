@@ -31,8 +31,6 @@
 
 #include <regex>
 
-DEFINE_ENUMCLASS_OPERATORS(Ashita::PluginFlags);
-
 namespace XiPivot
 {
 	namespace Pol
