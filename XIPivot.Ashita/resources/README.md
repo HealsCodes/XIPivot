@@ -100,6 +100,33 @@ Please note that adding and removing overlays way after the game launches can ha
 XI will load some DAT files right at the start and then never look at them again (some menu and landscape textures)
 other DAT files are loaded on-demand and overlay changes are visible once that happens (maps, some menu icons, Mog House and a few other locations)
 
+## Resource cache
+
+Recent releases include a memory cache to reduce disk I/O for frequently accessed DAT files.
+This cache can be configured from the `cache` tab in the xipivot GUI or directly using the following three parameters:
+
+`cache_enabled` - boolean flag, enable or disable the cache, defaults to `false`
+`cache_size`    - integer, cache allocation (max size) in megabyte, defaults to 2048 (2gb)
+`cache_max_age` - integer, number of seconds a cached object is allowed to be unused before it is purged, defaults to 600
+
+If caching is enabled XIPivot will try to read the full contents of each accessed DAT file into a memory cache and serve further access to this DAT from memory instead of doing a fresh disk I/O every time XI decides to read from it.
+Access times for every cached DAT are tracked and if a cached object is not accessed within `cache_max_age` seconds it is purged from the cache to make space.
+
+In addition to this a new command `/pivot c` is made available which will toggle an in-game overlay with cache statistics.
+
+`XIPivot.xml` with enabled caching and default parameters looks like this:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+    <setting name="root_path">C:/my/awesome/addons</setting>
+    <setting name="overlays">XI-Vision,XI-View,FFXI-HD</setting>
+    <setting name="cache_enabled">true</setting>
+    <setting name="cache_size">2048</setting>
+    <setting name="cache_max_age">600</setting>
+</settings>
+```
+
 ## Overlays with sound files / music
 
 XI is pretty unforgiving when replacing BGW music files at runtime and will crash if you do something stupid.
