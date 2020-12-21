@@ -388,10 +388,10 @@ namespace Ashita
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-typedef std::function<HRESULT(__stdcall)(DWORD, LPDIDEVICEOBJECTDATA, DWORD, LPDWORD, DWORD)> getdevicedatacallback_f;
-typedef std::function<HRESULT(__stdcall)(DWORD, LPVOID)> getdevicestatecallback_f;
-typedef std::function<BOOL(__stdcall)(WPARAM, LPARAM, bool)> keyboardcallback_f;
-typedef std::function<BOOL(__stdcall)(uint32_t, WPARAM, LPARAM, bool)> mousecallback_f;
+typedef HRESULT(__stdcall* getdevicedatacallback_f)(DWORD, LPDIDEVICEOBJECTDATA, DWORD, LPDWORD, DWORD);
+typedef HRESULT(__stdcall* getdevicestatecallback_f)(DWORD, LPVOID);
+typedef BOOL(__stdcall* keyboardcallback_f)(WPARAM, LPARAM, bool);
+typedef BOOL(__stdcall* mousecallback_f)(uint32_t, WPARAM, LPARAM, bool);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -409,8 +409,8 @@ typedef std::function<BOOL(__stdcall)(uint32_t, WPARAM, LPARAM, bool)> mousecall
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-typedef std::function<bool(__stdcall)(Ashita::KeyboardEvent eventId, void* object, int32_t vkey, bool down, LPARAM lParam)> fontkeyboardevent_f;
-typedef std::function<bool(__stdcall)(Ashita::MouseEvent eventId, void* object, int32_t xpos, int32_t ypos)> fontmouseevent_f;
+typedef bool(__stdcall* fontkeyboardevent_f)(Ashita::KeyboardEvent eventId, void* object, int32_t vkey, bool down, LPARAM lParam);
+typedef bool(__stdcall* fontmouseevent_f)(Ashita::MouseEvent eventId, void* object, int32_t xpos, int32_t ypos);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
