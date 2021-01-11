@@ -250,29 +250,17 @@ namespace XiPivot
 
 		void AshitaInterface::Settings::save(IConfigurationManager* config)
 		{
+			config->Delete(PluginName);
+
 			config->SetValue(PluginName, u8"settings", u8"root_path", rootPath.c_str());
 			config->SetValue(PluginName, u8"settings", u8"debug_log", debugLog ? u8"true" : u8"false");
 
-			for (unsigned i = 0; ; ++i)
+			for (unsigned i = 0; i < overlays.size(); ++i)
 			{
 				char key[10];
 				snprintf(key, 9, u8"%d", i);
 
-				if (i < overlays.size())
-				{
-					config->SetValue(PluginName, u8"overlays", key, overlays.at(i).c_str());
-				}
-				else
-				{
-					if (config->GetString(PluginName, u8"overlays", key) != nullptr)
-					{
-						config->SetValue(PluginName, u8"overlays", key, u8"");
-					}
-					else
-					{
-						break;
-					}
-				}
+				config->SetValue(PluginName, u8"overlays", key, overlays.at(i).c_str());
 			}
 
 			config->SetValue(PluginName, u8"cache", u8"enabled", cacheEnabled ? u8"true" : u8"false");
