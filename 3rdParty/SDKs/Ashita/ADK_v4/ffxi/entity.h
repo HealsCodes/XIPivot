@@ -1,5 +1,5 @@
 /**
- * Ashita SDK - Copyright (c) 2020 Ashita Development Team
+ * Ashita SDK - Copyright (c) 2021 Ashita Development Team
  * Contact: https://www.ashitaxi.com/
  * Contact: https://discord.gg/Ashita
  *
@@ -87,11 +87,6 @@ namespace Ashita::FFXI
         uint32_t        Flags7;                 // Overhead Flags (Hi-word: Jump Emote, Model Visibility etc.) (Low-word: Job Mastery Stars, Party Seek Mastery Star, etc. [Low-Byte:] Timer of some sort.)
     };
 
-    struct animation_t
-    {
-        uint32_t        Animations[0x0A];       // The animation names (4 bytes) that the entity has assigned to it.
-    };
-
     struct entity_t
     {
         uintptr_t       VTablePointer;          // The base CYyObject VTable pointer.
@@ -103,7 +98,7 @@ namespace Ashita::FFXI
         float           MovementSpeed;          // The entities movement speed.
         float           AnimationSpeed;         // The entities animation speed.
         uintptr_t       WarpPointer;            // The entities warp pointer. [Points to the entities model and editable movement information.]
-        uintptr_t       EntityAttachments[12];  // The entities attachments. [ie. CXiSkeletonActor - Used with things such as GEO Indi's.]
+        uintptr_t       Attachments[12];        // The entities attachments. [ie. CXiSkeletonActor - Used with things such as GEO Indi's.]
         uintptr_t       EventPointer;           // The entities event pointer. [Points to the XiEvent object that is being processed for the current event the entity is in.]
         float           Distance;               // The entities distance to the local player.
         uint32_t        Unknown0001;            // Unknown [0x64 - Used with movement calculations while talking to npcs during events.]
@@ -112,7 +107,7 @@ namespace Ashita::FFXI
         uintptr_t       Unknown0003;            // Unknown [Used to be pet owner id, seems different now.]
         uint8_t         HPPercent;              // The entities health percent.
         uint8_t         Unknown0004;            // Unknown [Used to be pet mp percent, not used anymore.]
-        uint8_t         EntityType;             // The entities object type. [0 = PC, 1 = NPC, 2 = NPC (Fixed Models), 3 = Doors etc.]
+        uint8_t         Type;                   // The entities object type. [0 = PC, 1 = NPC, 2 = NPC (Fixed Models), 3 = Doors etc.]
         uint8_t         Race;                   // The entities race id.
         uint16_t        Unknown0005;            // Unknown [Used for position updates, set usually when the entity is moving. Used as a countdown.]
         uint16_t        Unknown0006;            // Unknown [Used to constantly validate the entity for something. Prevents model updates if set.]
@@ -148,7 +143,7 @@ namespace Ashita::FFXI
         uint32_t        Unknown0019;            // Unknown
         uint32_t        ClaimStatus;            // The entities current claim information / last claimed info for dead entities. [Low-word holds the claimer server id. High-word is a 0/1 flag.]
         uint32_t        Unknown0020;            // Unknown [Unknown flag checked for 0/1 value.]
-        animation_t     Animations;             // The entities animations.
+        uint32_t        Animations[10];         // The entities animations.
         uint16_t        AnimationTime;          // The current time/duration of the animation. (ie. Counts up while walking.)
         uint16_t        AnimationStep;          // The current step of the animation. [Set via: rand() % 600 + 600]
         uint8_t         AnimationPlay;          // Flag used to cause the entities set animation to play. [6 = Sit/Stand, 12 = Play Emote, 21 = Sit, etc.]

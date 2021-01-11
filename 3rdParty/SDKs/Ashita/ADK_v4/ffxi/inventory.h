@@ -1,5 +1,5 @@
 /**
- * Ashita SDK - Copyright (c) 2020 Ashita Development Team
+ * Ashita SDK - Copyright (c) 2021 Ashita Development Team
  * Contact: https://www.ashitaxi.com/
  * Contact: https://discord.gg/Ashita
  *
@@ -54,7 +54,7 @@ namespace Ashita::FFXI
         uint32_t            Flags;                      // The treasure item flags.
         uint32_t            ItemId;                     // The treasure item id.
         uint32_t            Count;                      // The treasure item count.
-        uint32_t            Unknown0000[9];             // Unknown
+        uint8_t             Unknown0000[36];            // Unknown
         uint32_t            Status;                     // The treasure item status.
         uint16_t            Lot;                        // The local players lot on the treasure item.
         uint16_t            WinningLot;                 // The treasure item current winning lot.

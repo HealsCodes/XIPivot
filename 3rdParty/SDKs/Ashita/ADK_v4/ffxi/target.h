@@ -1,5 +1,5 @@
 /**
- * Ashita SDK - Copyright (c) 2020 Ashita Development Team
+ * Ashita SDK - Copyright (c) 2021 Ashita Development Team
  * Contact: https://www.ashitaxi.com/
  * Contact: https://discord.gg/Ashita
  *
@@ -110,7 +110,7 @@ namespace Ashita::FFXI
     {
         uintptr_t   VTablePointer;              // The target window class VTable pointer.
         uint32_t    Unknown0000;                // Unknown
-        uintptr_t   TargetWindowPointer;        // Pointer to the target window object.
+        uintptr_t   WindowPointer;              // Pointer to the target window object.
         uint32_t    Unknown0001;                // Unknown
         uint8_t     Unknown0002;                // Unknown [Set to 1 each time you initially target something.]
         uint8_t     Unknown0003[3];             // Unknown

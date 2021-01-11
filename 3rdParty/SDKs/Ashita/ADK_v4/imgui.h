@@ -1,5 +1,5 @@
 /**
- * Ashita SDK - Copyright (c) 2020 Ashita Development Team
+ * Ashita SDK - Copyright (c) 2021 Ashita Development Team
  * Contact: https://www.ashitaxi.com/
  * Contact: https://discord.gg/Ashita
  *
@@ -1280,7 +1280,7 @@ struct ImVector
         if (new_capacity <= Capacity)
             return;
         T* new_data = (T*)malloc((size_t)new_capacity * sizeof(T));
-        if (Data)
+        if (new_data && Data)
         {
             memcpy(new_data, Data, (size_t)Size * sizeof(T));
             free(Data);

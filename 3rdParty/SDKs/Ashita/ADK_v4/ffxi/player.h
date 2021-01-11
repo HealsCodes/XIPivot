@@ -1,5 +1,5 @@
 /**
- * Ashita SDK - Copyright (c) 2020 Ashita Development Team
+ * Ashita SDK - Copyright (c) 2021 Ashita Development Team
  * Contact: https://www.ashitaxi.com/
  * Contact: https://discord.gg/Ashita
  *
@@ -147,16 +147,16 @@ namespace Ashita::FFXI
 
     struct abilityrecast_t
     {
-        uint16_t    Recast;         // Recast timer at the time of use.
+        uint16_t    Recast;         // The ability recast timer at the time of use.
         uint8_t     Unknown0000;    // Unknown
-        uint8_t     RecastTimerId;  // Recast ability timer id. 
+        uint8_t     TimerId;        // The ability recast timer id.
         uint32_t    Unknown0001;    // Unknown
     };
 
     struct mountrecast_t
     {
         uint32_t Recast;
-        uint32_t RecastTimerId;
+        uint32_t TimerId;
     };
 
     union unityinfo_t
@@ -173,14 +173,14 @@ namespace Ashita::FFXI
     struct jobpointentry_t
     {
         uint16_t CapacityPoints;
-        uint16_t JobPoints;
-        uint16_t JobPointsSpent;
+        uint16_t Points;
+        uint16_t PointsSpent;
     };
 
     struct jobpointsinfo_t
     {
         uint32_t        Unknown0000;
-        jobpointentry_t JobPoints[24];
+        jobpointentry_t Jobs[24];
     };
 
     struct player_t
