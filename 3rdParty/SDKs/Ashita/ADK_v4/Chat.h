@@ -35,6 +35,19 @@
 
 namespace Ashita::Chat
 {
+    /**
+     * Warning:
+     * 
+     * There is a bug with the retail client that can break inline coloring when the client needs to 
+     * wrap long lines of text into multiple lines. If the players client is configured where the chat 
+     * window is too small to display a single chat line, the client will look for an optimal position 
+     * in the text to break it into parts. When this happens it only looks for and stores color codes 
+     * that start with 0x1E. Codes that start with 0x1F (color table 2) are ignored and incorrectly 
+     * recolored when the split lines begins.
+     *
+     * It is recommended to avoid 0x1F color codes as much as possible and only use 0x1E codes instead!
+     */
+
     namespace Helpers
     {
         constexpr auto HeaderOpen  = u8"\x1E\x51[\x1E\x06";
@@ -383,7 +396,7 @@ namespace Ashita::Chat
      */
     inline std::string Message(const std::string& str)
     {
-        return Color2(130, str);
+        return Color1(106, str);
     }
 
     /**

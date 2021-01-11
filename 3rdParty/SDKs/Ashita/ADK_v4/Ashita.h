@@ -1,5 +1,5 @@
 /**
- * Ashita SDK - Copyright (c) 2020 Ashita Development Team
+ * Ashita SDK - Copyright (c) 2021 Ashita Development Team
  * Contact: https://www.ashitaxi.com/
  * Contact: https://discord.gg/Ashita
  *
@@ -25,6 +25,17 @@
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
 #endif
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Warning Configurations
+//
+// Disables some warnings we do not need to care/worry about due to where they originate from.
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#pragma warning(push)
+#pragma warning(disable : 26812) // Prefer 'enum class' over 'enum'.
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -561,6 +572,21 @@ struct IItem
     uint8_t Bitmap[0x980];   // The items bitmap data.
 };
 
+struct IStatusIcon
+{
+    uint16_t Index;    // The status icons index in the DAT file.
+    uint16_t Id;       // The status icons id. (Most match the index, but some don't.)
+    uint8_t CanCancel; // The status icons cancellable flag. (1 if it can be cancelled, 0 otherwise.)
+    uint8_t HideTimer; // The status icons force-hide timer flag. (1 if the timer is hidden by force, 0 otherwise.)
+
+    const char* Description[3]; // The status icons description. (0 = Default, 1 = Japanese, 2 = English)
+
+    uint32_t ImageSize;      // The status icons image size.
+    uint8_t ImageType;       // The status icons image type.
+    uint8_t ImageName[0x10]; // The status icons image name.
+    uint8_t Bitmap[0x156A];  // The status icons bitmap data.
+};
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // Ashita Memory Object Interface Definitions
@@ -634,6 +660,9 @@ interface IEntity
      */
     virtual Ashita::FFXI::entity_t* GetRawEntity(uint32_t index) const = 0;
 
+    // Helper Methods
+    virtual uint32_t GetEntityMapSize(void) const = 0;
+
     // Get Properties
     virtual float GetLocalPositionX(uint32_t index) const                           = 0;
     virtual float GetLocalPositionY(uint32_t index) const                           = 0;
@@ -661,7 +690,7 @@ interface IEntity
     virtual float GetDistance(uint32_t index) const                                 = 0;
     virtual float GetHeading(uint32_t index) const                                  = 0;
     virtual uint8_t GetHPPercent(uint32_t index) const                              = 0;
-    virtual uint8_t GetEntityType(uint32_t index) const                             = 0;
+    virtual uint8_t GetType(uint32_t index) const                                   = 0;
     virtual uint8_t GetRace(uint32_t index) const                                   = 0;
     virtual uint16_t GetModelUpdateFlags(uint32_t index) const                      = 0;
     virtual uint16_t GetLookHair(uint32_t index) const                              = 0;
@@ -753,7 +782,7 @@ interface IEntity
     virtual void SetDistance(uint32_t index, float distance) const                                   = 0;
     virtual void SetHeading(uint32_t index, float heading) const                                     = 0;
     virtual void SetHPPercent(uint32_t index, uint8_t hpp) const                                     = 0;
-    virtual void SetEntityType(uint32_t index, uint8_t type) const                                   = 0;
+    virtual void SetType(uint32_t index, uint8_t type) const                                         = 0;
     virtual void SetRace(uint32_t index, uint8_t race) const                                         = 0;
     virtual void SetModelUpdateFlags(uint32_t index, uint16_t flags) const                           = 0;
     virtual void SetLookHair(uint32_t index, uint16_t hair) const                                    = 0;
@@ -997,9 +1026,9 @@ interface IPlayer
 interface IRecast
 {
     // Get Properties
-    virtual uint32_t GetAbilityRecastTimerId(uint32_t index) const = 0;
-    virtual uint32_t GetAbilityRecastTimer(uint32_t index) const   = 0;
-    virtual uint32_t GetSpellRecastTimer(uint32_t index) const     = 0;
+    virtual uint32_t GetAbilityTimerId(uint32_t index) const = 0;
+    virtual uint32_t GetAbilityTimer(uint32_t index) const   = 0;
+    virtual uint32_t GetSpellTimer(uint32_t index) const     = 0;
 };
 
 interface ITarget
@@ -1013,16 +1042,16 @@ interface ITarget
     virtual Ashita::FFXI::targetwindow_t* GetRawStructureWindow(void) const = 0;
 
     // Get Properties (Target Entry)
-    virtual uint32_t GetTargetIndex(uint32_t index) const          = 0;
-    virtual uint32_t GetTargetServerId(uint32_t index) const       = 0;
-    virtual uintptr_t GetTargetEntityPointer(uint32_t index) const = 0;
-    virtual uintptr_t GetTargetWarpPointer(uint32_t index) const   = 0;
-    virtual float GetTargetArrowPositionX(uint32_t index) const    = 0;
-    virtual float GetTargetArrowPositionY(uint32_t index) const    = 0;
-    virtual float GetTargetArrowPositionZ(uint32_t index) const    = 0;
-    virtual uint8_t GetTargetActive(uint32_t index) const          = 0;
-    virtual uint8_t GetTargetArrowActive(uint32_t index) const     = 0;
-    virtual uint16_t GetTargetChecksum(uint32_t index) const       = 0;
+    virtual uint32_t GetTargetIndex(uint32_t index) const    = 0;
+    virtual uint32_t GetServerId(uint32_t index) const       = 0;
+    virtual uintptr_t GetEntityPointer(uint32_t index) const = 0;
+    virtual uintptr_t GetWarpPointer(uint32_t index) const   = 0;
+    virtual float GetArrowPositionX(uint32_t index) const    = 0;
+    virtual float GetArrowPositionY(uint32_t index) const    = 0;
+    virtual float GetArrowPositionZ(uint32_t index) const    = 0;
+    virtual uint8_t GetActive(uint32_t index) const          = 0;
+    virtual uint8_t GetArrowActive(uint32_t index) const     = 0;
+    virtual uint16_t GetChecksum(uint32_t index) const       = 0;
 
     // Get Properties (Target Misc)
     virtual uint8_t GetIsSubTargetActive(void) const     = 0;
@@ -1041,13 +1070,13 @@ interface ITarget
     virtual float GetMouseDistanceY(void) const          = 0;
 
     // Get Properties (Target Window)
-    virtual const char* GetTargetWindowName(void) const        = 0;
-    virtual uintptr_t GetTargetWindowEntityPointer(void) const = 0;
-    virtual uint32_t GetTargetWindowServerId(void) const       = 0;
-    virtual uint8_t GetTargetWindowHPPercent(void) const       = 0;
-    virtual uint8_t GetTargetWindowDeathFlag(void) const       = 0;
-    virtual uint8_t GetTargetWindowReraiseFlag(void) const     = 0;
-    virtual uint8_t GetTargetWindowIsLoaded(void) const        = 0;
+    virtual const char* GetWindowName(void) const        = 0;
+    virtual uintptr_t GetWindowEntityPointer(void) const = 0;
+    virtual uint32_t GetWindowServerId(void) const       = 0;
+    virtual uint8_t GetWindowHPPercent(void) const       = 0;
+    virtual uint8_t GetWindowDeathFlag(void) const       = 0;
+    virtual uint8_t GetWindowReraiseFlag(void) const     = 0;
+    virtual uint8_t GetWindowIsLoaded(void) const        = 0;
 
     // Helper Functions
     virtual void SetTarget(uint32_t index, bool force) const = 0;
@@ -1138,7 +1167,7 @@ interface IChatManager
     virtual const char* GetInputTextRaw(void) const                        = 0;
     virtual void SetInputTextRaw(const char* message, uint32_t size) const = 0;
     virtual uint32_t GetInputTextRawLength(void) const                     = 0;
-    virtual uint32_t GetInputTextRawCarrotPosition(void) const             = 0;
+    virtual uint32_t GetInputTextRawCaretPosition(void) const              = 0;
     virtual const char* GetInputTextParsed(void) const                     = 0;
     virtual void SetInputTextParsed(const char* message) const             = 0;
     virtual uint32_t GetInputTextParsedLength(void) const                  = 0;
@@ -1156,7 +1185,7 @@ interface IConfigurationManager
     // Methods (Files)
     virtual bool Load(const char* alias, const char* file) = 0;
     virtual bool Save(const char* alias, const char* file) = 0;
-    virtual void Remove(const char* alias)                 = 0;
+    virtual void Delete(const char* alias)                 = 0;
 
     // Methods (Value Helpers)
     virtual const char* GetString(const char* alias, const char* section, const char* key)            = 0;
@@ -1194,6 +1223,8 @@ interface IOffsetManager
     // Methods
     virtual void Add(const char* section, const char* key, const int32_t offset) = 0;
     virtual int32_t Get(const char* section, const char* key) const              = 0;
+    virtual void Delete(const char* section)                                     = 0;
+    virtual void Delete(const char* section, const char* key)                    = 0;
 };
 
 interface IPacketManager
@@ -1248,39 +1279,7 @@ interface IPointerManager
     virtual void Add(const char* name, const uintptr_t pointer)                                                                  = 0;
     virtual uintptr_t Add(const char* name, const char* module, const char* pattern, const int32_t offset, const uint32_t count) = 0;
     virtual uintptr_t Get(const char* name) const                                                                                = 0;
-};
-
-interface IProperties
-{
-    // PlayOnline Window Properties
-    virtual HWND GetPlayOnlineHwnd(void) const        = 0;
-    virtual uint32_t GetPlayOnlineStyle(void) const   = 0;
-    virtual uint32_t GetPlayOnlineStyleEx(void) const = 0;
-    virtual RECT GetPlayOnlineRect(void) const        = 0;
-    virtual void SetPlayOnlineHwnd(HWND hWnd)         = 0;
-    virtual void SetPlayOnlineStyle(uint32_t style)   = 0;
-    virtual void SetPlayOnlineStyleEx(uint32_t style) = 0;
-    virtual void SetPlayOnlineRect(RECT rect)         = 0;
-
-    // PlayOnline Mask Window Properties
-    virtual HWND GetPlayOnlineMaskHwnd(void) const        = 0;
-    virtual uint32_t GetPlayOnlineMaskStyle(void) const   = 0;
-    virtual uint32_t GetPlayOnlineMaskStyleEx(void) const = 0;
-    virtual RECT GetPlayOnlineMaskRect(void) const        = 0;
-    virtual void SetPlayOnlineMaskHwnd(HWND hWnd)         = 0;
-    virtual void SetPlayOnlineMaskStyle(uint32_t style)   = 0;
-    virtual void SetPlayOnlineMaskStyleEx(uint32_t style) = 0;
-    virtual void SetPlayOnlineMaskRect(RECT rect)         = 0;
-
-    // Final Fantasy XI Window Properties
-    virtual HWND GetFinalFantasyHwnd(void) const        = 0;
-    virtual uint32_t GetFinalFantasyStyle(void) const   = 0;
-    virtual uint32_t GetFinalFantasyStyleEx(void) const = 0;
-    virtual RECT GetFinalFantasyRect(void) const        = 0;
-    virtual void SetFinalFantasyHwnd(HWND hWnd)         = 0;
-    virtual void SetFinalFantasyStyle(uint32_t style)   = 0;
-    virtual void SetFinalFantasyStyleEx(uint32_t style) = 0;
-    virtual void SetFinalFantasyRect(RECT rect)         = 0;
+    virtual void Delete(const char* name)                                                                                        = 0;
 };
 
 interface IResourceManager
@@ -1298,6 +1297,10 @@ interface IResourceManager
     virtual IItem* GetItemById(uint32_t id) const                         = 0;
     virtual IItem* GetItemByName(const char* name, uint32_t langId) const = 0;
 
+    // Methods (Status Icons)
+    virtual IStatusIcon* GetStatusIconByIndex(uint16_t index) const = 0;
+    virtual IStatusIcon* GetStatusIconById(uint16_t id) const       = 0;
+
     // Methods (Strings)
     virtual const char* GetString(const char* table, uint32_t index) const                  = 0;
     virtual const char* GetString(const char* table, uint32_t index, uint32_t langId) const = 0;
@@ -1306,6 +1309,7 @@ interface IResourceManager
 
     // Methods (Textures)
     virtual IDirect3DTexture8* GetTexture(const char* name) const = 0;
+    virtual D3DXIMAGE_INFO GetTextureInfo(const char* name) const = 0;
 
     // Helpers
     virtual uint32_t GetAbilityRange(uint32_t abilityId, bool useAreaRange) const = 0;
@@ -1322,9 +1326,11 @@ interface IResourceManager
 interface IPrimitiveObject
 {
     // Methods
-    virtual bool SetTextureFromFile(const char* path)                                = 0;
-    virtual bool SetTextureFromResource(const char* moduleName, const char* resName) = 0;
-    virtual bool HitTest(int32_t x, int32_t y) const                                 = 0;
+    virtual bool SetTextureFromFile(const char* path)                                           = 0;
+    virtual bool SetTextureFromMemory(const void* data, const uint32_t size, D3DCOLOR colorKey) = 0;
+    virtual bool SetTextureFromResource(const char* moduleName, const char* resName)            = 0;
+    virtual bool SetTextureFromResourceCache(const char* name)                                  = 0;
+    virtual bool HitTest(int32_t x, int32_t y) const                                            = 0;
 
     // Properties
     virtual const char* GetAlias(void) const                   = 0;
@@ -1503,6 +1509,39 @@ interface ILogManager
 // AshitaCore Interface Definition
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+interface IProperties
+{
+    // PlayOnline Window Properties
+    virtual HWND GetPlayOnlineHwnd(void) const        = 0;
+    virtual uint32_t GetPlayOnlineStyle(void) const   = 0;
+    virtual uint32_t GetPlayOnlineStyleEx(void) const = 0;
+    virtual RECT GetPlayOnlineRect(void) const        = 0;
+    virtual void SetPlayOnlineHwnd(HWND hWnd)         = 0;
+    virtual void SetPlayOnlineStyle(uint32_t style)   = 0;
+    virtual void SetPlayOnlineStyleEx(uint32_t style) = 0;
+    virtual void SetPlayOnlineRect(RECT rect)         = 0;
+
+    // PlayOnline Mask Window Properties
+    virtual HWND GetPlayOnlineMaskHwnd(void) const        = 0;
+    virtual uint32_t GetPlayOnlineMaskStyle(void) const   = 0;
+    virtual uint32_t GetPlayOnlineMaskStyleEx(void) const = 0;
+    virtual RECT GetPlayOnlineMaskRect(void) const        = 0;
+    virtual void SetPlayOnlineMaskHwnd(HWND hWnd)         = 0;
+    virtual void SetPlayOnlineMaskStyle(uint32_t style)   = 0;
+    virtual void SetPlayOnlineMaskStyleEx(uint32_t style) = 0;
+    virtual void SetPlayOnlineMaskRect(RECT rect)         = 0;
+
+    // Final Fantasy XI Window Properties
+    virtual HWND GetFinalFantasyHwnd(void) const        = 0;
+    virtual uint32_t GetFinalFantasyStyle(void) const   = 0;
+    virtual uint32_t GetFinalFantasyStyleEx(void) const = 0;
+    virtual RECT GetFinalFantasyRect(void) const        = 0;
+    virtual void SetFinalFantasyHwnd(HWND hWnd)         = 0;
+    virtual void SetFinalFantasyStyle(uint32_t style)   = 0;
+    virtual void SetFinalFantasyStyleEx(uint32_t style) = 0;
+    virtual void SetFinalFantasyRect(RECT rect)         = 0;
+};
 
 interface IAshitaCore
 {
@@ -2561,5 +2600,13 @@ public:
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 typedef IPolPlugin* /**/ (__stdcall* export_CreatePolPlugin_f)(const char* args);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Pop warning disables.
+//
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#pragma warning(pop)
 
 #endif // __ASHITA_SDK_H_INCLUDED__
