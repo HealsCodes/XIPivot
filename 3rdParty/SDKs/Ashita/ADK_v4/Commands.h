@@ -19,8 +19,8 @@
  * along with Ashita.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __ASHITA_SDK_COMMANDS_H_INCLUDED__
-#define __ASHITA_SDK_COMMANDS_H_INCLUDED__
+#ifndef ASHITA_SDK_COMMANDS_H_INCLUDED
+#define ASHITA_SDK_COMMANDS_H_INCLUDED
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -67,7 +67,7 @@ namespace Ashita::Commands
      */
     static __forceinline bool _isspace(const char c)
     {
-        return (c == u8' ' || c == u8'\t' || c == u8'\n' || c == u8'\v' || c == u8'\f' || c == u8'\r');
+        return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r';
     }
 
     /**
@@ -106,7 +106,7 @@ namespace Ashita::Commands
                 case cState::None:
                     if (Ashita::Commands::_isspace(c))
                         continue;
-                    if (c == u8'"')
+                    if (c == '"')
                     {
                         state  = cState::InString;
                         pStart = (char*)p + 1;
@@ -120,7 +120,7 @@ namespace Ashita::Commands
                  * String state, look for ending quote to complete a string..
                  */
                 case cState::InString:
-                    if (c == u8'"')
+                    if (c == '"')
                     {
                         strncpy_s(curr, pStart, p - pStart);
                         args->push_back(std::string(curr));
@@ -155,6 +155,6 @@ namespace Ashita::Commands
         return args->size();
     }
 
-}; // namespace Ashita::Commands
+} // namespace Ashita::Commands
 
-#endif // __ASHITA_SDK_COMMANDS_H_INCLUDED__
+#endif // ASHITA_SDK_COMMANDS_H_INCLUDED

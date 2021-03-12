@@ -19,8 +19,8 @@
  * along with Ashita.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __ASHITA_SDK_H_INCLUDED__
-#define __ASHITA_SDK_H_INCLUDED__
+#ifndef ASHITA_SDK_H_INCLUDED
+#define ASHITA_SDK_H_INCLUDED
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -45,6 +45,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
+// ReSharper disable CppClassCanBeFinal
 // ReSharper disable CppInconsistentNaming
 // ReSharper disable CppPolymorphicClassWithNonVirtualPublicDestructor
 // ReSharper disable CppUnusedIncludeDirective
@@ -124,6 +125,19 @@ union ashitaversion_t
         uint16_t Build;    // The versions build value.
         uint16_t Revision; // The versions revision value.
     };
+
+    ashitaversion_t(void)
+        : Version(0)
+    {}
+    explicit ashitaversion_t(const uint64_t version)
+        : Version(version)
+    {}
+    ashitaversion_t(const uint16_t major, const uint16_t minor, const uint16_t build, const uint16_t revision)
+        : Major(major)
+        , Minor(minor)
+        , Build(build)
+        , Revision(revision)
+    {}
 };
 #pragma warning(default : 4201)
 
@@ -164,12 +178,12 @@ namespace Ashita
      */
     enum class PluginFlags : uint32_t
     {
-        None            = (0 << 0), // None.
-        UseCommands     = (1 << 0), // The plugin will make use of the incoming command handler.
-        UseText         = (1 << 1), // The plugin will make use of the incoming/outgoing text handlers.
-        UsePackets      = (1 << 2), // The plugin will make use of the incoming/outgoing packet handlers.
-        UseDirect3D     = (1 << 3), // The plugin will make use of the various Direct3D handlers.
-        UsePluginEvents = (1 << 4), // The plugin will make use of the Ashita plugin event system. (RaiseEvent / HandleEvent)
+        None            = 0 << 0, // None.
+        UseCommands     = 1 << 0, // The plugin will make use of the incoming command handler.
+        UseText         = 1 << 1, // The plugin will make use of the incoming/outgoing text handlers.
+        UsePackets      = 1 << 2, // The plugin will make use of the incoming/outgoing packet handlers.
+        UseDirect3D     = 1 << 3, // The plugin will make use of the various Direct3D handlers.
+        UsePluginEvents = 1 << 4, // The plugin will make use of the Ashita plugin event system. (RaiseEvent / HandleEvent)
 
         /**
          * Ashita v3 legacy style setup.
@@ -279,11 +293,11 @@ namespace Ashita
      */
     enum class FontBorderFlags : uint32_t
     {
-        None   = (0 << 0),                    // None.
-        Top    = (1 << 0),                    // Font will have a top border.
-        Bottom = (1 << 1),                    // Font will have a bottom border.
-        Left   = (1 << 2),                    // Font will have a left border.
-        Right  = (1 << 3),                    // Font will have a right border.
+        None   = 0 << 0,                      // None.
+        Top    = 1 << 0,                      // Font will have a top border.
+        Bottom = 1 << 1,                      // Font will have a bottom border.
+        Left   = 1 << 2,                      // Font will have a left border.
+        Right  = 1 << 3,                      // Font will have a right border.
         All    = Top | Bottom | Left | Right, // Font will have borders on all sides.
     };
 
@@ -292,13 +306,13 @@ namespace Ashita
      */
     enum class FontCreateFlags : uint32_t
     {
-        None          = (0 << 0), // None.
-        Bold          = (1 << 0), // Font will be bold.
-        Italic        = (1 << 1), // Font will be italic.
-        StrikeThrough = (1 << 2), // Font will be strikethrough.
-        Underlined    = (1 << 3), // Font will be underlined.
-        CustomFile    = (1 << 4), // Font will be loaded from a custom file, not installed on the system.
-        ClearType     = (1 << 5), // Font will be created with an alpha channel texture supporting clear type.
+        None          = 0 << 0, // None.
+        Bold          = 1 << 0, // Font will be bold.
+        Italic        = 1 << 1, // Font will be italic.
+        StrikeThrough = 1 << 2, // Font will be strikethrough.
+        Underlined    = 1 << 3, // Font will be underlined.
+        CustomFile    = 1 << 4, // Font will be loaded from a custom file, not installed on the system.
+        ClearType     = 1 << 5, // Font will be created with an alpha channel texture supporting clear type.
     };
 
     /**
@@ -306,12 +320,12 @@ namespace Ashita
      */
     enum class FontDrawFlags : uint32_t
     {
-        None           = (0 << 0), // None.
-        Filtered       = (1 << 0), // Font will be drawn filtered.
-        CenterX        = (1 << 1), // Font will be drawn centered.
-        CenterY        = (1 << 2), // Font will be drawn centered.
-        RightJustified = (1 << 3), // Font will be drawn right-justified.
-        Outlined       = (1 << 4), // Font will be drawn with a colored outline.
+        None           = 0 << 0, // None.
+        Filtered       = 1 << 0, // Font will be drawn filtered.
+        CenterX        = 1 << 1, // Font will be drawn centered.
+        CenterY        = 1 << 2, // Font will be drawn centered.
+        RightJustified = 1 << 3, // Font will be drawn right-justified.
+        Outlined       = 1 << 4, // Font will be drawn with a colored outline.
     };
 
     /**
@@ -363,7 +377,7 @@ namespace Ashita
     DEFINE_ENUMCLASS_OPERATORS(Ashita::FontCreateFlags);
     DEFINE_ENUMCLASS_OPERATORS(Ashita::FontDrawFlags);
 
-}; // namespace Ashita
+} // namespace Ashita
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -909,26 +923,33 @@ interface IParty
     virtual int8_t GetAllianceInvited(void) const                = 0;
 
     // Get Properties (Party Members)
-    virtual uint8_t GetMemberIndex(uint32_t index) const        = 0;
-    virtual uint8_t GetMemberNumber(uint32_t index) const       = 0;
-    virtual const char* GetMemberName(uint32_t index) const     = 0;
-    virtual uint32_t GetMemberServerId(uint32_t index) const    = 0;
-    virtual uint32_t GetMemberTargetIndex(uint32_t index) const = 0;
-    virtual uint32_t GetMemberHP(uint32_t index) const          = 0;
-    virtual uint32_t GetMemberMP(uint32_t index) const          = 0;
-    virtual uint32_t GetMemberTP(uint32_t index) const          = 0;
-    virtual uint8_t GetMemberHPPercent(uint32_t index) const    = 0;
-    virtual uint8_t GetMemberMPPercent(uint32_t index) const    = 0;
-    virtual uint16_t GetMemberZone(uint32_t index) const        = 0;
-    virtual uint32_t GetMemberFlagMask(uint32_t index) const    = 0;
-    virtual uint8_t GetMemberMainJob(uint32_t index) const      = 0;
-    virtual uint8_t GetMemberMainJobLevel(uint32_t index) const = 0;
-    virtual uint8_t GetMemberSubJob(uint32_t index) const       = 0;
-    virtual uint8_t GetMemberSubJobLevel(uint32_t index) const  = 0;
-    virtual uint32_t GetMemberServerId2(uint32_t index) const   = 0;
-    virtual uint8_t GetMemberHPPercent2(uint32_t index) const   = 0;
-    virtual uint8_t GetMemberMPPercent2(uint32_t index) const   = 0;
-    virtual uint8_t GetMemberIsActive(uint32_t index) const     = 0;
+    virtual uint8_t GetMemberIndex(uint32_t index) const                       = 0;
+    virtual uint8_t GetMemberNumber(uint32_t index) const                      = 0;
+    virtual const char* GetMemberName(uint32_t index) const                    = 0;
+    virtual uint32_t GetMemberServerId(uint32_t index) const                   = 0;
+    virtual uint32_t GetMemberTargetIndex(uint32_t index) const                = 0;
+    virtual uint32_t GetMemberLastUpdatedTimestamp(uint32_t index) const       = 0;
+    virtual uint32_t GetMemberHP(uint32_t index) const                         = 0;
+    virtual uint32_t GetMemberMP(uint32_t index) const                         = 0;
+    virtual uint32_t GetMemberTP(uint32_t index) const                         = 0;
+    virtual uint8_t GetMemberHPPercent(uint32_t index) const                   = 0;
+    virtual uint8_t GetMemberMPPercent(uint32_t index) const                   = 0;
+    virtual uint16_t GetMemberZone(uint32_t index) const                       = 0;
+    virtual uint16_t GetMemberZone2(uint32_t index) const                      = 0;
+    virtual uint32_t GetMemberFlagMask(uint32_t index) const                   = 0;
+    virtual uint16_t GetMemberTreasureLot(uint32_t index, uint32_t slot) const = 0;
+    virtual uint16_t GetMemberMonstrosityItemId(uint32_t index) const          = 0;
+    virtual uint8_t GetMemberMonstrosityPrefixFlag1(uint32_t index) const      = 0;
+    virtual uint8_t GetMemberMonstrosityPrefixFlag2(uint32_t index) const      = 0;
+    virtual const char* GetMemberMonstrosityName(uint32_t index) const         = 0;
+    virtual uint8_t GetMemberMainJob(uint32_t index) const                     = 0;
+    virtual uint8_t GetMemberMainJobLevel(uint32_t index) const                = 0;
+    virtual uint8_t GetMemberSubJob(uint32_t index) const                      = 0;
+    virtual uint8_t GetMemberSubJobLevel(uint32_t index) const                 = 0;
+    virtual uint32_t GetMemberServerId2(uint32_t index) const                  = 0;
+    virtual uint8_t GetMemberHPPercent2(uint32_t index) const                  = 0;
+    virtual uint8_t GetMemberMPPercent2(uint32_t index) const                  = 0;
+    virtual uint8_t GetMemberIsActive(uint32_t index) const                    = 0;
 
     /**
      * Warning!
@@ -1187,6 +1208,10 @@ interface IConfigurationManager
     virtual bool Save(const char* alias, const char* file) = 0;
     virtual void Delete(const char* alias)                 = 0;
 
+    // Methods (Section Helpers)
+    virtual uint32_t GetSections(const char* alias, char* buffer, uint32_t bufferSize)                         = 0;
+    virtual uint32_t GetSectionKeys(const char* alias, const char* section, char* buffer, uint32_t bufferSize) = 0;
+
     // Methods (Value Helpers)
     virtual const char* GetString(const char* alias, const char* section, const char* key)            = 0;
     virtual void SetValue(const char* alias, const char* section, const char* key, const char* value) = 0;
@@ -1221,10 +1246,10 @@ interface IMemoryManager
 interface IOffsetManager
 {
     // Methods
-    virtual void Add(const char* section, const char* key, const int32_t offset) = 0;
-    virtual int32_t Get(const char* section, const char* key) const              = 0;
-    virtual void Delete(const char* section)                                     = 0;
-    virtual void Delete(const char* section, const char* key)                    = 0;
+    virtual void Add(const char* section, const char* key, int32_t offset) = 0;
+    virtual int32_t Get(const char* section, const char* key) const        = 0;
+    virtual void Delete(const char* section)                               = 0;
+    virtual void Delete(const char* section, const char* key)              = 0;
 };
 
 interface IPacketManager
@@ -1250,7 +1275,7 @@ interface IPluginManager
     virtual uint32_t Count(void)            = 0;
 
     // Methods (Events)
-    virtual void RaiseEvent(const char* eventName, const void* eventData, const uint32_t eventSize) = 0;
+    virtual void RaiseEvent(const char* eventName, const void* eventData, uint32_t eventSize) = 0;
 
     // Properties
     virtual bool GetSilentPlugins(void) const  = 0;
@@ -1270,16 +1295,16 @@ interface IPolPluginManager
     virtual uint32_t Count(void)            = 0;
 
     // Methods (Events)
-    virtual void RaiseEvent(const char* eventName, const void* eventData, const uint32_t eventSize) = 0;
+    virtual void RaiseEvent(const char* eventName, const void* eventData, uint32_t eventSize) = 0;
 };
 
 interface IPointerManager
 {
     // Methods
-    virtual void Add(const char* name, const uintptr_t pointer)                                                                  = 0;
-    virtual uintptr_t Add(const char* name, const char* module, const char* pattern, const int32_t offset, const uint32_t count) = 0;
-    virtual uintptr_t Get(const char* name) const                                                                                = 0;
-    virtual void Delete(const char* name)                                                                                        = 0;
+    virtual void Add(const char* name, uintptr_t pointer)                                                                = 0;
+    virtual uintptr_t Add(const char* name, const char* moduleName, const char* pattern, int32_t offset, uint32_t count) = 0;
+    virtual uintptr_t Get(const char* name) const                                                                        = 0;
+    virtual void Delete(const char* name)                                                                                = 0;
 };
 
 interface IResourceManager
@@ -1326,11 +1351,11 @@ interface IResourceManager
 interface IPrimitiveObject
 {
     // Methods
-    virtual bool SetTextureFromFile(const char* path)                                           = 0;
-    virtual bool SetTextureFromMemory(const void* data, const uint32_t size, D3DCOLOR colorKey) = 0;
-    virtual bool SetTextureFromResource(const char* moduleName, const char* resName)            = 0;
-    virtual bool SetTextureFromResourceCache(const char* name)                                  = 0;
-    virtual bool HitTest(int32_t x, int32_t y) const                                            = 0;
+    virtual bool SetTextureFromFile(const char* path)                                     = 0;
+    virtual bool SetTextureFromMemory(const void* data, uint32_t size, D3DCOLOR colorKey) = 0;
+    virtual bool SetTextureFromResource(const char* moduleName, const char* resName)      = 0;
+    virtual bool SetTextureFromResourceCache(const char* name)                            = 0;
+    virtual bool HitTest(int32_t x, int32_t y) const                                      = 0;
 
     // Properties
     virtual const char* GetAlias(void) const                   = 0;
@@ -1541,6 +1566,14 @@ interface IProperties
     virtual void SetFinalFantasyStyle(uint32_t style)   = 0;
     virtual void SetFinalFantasyStyleEx(uint32_t style) = 0;
     virtual void SetFinalFantasyRect(RECT rect)         = 0;
+
+    // Direct3D Properties
+    virtual bool GetD3DAmbientEnabled(void) const   = 0;
+    virtual uint32_t GetD3DAmbientColor(void) const = 0;
+    virtual uint32_t GetD3DFillMode(void) const     = 0;
+    virtual void SetD3DAmbientEnabled(bool enabled) = 0;
+    virtual void SetD3DAmbientColor(uint32_t color) = 0;
+    virtual void SetD3DFillMode(uint32_t fillmode)  = 0;
 };
 
 interface IAshitaCore
@@ -1567,6 +1600,21 @@ interface IAshitaCore
     virtual IPointerManager* GetPointerManager(void) const             = 0;
     virtual IPrimitiveManager* GetPrimitiveManager(void) const         = 0;
     virtual IResourceManager* GetResourceManager(void) const           = 0;
+
+    // Methods (API Hook Forwards)
+    virtual HWND GetForegroundWindow(void)                                                       = 0;
+    virtual HWND GetFocus(void)                                                                  = 0;
+    virtual int GetSystemMetrics(int nIndex)                                                     = 0;
+    virtual ATOM RegisterClassA(CONST WNDCLASSA * lpWndClass)                                    = 0;
+    virtual ATOM RegisterClassW(CONST WNDCLASSW * lpWndClass)                                    = 0;
+    virtual ATOM RegisterClassExA(CONST WNDCLASSEXA * lpWndClass)                                = 0;
+    virtual ATOM RegisterClassExW(CONST WNDCLASSEXW * lpWndClass)                                = 0;
+    virtual BOOL RemoveMenu(HMENU hMenu, UINT uPosition, UINT uFlags)                            = 0;
+    virtual LRESULT SendMessageA(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)             = 0;
+    virtual BOOL SetCursorPos(int X, int Y)                                                      = 0;
+    virtual HWND SetFocus(HWND hWnd)                                                             = 0;
+    virtual BOOL SetForegroundWindow(HWND hWnd)                                                  = 0;
+    virtual HHOOK SetWindowsHookExA(int idHook, HOOKPROC lpfn, HINSTANCE hmod, DWORD dwThreadId) = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1595,7 +1643,7 @@ interface IPluginBase
     virtual void Release(void)                                    = 0;
 
     // Event Callbacks: PluginManager
-    virtual void HandleEvent(const char*, const void*, const uint32_t) = 0;
+    virtual void HandleEvent(const char*, const void*, uint32_t) = 0;
 
     // Event Callbacks: ChatManager
     virtual bool HandleCommand(int32_t, const char*, bool)                                          = 0;
@@ -1630,26 +1678,15 @@ interface IPluginBase
 
 class IPlugin : public IPluginBase
 {
-protected:
-    IAshitaCore* m_AshitaCore;          // The main AshitaCore object pointer.
-    ILogManager* m_LogManager;          // The main LogManager object pointer.
-    IDirect3DDevice8* m_Direct3DDevice; // The main Direct3D device object pointer.
-    uint32_t m_PluginId;                // The plugins id. (It's base address.)
-
 public:
     /**
      * Constructor and Deconstructor
      */
     IPlugin(void)
-        : m_AshitaCore(nullptr)
-        , m_LogManager(nullptr)
-        , m_Direct3DDevice(nullptr)
-        , m_PluginId(0)
     {}
     virtual ~IPlugin(void)
     {}
 
-public:
     /**
      * Returns the plugins name.
      *
@@ -1657,7 +1694,7 @@ public:
      */
     const char* GetName(void) const override
     {
-        return u8"PluginBase";
+        return "PluginBase";
     }
 
     /**
@@ -1667,7 +1704,7 @@ public:
      */
     const char* GetAuthor(void) const override
     {
-        return u8"Ashita Development Team";
+        return "Ashita Development Team";
     }
 
     /**
@@ -1677,7 +1714,7 @@ public:
      */
     const char* GetDescription(void) const override
     {
-        return u8"Ashita Plugin Base";
+        return "Ashita Plugin Base";
     }
 
     /**
@@ -1687,7 +1724,7 @@ public:
      */
     const char* GetLink(void) const override
     {
-        return u8"https://www.ashitaxi.com/";
+        return "https://www.ashitaxi.com/";
     }
 
     /**
@@ -1751,7 +1788,6 @@ public:
         return (uint32_t)Ashita::PluginFlags::None;
     }
 
-public:
     /**
      * Event invoked when the plugin is being loaded and initialized.
      *
@@ -1768,9 +1804,9 @@ public:
      */
     bool Initialize(IAshitaCore* core, ILogManager* logger, const uint32_t id) override
     {
-        this->m_AshitaCore = core;
-        this->m_LogManager = logger;
-        this->m_PluginId   = id;
+        UNREFERENCED_PARAMETER(core);
+        UNREFERENCED_PARAMETER(logger);
+        UNREFERENCED_PARAMETER(id);
 
         return false;
     }
@@ -1786,7 +1822,6 @@ public:
     void Release(void) override
     {}
 
-public:
     /**
      * Event invoked when another plugin has raised a custom event for other plugins to handle.
      *
@@ -1809,7 +1844,6 @@ public:
         UNREFERENCED_PARAMETER(eventSize);
     }
 
-public:
     /**
      * Event invoked when an input command is being processed by the game client.
      *
@@ -1931,7 +1965,6 @@ public:
         return false;
     }
 
-public:
     /**
      * Event invoked when the game client is processing an incoming packet.
      *
@@ -2030,7 +2063,6 @@ public:
         return false;
     }
 
-public:
     /**
      * Event invoked when the plugin is being initialized for Direct3D usage.
      *
@@ -2048,7 +2080,7 @@ public:
      */
     bool Direct3DInitialize(IDirect3DDevice8* device) override
     {
-        this->m_Direct3DDevice = device;
+        UNREFERENCED_PARAMETER(device);
 
         return false;
     }
@@ -2293,7 +2325,7 @@ interface IPolPluginBase
     virtual void Release(void)                                    = 0;
 
     // Event Callbacks: PolPluginManager
-    virtual void HandleEvent(const char*, const void*, const uint32_t) = 0;
+    virtual void HandleEvent(const char*, const void*, uint32_t) = 0;
 
     // Event Callbacks: ChatManager
     virtual bool HandleCommand(int32_t, const char*, bool) = 0;
@@ -2316,24 +2348,15 @@ interface IPolPluginBase
 
 class IPolPlugin : public IPolPluginBase
 {
-protected:
-    IAshitaCore* m_AshitaCore;
-    ILogManager* m_LogManager;
-    uint32_t m_PluginId;
-
 public:
     /**
      * Constructor and Deconstructor
      */
     IPolPlugin(void)
-        : m_AshitaCore(nullptr)
-        , m_LogManager(nullptr)
-        , m_PluginId(0)
     {}
     virtual ~IPolPlugin(void)
     {}
 
-public:
     /**
      * Returns the plugins name.
      *
@@ -2341,7 +2364,7 @@ public:
      */
     const char* GetName(void) const override
     {
-        return u8"PolPluginBase";
+        return "PolPluginBase";
     }
 
     /**
@@ -2351,7 +2374,7 @@ public:
      */
     const char* GetAuthor(void) const override
     {
-        return u8"Ashita Development Team";
+        return "Ashita Development Team";
     }
 
     /**
@@ -2361,7 +2384,7 @@ public:
      */
     const char* GetDescription(void) const override
     {
-        return u8"Ashita POL Plugin Base";
+        return "Ashita POL Plugin Base";
     }
 
     /**
@@ -2371,7 +2394,7 @@ public:
      */
     const char* GetLink(void) const override
     {
-        return u8"https://www.ashitaxi.com/";
+        return "https://www.ashitaxi.com/";
     }
 
     /**
@@ -2418,7 +2441,6 @@ public:
         return (uint32_t)Ashita::PluginFlags::None;
     }
 
-public:
     /**
      * Event invoked when the POL plugin is being loaded and initialized.
      *
@@ -2438,9 +2460,9 @@ public:
      */
     bool Initialize(IAshitaCore* core, ILogManager* logger, const uint32_t id) override
     {
-        this->m_AshitaCore = core;
-        this->m_LogManager = logger;
-        this->m_PluginId   = id;
+        UNREFERENCED_PARAMETER(core);
+        UNREFERENCED_PARAMETER(logger);
+        UNREFERENCED_PARAMETER(id);
 
         return false;
     }
@@ -2455,7 +2477,6 @@ public:
     void Release(void) override
     {}
 
-public:
     /**
      * Event invoked when another plugin has raised a custom event for other plugins to handle.
      *
@@ -2478,7 +2499,6 @@ public:
         UNREFERENCED_PARAMETER(eventSize);
     }
 
-public:
     /**
      * Event invoked when an input command is being processed by the game client.
      *
@@ -2510,7 +2530,6 @@ public:
         return false;
     }
 
-public:
     /**
      * Event invoked when the Direct3D device is beginning a scene.
      *
@@ -2609,4 +2628,4 @@ typedef IPolPlugin* /**/ (__stdcall* export_CreatePolPlugin_f)(const char* args)
 
 #pragma warning(pop)
 
-#endif // __ASHITA_SDK_H_INCLUDED__
+#endif // ASHITA_SDK_H_INCLUDED

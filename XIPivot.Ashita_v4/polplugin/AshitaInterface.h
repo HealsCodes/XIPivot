@@ -37,12 +37,12 @@ namespace XiPivot
 {
 	namespace Pol
 	{
-		static constexpr auto PluginName = u8"pivot";
-		static constexpr auto PluginAuthor = u8"Heals";
-		static constexpr auto PluginVersion = 4.005;
-		static constexpr auto PluginUrl = u8"https://github.com/Shirk/XIPivot";
-		static constexpr auto PluginDescr = u8"Runtime DAT, sfx and bgm replacement manager.";
-		static constexpr auto PluginCommand = u8"pivot";
+		static constexpr auto PluginName = "pivot";
+		static constexpr auto PluginAuthor = "Heals";
+		static constexpr auto PluginVersion = 4.006;
+		static constexpr auto PluginUrl = "https://github.com/Shirk/XIPivot";
+		static constexpr auto PluginDescr = "Runtime DAT, sfx and bgm replacement manager.";
+		static constexpr auto PluginCommand = "pivot";
 
 		class AshitaInterface : public IPolPlugin, public Core::ILogProvider
 		{
@@ -91,6 +91,9 @@ namespace XiPivot
 
 				bool dirty;
 			};
+
+			IAshitaCore*  m_ashitaCore = nullptr;
+			ILogManager*  m_logManager = nullptr;
 
 			std::string   m_pluginArgs;
 			Settings      m_settings;
