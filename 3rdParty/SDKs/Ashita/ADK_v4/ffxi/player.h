@@ -19,8 +19,8 @@
  * along with Ashita.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __ASHITA_SDK_FFXI_PLAYER_H_INCLUDED__
-#define __ASHITA_SDK_FFXI_PLAYER_H_INCLUDED__
+#ifndef ASHITA_SDK_FFXI_PLAYER_H_INCLUDED
+#define ASHITA_SDK_FFXI_PLAYER_H_INCLUDED
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -61,7 +61,7 @@ namespace Ashita::FFXI
         uint16_t Raw;
 
         uint16_t GetSkill(void) const { return (uint16_t)(this->Raw & 0x7FFF); }
-        bool IsCapped(void)     const { return (this->Raw & 0x8000) == 0 ? false : true; };
+        bool IsCapped(void)     const { return (this->Raw & 0x8000) == 0 ? false : true; }
     };
 
     struct craftskill_t
@@ -70,7 +70,7 @@ namespace Ashita::FFXI
 
         uint16_t GetSkill(void) const { return (this->Raw & 0x1FE0) >> 5; }
         uint16_t GetRank(void)  const { return (uint16_t)(this->Raw & 0x1F); }
-        bool IsCapped(void)     const { return (this->Raw & 0x8000) >> 15 == 0 ? false : true; };
+        bool IsCapped(void)     const { return (this->Raw & 0x8000) >> 15 == 0 ? false : true; }
     };
 
     struct combatskills_t
@@ -252,6 +252,6 @@ namespace Ashita::FFXI
         int16_t         Buffs[32];                              // The players current status effect icon ids.
     };
 
-}; // namespace Ashita::FFXI
+} // namespace Ashita::FFXI
 
-#endif // __ASHITA_SDK_FFXI_PLAYER_H_INCLUDED__
+#endif // ASHITA_SDK_FFXI_PLAYER_H_INCLUDED

@@ -19,8 +19,8 @@
  * along with Ashita.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __ASHITA_SDK_THREADING_H_INCLUDED__
-#define __ASHITA_SDK_THREADING_H_INCLUDED__
+#ifndef ASHITA_SDK_THREADING_H_INCLUDED
+#define ASHITA_SDK_THREADING_H_INCLUDED
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -361,6 +361,6 @@ namespace Ashita::Threading
         }
     };
 
-}; // namespace Ashita::Threading
+} // namespace Ashita::Threading
 
-#endif // __ASHITA_SDK_THREADING_H_INCLUDED__
+#endif // ASHITA_SDK_THREADING_H_INCLUDED

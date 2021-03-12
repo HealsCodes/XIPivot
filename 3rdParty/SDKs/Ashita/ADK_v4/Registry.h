@@ -19,8 +19,8 @@
  * along with Ashita.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __ASHITA_SDK_REGISTRY_H_INCLUDED__
-#define __ASHITA_SDK_REGISTRY_H_INCLUDED__
+#ifndef ASHITA_SDK_REGISTRY_H_INCLUDED
+#define ASHITA_SDK_REGISTRY_H_INCLUDED
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -82,12 +82,12 @@ namespace Ashita
                 buffer == nullptr || size == 0)
                 return false;
 
-            const char tags[4][255] = {u8"US", u8"", u8"US", u8"EU"};
-            const char path[4][255] = {u8"1000", u8"0001", u8"0002", u8"0015"};
+            const char tags[4][255] = {"US", "", "US", "EU"};
+            const char path[4][255] = {"1000", "0001", "0002", "0015"};
 
             // Build the initial registry key path to the install folder information..
             char regpath[MAX_PATH]{};
-            sprintf_s(regpath, MAX_PATH, u8"SOFTWARE\\PlayOnline%s\\InstallFolder", tags[(uint32_t)lid]);
+            sprintf_s(regpath, MAX_PATH, "SOFTWARE\\PlayOnline%s\\InstallFolder", tags[(uint32_t)lid]);
 
             // Open the registry for reading..
             HKEY key = nullptr;
@@ -97,7 +97,7 @@ namespace Ashita
             // Read the install path from the registry..
             char ipath[MAX_PATH]{};
             DWORD ksize = MAX_PATH;
-            DWORD ktype = REG_DWORD;
+            auto ktype  = REG_DWORD;
             if (!(::RegQueryValueExA(key, path[(uint32_t)gid], nullptr, &ktype, (LPBYTE)ipath, &ksize) == ERROR_SUCCESS))
             {
                 ::RegCloseKey(key);
@@ -128,11 +128,11 @@ namespace Ashita
             if ((uint32_t)lid < 0 || lid >= LanguageId::MaxValue)
                 return 0;
 
-            const char tags[4][255] = {u8"US", u8"", u8"US", u8"EU"};
+            const char tags[4][255] = {"US", "", "US", "EU"};
 
             // Build the path to the registry value..
             char regpath[MAX_PATH]{};
-            sprintf_s(regpath, MAX_PATH, u8"SOFTWARE\\PlayOnline%s\\%s", tags[(uint32_t)lid], parent);
+            sprintf_s(regpath, MAX_PATH, "SOFTWARE\\PlayOnline%s\\%s", tags[(uint32_t)lid], parent);
 
             // Open the registry for reading..
             HKEY key = nullptr;
@@ -140,7 +140,7 @@ namespace Ashita
                 return 0;
 
             DWORD ksize = 4;
-            DWORD ktype = REG_DWORD;
+            auto ktype  = REG_DWORD;
             DWORD value = 0;
 
             // Read the value..
@@ -168,11 +168,11 @@ namespace Ashita
             if ((uint32_t)lid < 0 || lid >= LanguageId::MaxValue)
                 return false;
 
-            const char tags[4][255] = {u8"US", u8"", u8"US", u8"EU"};
+            const char tags[4][255] = {"US", "", "US", "EU"};
 
             // Build the path to the registry value..
             char regpath[MAX_PATH]{};
-            sprintf_s(regpath, MAX_PATH, u8"SOFTWARE\\PlayOnline%s\\%s", tags[(uint32_t)lid], parent);
+            sprintf_s(regpath, MAX_PATH, "SOFTWARE\\PlayOnline%s\\%s", tags[(uint32_t)lid], parent);
 
             // Open the registry for writing..
             HKEY key = nullptr;
@@ -185,8 +185,8 @@ namespace Ashita
 
             return ret == ERROR_SUCCESS;
         }
-    }; // namespace Registry
+    } // namespace Registry
 
-}; // namespace Ashita
+} // namespace Ashita
 
-#endif // __ASHITA_SDK_REGISTRY_H_INCLUDED__
+#endif // ASHITA_SDK_REGISTRY_H_INCLUDED

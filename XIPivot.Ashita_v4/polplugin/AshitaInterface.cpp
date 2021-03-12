@@ -58,9 +58,12 @@ namespace XiPivot
 
 			IPolPlugin::Initialize(core, log, id);
 
+			m_ashitaCore = core;
+			m_logManager = log;
+
 			redirector.setLogProvider(this);
 
-			auto config = m_AshitaCore->GetConfigurationManager();
+			auto config = m_ashitaCore->GetConfigurationManager();
 			if (config != nullptr)
 			{
 				if (m_settings.load(config))
@@ -108,10 +111,10 @@ namespace XiPivot
 			std::vector<std::string> args;
 			Ashita::Commands::GetCommandArgs(command, &args);
 
-			HANDLECOMMAND(u8"/pivot")
+			HANDLECOMMAND("/pivot")
 			{
 				args.erase(args.begin());
-				return m_ui.HandleCommand(m_AshitaCore->GetChatManager(), args);
+				return m_ui.HandleCommand(m_ashitaCore->GetChatManager(), args);
 			}
 			return false;
 		}
@@ -133,9 +136,9 @@ namespace XiPivot
 
 					m_settings.cacheEnabled    = Core::MemCache::instance().hooksActive();
 					m_settings.cacheSize       = Core::MemCache::instance().getCacheAllocation();
-					m_settings.cachePurgeDelay = m_ui.getCachePurgeDelay();
+					m_settings.cachePurgeDelay = static_cast<uint32_t>(m_ui.getCachePurgeDelay());
 
-					m_settings.save(m_AshitaCore->GetConfigurationManager());
+					m_settings.save(m_ashitaCore->GetConfigurationManager());
 				}
 
 				m_ui.ProcessUI(m_settings.dirty);
@@ -144,7 +147,7 @@ namespace XiPivot
 
 		void AshitaInterface::Direct3DPresent(const RECT*, const RECT*, HWND, const RGNDATA*)
 		{
-			m_ui.RenderUI(m_AshitaCore->GetGuiManager());
+			m_ui.RenderUI(m_ashitaCore->GetGuiManager());
 		}
 
 		/* ILogProvider */
@@ -187,7 +190,7 @@ namespace XiPivot
 				va_start(args, msg);
 
 				vsnprintf_s(msgBuf, 511, msg.c_str(), args);
-				m_LogManager->Log(static_cast<uint32_t>(ashitaLevel), GetName(), msgBuf);
+				m_logManager->Log(static_cast<uint32_t>(ashitaLevel), GetName(), msgBuf);
 
 				va_end(args);
 			}
@@ -202,7 +205,7 @@ namespace XiPivot
 			GetCurrentDirectoryA(MAX_PATH, static_cast<LPSTR>(workPath));
 
 			/* default to "plugin location"\\DATs */
-			rootPath = std::string(workPath) + u8"\\DATs";
+			rootPath = std::string(workPath) + "\\DATs";
 			overlays.clear();
 			debugLog = false;
 			cacheEnabled = false;
@@ -216,8 +219,8 @@ namespace XiPivot
 			dirty = false;
 			if (config->Load(PluginName, PluginName))
 			{
-				const char* rP = config->GetString(PluginName, u8"settings", u8"root_path");
-				const bool dbg = config->GetBool(PluginName, u8"settings", u8"debug_log", true);
+				const char* rP = config->GetString(PluginName, "settings", "root_path");
+				const bool dbg = config->GetBool(PluginName, "settings", "debug_log", true);
 
 				debugLog = dbg;
 				rootPath = (rP ? rP : rootPath);
@@ -230,18 +233,18 @@ namespace XiPivot
 
 				do
 				{
-					snprintf(overlayIndexStr, sizeof(overlayIndexStr) - 1, u8"%d", overlayIndex++);
-					overlayName = const_cast<char*>(config->GetString(PluginName, u8"overlays", overlayIndexStr));
+					snprintf(overlayIndexStr, sizeof(overlayIndexStr) - 1, "%d", overlayIndex++);
+					overlayName = const_cast<char*>(config->GetString(PluginName, "overlays", overlayIndexStr));
 
-					if (overlayName != nullptr && strcmp(overlayName, u8"") != 0)
+					if (overlayName != nullptr && strcmp(overlayName, "") != 0)
 					{
 						overlays.push_back(overlayName);
 					}
 				} while (overlayName != nullptr);
 
-				cacheEnabled = config->GetBool(PluginName, u8"cache", u8"enabled", false);
-				cacheSize = config->GetInt32(PluginName, u8"cache", u8"size", 2048) * 0x100000;
-				cachePurgeDelay = config->GetInt32(PluginName, u8"cache", u8"max_age", 600);
+				cacheEnabled = config->GetBool(PluginName, "cache", "enabled", false);
+				cacheSize = config->GetInt32(PluginName, "cache", "size", 2048) * 0x100000;
+				cachePurgeDelay = config->GetInt32(PluginName, "cache", "max_age", 600);
 
 				return true;
 			}
@@ -252,25 +255,25 @@ namespace XiPivot
 		{
 			config->Delete(PluginName);
 
-			config->SetValue(PluginName, u8"settings", u8"root_path", rootPath.c_str());
-			config->SetValue(PluginName, u8"settings", u8"debug_log", debugLog ? u8"true" : u8"false");
+			config->SetValue(PluginName, "settings", "root_path", rootPath.c_str());
+			config->SetValue(PluginName, "settings", "debug_log", debugLog ? "true" : "false");
 
 			for (unsigned i = 0; i < overlays.size(); ++i)
 			{
 				char key[10];
-				snprintf(key, 9, u8"%d", i);
+				snprintf(key, 9, "%d", i);
 
-				config->SetValue(PluginName, u8"overlays", key, overlays.at(i).c_str());
+				config->SetValue(PluginName, "overlays", key, overlays.at(i).c_str());
 			}
 
-			config->SetValue(PluginName, u8"cache", u8"enabled", cacheEnabled ? u8"true" : u8"false");
+			config->SetValue(PluginName, "cache", "enabled", cacheEnabled ? "true" : "false");
 
 			char val[32];
-			snprintf(val, 31, u8"%u", cacheSize / 0x100000);
-			config->SetValue(PluginName, u8"cache", u8"size", val);
+			snprintf(val, 31, "%u", cacheSize / 0x100000);
+			config->SetValue(PluginName, "cache", "size", val);
 
-			snprintf(val, 31, u8"%u", cachePurgeDelay);
-			config->SetValue(PluginName, u8"cache", u8"max_age", val);
+			snprintf(val, 31, "%u", cachePurgeDelay);
+			config->SetValue(PluginName, "cache", "max_age", val);
 
 			config->Save(PluginName, PluginName);
 			dirty = false;

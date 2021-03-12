@@ -19,8 +19,8 @@
  * along with Ashita.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __ASHITA_SDK_BINARYDATA_H_INCLUDED__
-#define __ASHITA_SDK_BINARYDATA_H_INCLUDED__
+#ifndef ASHITA_SDK_BINARYDATA_H_INCLUDED
+#define ASHITA_SDK_BINARYDATA_H_INCLUDED
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -196,7 +196,7 @@ namespace Ashita
         static uint64_t UnpackBitsBE(uint8_t* data, uint32_t byteOffset, uint32_t bitOffset, const uint8_t len)
         {
             // Adjust the offsets as needed for bit alignment..
-            byteOffset += (bitOffset >> 3);
+            byteOffset += bitOffset >> 3;
             bitOffset %= 8;
 
             // Prepare the bit mask..
@@ -375,6 +375,6 @@ namespace Ashita
         }
     };
 
-}; // namespace Ashita
+} // namespace Ashita
 
-#endif // __ASHITA_SDK_BINARYDATA_H_INCLUDED__
+#endif // ASHITA_SDK_BINARYDATA_H_INCLUDED

@@ -19,8 +19,8 @@
  * along with Ashita.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __ASHITA_SDK_FFXI_INVENTORY_H_INCLUDED__
-#define __ASHITA_SDK_FFXI_INVENTORY_H_INCLUDED__
+#ifndef ASHITA_SDK_FFXI_INVENTORY_H_INCLUDED
+#define ASHITA_SDK_FFXI_INVENTORY_H_INCLUDED
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -92,6 +92,6 @@ namespace Ashita::FFXI
         uint32_t            CraftTimestamp;                                         // The timestamp when an attempt was made to craft something.
     };
 
-}; // namespace Ashita::FFXI
+} // namespace Ashita::FFXI
 
-#endif // __ASHITA_SDK_FFXI_INVENTORY_H_INCLUDED__
+#endif // ASHITA_SDK_FFXI_INVENTORY_H_INCLUDED

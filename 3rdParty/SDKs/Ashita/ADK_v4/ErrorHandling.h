@@ -19,8 +19,8 @@
  * along with Ashita.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __ASHITA_SDK_ERRORHANDLING_H_INCLUDED__
-#define __ASHITA_SDK_ERRORHANDLING_H_INCLUDED__
+#ifndef ASHITA_SDK_ERRORHANDLING_H_INCLUDED
+#define ASHITA_SDK_ERRORHANDLING_H_INCLUDED
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -91,16 +91,16 @@ namespace Ashita::ErrorHandling
                 CASE(EXCEPTION_STACK_OVERFLOW);
 
                 default:
-                    this->m_Exception = u8"(Unknown Exception)";
+                    this->m_Exception = "(Unknown Exception)";
                     break;
             }
 
-            const auto ptr = (pointers != nullptr && pointers->ExceptionRecord != nullptr)
+            const auto ptr = pointers != nullptr && pointers->ExceptionRecord != nullptr
                                  ? pointers->ExceptionRecord->ExceptionAddress
                                  : nullptr;
 
             // Create a formatted message of the exception..
-            sprintf_s(this->m_Message, 2048, u8"%s (%08X). [Ptr: %08p]", this->m_Exception, id, ptr);
+            sprintf_s(this->m_Message, 2048, "%s (%08X). [Ptr: %08p]", this->m_Exception, id, ptr);
         }
         ~Exception(void)
         {}
@@ -130,7 +130,7 @@ namespace Ashita::ErrorHandling
          *
          * @return {const char*} The exception message.
          */
-        const char* GetMessage(void) const
+        const char* what(void) const
         {
             return (const char*)this->m_Message;
         }
@@ -176,6 +176,6 @@ namespace Ashita::ErrorHandling
         }
     };
 
-}; // namespace Ashita::ErrorHandling
+} // namespace Ashita::ErrorHandling
 
-#endif // __ASHITA_SDK_ERRORHANDLING_H_INCLUDED__
+#endif // ASHITA_SDK_ERRORHANDLING_H_INCLUDED

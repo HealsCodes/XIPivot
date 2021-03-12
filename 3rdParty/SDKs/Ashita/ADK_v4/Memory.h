@@ -19,8 +19,8 @@
  * along with Ashita.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#ifndef __ASHITA_SDK_MEMORY_H_INCLUDED__
-#define __ASHITA_SDK_MEMORY_H_INCLUDED__
+#ifndef ASHITA_SDK_MEMORY_H_INCLUDED
+#define ASHITA_SDK_MEMORY_H_INCLUDED
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1020)
 #pragma once
@@ -97,7 +97,7 @@ namespace Ashita
 
             // Validate the incoming pattern is properly aligned..
             const auto len = strlen(pattern);
-            if (len == 0 || (len % 2) > 0)
+            if (len == 0 || len % 2 > 0)
                 return 0;
 
             // Convert the pattern to a vectored pair..
@@ -106,7 +106,7 @@ namespace Ashita
             {
                 // Convert the current byte into the vectored pattern data..
                 std::stringstream stream(std::string(pattern + (x * 2), 2));
-                if (stream.str() == u8"??")
+                if (stream.str() == "??")
                     vpattern.push_back(std::make_pair((uint8_t)0, false));
                 else
                 {
@@ -125,7 +125,7 @@ namespace Ashita
                 // Search for the pattern..
                 auto ret = std::search(scanStart, data.end(), vpattern.begin(), vpattern.end(),
                     [&](const uint8_t curr, const std::pair<uint8_t, bool> currPattern) {
-                        return (!currPattern.second) || curr == currPattern.first;
+                        return !currPattern.second || curr == currPattern.first;
                     });
 
                 // Check for a match..
@@ -133,7 +133,7 @@ namespace Ashita
                 {
                     // Use the current result if no increased count expected..
                     if (result == count || count == 0)
-                        return (std::distance(data.begin(), ret) + baseAddress) + offset;
+                        return std::distance(data.begin(), ret) + baseAddress + offset;
 
                     // Scan for the next result..
                     ++result;
@@ -279,6 +279,6 @@ namespace Ashita
         }
     };
 
-}; // namespace Ashita
+} // namespace Ashita
 
-#endif // __ASHITA_SDK_MEMORY_H_INCLUDED__
+#endif // ASHITA_SDK_MEMORY_H_INCLUDED
