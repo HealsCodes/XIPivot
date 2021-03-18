@@ -24,7 +24,7 @@ XIPivot works together with [Ashita v3](https://www.ashitaxi.com) as well as [Wi
 - Head over to the [Releases page](https://github.com/Shirk/XIPivot/releases) and pick the ZIP that matches your launcher
 - Follow the README.md inside the archive  for setup and configuration instructions
 
-- [Latest release for Windower](https://github.com/Shirk/XIPivot/releases/tag/v0.3.1)
+- [Latest release for Windower](https://github.com/Shirk/XIPivot/releases/tag/v0.4.3)
 - [Latest release for Ashita](https://github.com/Shirk/XIPivot/releases/tag/v0.4.2)
 
 #### Ashita Install

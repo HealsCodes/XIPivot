@@ -1,5 +1,5 @@
 --[[
- 	Copyright © 2019, Renee Koecher
+ 	Copyright © 2019-2021, Renee Koecher
  	All rights reserved.
  
  	Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
 
 _addon.name = 'XIPivot'
 _addon.author = 'Heals'
-_addon.version = '0.4.1'
+_addon.version = '0.4.3'
 _addon.command = 'pivot'
 
 config = require('config')

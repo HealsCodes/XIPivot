@@ -13,6 +13,10 @@ The goals behind XIPivot are simple:
 - the ability to sort Mods into separate folders for each mod
 - the ability to control which Mods take precedence
 
+## Prerequisites
+
+Besides a recent Windower installation XIPivot requires the Microsoft Visual C++ Runtime 2010 which you can download from [Microsoft](https://www.microsoft.com/en-us/download/details.aspx?id=5555)
+
 ## Setup
 
 - 1) Copy the XIPivot folder into your Windower addons folder.
