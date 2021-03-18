@@ -19,12 +19,21 @@ XIPivot works together with [Ashita v3](https://www.ashitaxi.com) as well as [Wi
 
 ## Installation
 
+#### Manual and Windower Install
+
 - Head over to the [Releases page](https://github.com/Shirk/XIPivot/releases) and pick the ZIP that matches your launcher
 - Follow the README.md inside the archive  for setup and configuration instructions
 
+- [Latest release for Windower](https://github.com/Shirk/XIPivot/releases/tag/v0.3.2)
+- [Latest release for Ashita](https://github.com/Shirk/XIPivot/releases/tag/v0.4.2)
+
+#### Ashita Install
+
+The latest version of XIPivot can always be installed from the plugins list in Ashita and will be updated automatically.
+
 ## Modifications / Contribution
 
-If you would like to build XIPivot from source you need the Visual Studio 2017.
+If you would like to build XIPivot from source you need the Visual Studio 2017 or newer.
 The Community Edition is available for free from [Microsoft](https://visualstudio.microsoft.com/vs/community/).
 
 Otherwise it's just these three steps:

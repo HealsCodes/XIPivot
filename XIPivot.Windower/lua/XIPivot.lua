@@ -1,5 +1,5 @@
 --[[
- 	Copyright © 2019, Renee Koecher
+ 	Copyright © 2019-2021, Renee Koecher
  	All rights reserved.
  
  	Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,6 @@ require('lists')
 local addon_path = windower.addon_path:gsub('\\', '/')
 local root_path = addon_path .. 'data/DATs'
 defaults = T{}
---defaults.root_path = root_path
 defaults.overlays  = L{}
 
 settings = config.load(defaults)
