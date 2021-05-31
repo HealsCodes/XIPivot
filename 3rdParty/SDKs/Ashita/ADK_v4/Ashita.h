@@ -620,8 +620,8 @@ interface IAutoFollow
     virtual uint32_t GetTargetIndex(void) const          = 0;
     virtual uint32_t GetTargetServerId(void) const       = 0;
     virtual float GetFollowDeltaX(void) const            = 0;
-    virtual float GetFollowDeltaY(void) const            = 0;
     virtual float GetFollowDeltaZ(void) const            = 0;
+    virtual float GetFollowDeltaY(void) const            = 0;
     virtual uint32_t GetFollowTargetIndex(void) const    = 0;
     virtual uint32_t GetFollowTargetServerId(void) const = 0;
     virtual uint8_t GetIsFirstPersonCamera(void) const   = 0;
@@ -633,8 +633,8 @@ interface IAutoFollow
     virtual void SetTargetIndex(uint32_t index) const                    = 0;
     virtual void SetTargetServerId(uint32_t id) const                    = 0;
     virtual void SetFollowDeltaX(float x) const                          = 0;
-    virtual void SetFollowDeltaY(float y) const                          = 0;
     virtual void SetFollowDeltaZ(float z) const                          = 0;
+    virtual void SetFollowDeltaY(float y) const                          = 0;
     virtual void SetFollowTargetIndex(uint32_t index) const              = 0;
     virtual void SetFollowTargetServerId(uint32_t id) const              = 0;
     virtual void SetIsFirstPersonCamera(uint8_t firstPersonCamera) const = 0;
@@ -679,20 +679,20 @@ interface IEntity
 
     // Get Properties
     virtual float GetLocalPositionX(uint32_t index) const                           = 0;
-    virtual float GetLocalPositionY(uint32_t index) const                           = 0;
     virtual float GetLocalPositionZ(uint32_t index) const                           = 0;
+    virtual float GetLocalPositionY(uint32_t index) const                           = 0;
     virtual float GetLocalPositionRoll(uint32_t index) const                        = 0;
     virtual float GetLocalPositionYaw(uint32_t index) const                         = 0;
     virtual float GetLocalPositionPitch(uint32_t index) const                       = 0;
     virtual float GetLastPositionX(uint32_t index) const                            = 0;
-    virtual float GetLastPositionY(uint32_t index) const                            = 0;
     virtual float GetLastPositionZ(uint32_t index) const                            = 0;
+    virtual float GetLastPositionY(uint32_t index) const                            = 0;
     virtual float GetLastPositionRoll(uint32_t index) const                         = 0;
     virtual float GetLastPositionYaw(uint32_t index) const                          = 0;
     virtual float GetLastPositionPitch(uint32_t index) const                        = 0;
     virtual float GetMoveX(uint32_t index) const                                    = 0;
-    virtual float GetMoveY(uint32_t index) const                                    = 0;
     virtual float GetMoveZ(uint32_t index) const                                    = 0;
+    virtual float GetMoveY(uint32_t index) const                                    = 0;
     virtual uint32_t GetTargetIndex(uint32_t index) const                           = 0;
     virtual uint32_t GetServerId(uint32_t index) const                              = 0;
     virtual const char* GetName(uint32_t index) const                               = 0;
@@ -729,6 +729,11 @@ interface IEntity
     virtual uint16_t GetPopEffect(uint32_t index) const                             = 0;
     virtual uint16_t GetInteractionTargetIndex(uint32_t index) const                = 0;
     virtual uint16_t GetNpcSpeechFrame(uint32_t index) const                        = 0;
+    virtual uint16_t GetCraftTimerUnknown(uint32_t index) const                     = 0;
+    virtual uint32_t GetCraftServerId(uint32_t index) const                         = 0;
+    virtual uint16_t GetCraftAnimationEffect(uint32_t index) const                  = 0;
+    virtual uint8_t GetCraftAnimationStep(uint32_t index) const                     = 0;
+    virtual uint8_t GetCraftParam(uint32_t index) const                             = 0;
     virtual float GetMovementSpeed2(uint32_t index) const                           = 0;
     virtual uint16_t GetNpcWalkPosition1(uint32_t index) const                      = 0;
     virtual uint16_t GetNpcWalkPosition2(uint32_t index) const                      = 0;
@@ -739,6 +744,7 @@ interface IEntity
     virtual uint32_t GetStatus(uint32_t index) const                                = 0;
     virtual uint32_t GetStatusEvent(uint32_t index) const                           = 0;
     virtual uint32_t GetClaimStatus(uint32_t index) const                           = 0;
+    virtual uint32_t GetZoneId(uint32_t index) const                                = 0;
     virtual uint32_t GetAnimation(uint32_t index, uint32_t animationIndex) const    = 0;
     virtual uint16_t GetAnimationTime(uint32_t index) const                         = 0;
     virtual uint16_t GetAnimationStep(uint32_t index) const                         = 0;
@@ -758,6 +764,8 @@ interface IEntity
     virtual int16_t GetFishingUnknown0002(uint32_t index) const                     = 0;
     virtual uint16_t GetTargetedIndex(uint32_t index) const                         = 0;
     virtual uint16_t GetPetTargetIndex(uint32_t index) const                        = 0;
+    virtual uint16_t GetUpdateRequestDelay(uint32_t index) const                    = 0;
+    virtual uint8_t GetIsDirty(uint32_t index) const                                = 0;
     virtual uint8_t GetBallistaFlags(uint32_t index) const                          = 0;
     virtual uint8_t GetPankrationEnabled(uint32_t index) const                      = 0;
     virtual uint8_t GetPankrationFlagFlip(uint32_t index) const                     = 0;
@@ -771,20 +779,20 @@ interface IEntity
 
     // Set Properties
     virtual void SetLocalPositionX(uint32_t index, float x) const                                    = 0;
-    virtual void SetLocalPositionY(uint32_t index, float y) const                                    = 0;
     virtual void SetLocalPositionZ(uint32_t index, float z) const                                    = 0;
+    virtual void SetLocalPositionY(uint32_t index, float y) const                                    = 0;
     virtual void SetLocalPositionRoll(uint32_t index, float roll) const                              = 0;
     virtual void SetLocalPositionYaw(uint32_t index, float yaw) const                                = 0;
     virtual void SetLocalPositionPitch(uint32_t index, float pitch) const                            = 0;
     virtual void SetLastPositionX(uint32_t index, float x) const                                     = 0;
-    virtual void SetLastPositionY(uint32_t index, float y) const                                     = 0;
     virtual void SetLastPositionZ(uint32_t index, float z) const                                     = 0;
+    virtual void SetLastPositionY(uint32_t index, float y) const                                     = 0;
     virtual void SetLastPositionRoll(uint32_t index, float roll) const                               = 0;
     virtual void SetLastPositionYaw(uint32_t index, float yaw) const                                 = 0;
     virtual void SetLastPositionPitch(uint32_t index, float pitch) const                             = 0;
     virtual void SetMoveX(uint32_t index, float x) const                                             = 0;
-    virtual void SetMoveY(uint32_t index, float y) const                                             = 0;
     virtual void SetMoveZ(uint32_t index, float z) const                                             = 0;
+    virtual void SetMoveY(uint32_t index, float y) const                                             = 0;
     virtual void SetTargetIndex(uint32_t index, uint32_t targetIndex) const                          = 0;
     virtual void SetServerId(uint32_t index, uint32_t serverId) const                                = 0;
     virtual void SetName(uint32_t index, const char* name) const                                     = 0;
@@ -821,6 +829,11 @@ interface IEntity
     virtual void SetPopEffect(uint32_t index, uint16_t effect) const                                 = 0;
     virtual void SetInteractionTargetIndex(uint32_t index, uint16_t targetIndex) const               = 0;
     virtual void SetNpcSpeechFrame(uint32_t index, uint16_t frame) const                             = 0;
+    virtual void SetCraftTimerUnknown(uint32_t index, uint16_t timer) const                          = 0;
+    virtual void SetCraftServerId(uint32_t index, uint32_t serverId) const                           = 0;
+    virtual void SetCraftAnimationEffect(uint32_t index, uint16_t animationEffect) const             = 0;
+    virtual void SetCraftAnimationStep(uint32_t index, uint8_t animationStep) const                  = 0;
+    virtual void SetCraftParam(uint32_t index, uint8_t param) const                                  = 0;
     virtual void SetMovementSpeed2(uint32_t index, float speed) const                                = 0;
     virtual void SetNpcWalkPosition1(uint32_t index, uint16_t pos) const                             = 0;
     virtual void SetNpcWalkPosition2(uint32_t index, uint16_t pos) const                             = 0;
@@ -831,6 +844,7 @@ interface IEntity
     virtual void SetStatus(uint32_t index, uint32_t status) const                                    = 0;
     virtual void SetStatusEvent(uint32_t index, uint32_t status) const                               = 0;
     virtual void SetClaimStatus(uint32_t index, uint32_t status) const                               = 0;
+    virtual void SetZoneId(uint32_t index, uint32_t zoneId) const                                    = 0;
     virtual void SetAnimation(uint32_t index, uint32_t animationIndex, uint32_t animation) const     = 0;
     virtual void SetAnimationTime(uint32_t index, uint16_t time) const                               = 0;
     virtual void SetAnimationStep(uint32_t index, uint16_t step) const                               = 0;
@@ -850,6 +864,8 @@ interface IEntity
     virtual void SetFishingUnknown0002(uint32_t index, int16_t unknown) const                        = 0;
     virtual void SetTargetedIndex(uint32_t index, uint16_t targetIndex) const                        = 0;
     virtual void SetPetTargetIndex(uint32_t index, uint16_t targetIndex) const                       = 0;
+    virtual void SetUpdateRequestDelay(uint32_t index, uint16_t delay) const                         = 0;
+    virtual void SetIsDirty(uint32_t index, uint8_t dirty) const                                     = 0;
     virtual void SetBallistaFlags(uint32_t index, uint8_t flags) const                               = 0;
     virtual void SetPankrationEnabled(uint32_t index, uint8_t enabled) const                         = 0;
     virtual void SetPankrationFlagFlip(uint32_t index, uint8_t flagflip) const                       = 0;
@@ -1068,8 +1084,8 @@ interface ITarget
     virtual uintptr_t GetEntityPointer(uint32_t index) const = 0;
     virtual uintptr_t GetWarpPointer(uint32_t index) const   = 0;
     virtual float GetArrowPositionX(uint32_t index) const    = 0;
-    virtual float GetArrowPositionY(uint32_t index) const    = 0;
     virtual float GetArrowPositionZ(uint32_t index) const    = 0;
+    virtual float GetArrowPositionY(uint32_t index) const    = 0;
     virtual uint8_t GetActive(uint32_t index) const          = 0;
     virtual uint8_t GetArrowActive(uint32_t index) const     = 0;
     virtual uint16_t GetChecksum(uint32_t index) const       = 0;
