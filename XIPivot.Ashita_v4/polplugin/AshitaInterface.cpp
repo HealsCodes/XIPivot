@@ -66,17 +66,20 @@ namespace XiPivot
 			auto config = m_ashitaCore->GetConfigurationManager();
 			if (config != nullptr)
 			{
-				if (m_settings.load(config))
+				if (!m_settings.load(config))
 				{
-					redirector.setDebugLog(m_settings.debugLog);
-					redirector.setRootPath(m_settings.rootPath);
-					for (const auto& path : m_settings.overlays)
-					{
-						redirector.addOverlay(path);
-					}
-
-					m_ui.setCachePurgeDelay(m_settings.cachePurgeDelay);
+					logMessageF(LogLevel::Warn, "Failed to load config file, saving defaults instead");
+					m_settings.save(config);
 				}
+
+				redirector.setDebugLog(m_settings.debugLog);
+				redirector.setRootPath(m_settings.rootPath);
+				for (const auto& path : m_settings.overlays)
+				{
+					redirector.addOverlay(path);
+				}
+
+				m_ui.setCachePurgeDelay(m_settings.cachePurgeDelay);
 
 				if (m_settings.cacheEnabled)
 				{
