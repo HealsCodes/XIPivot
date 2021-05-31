@@ -110,7 +110,8 @@ namespace Ashita
                 return false;
 
             // Copy the result into the output buffer..
-            memcpy_s(buffer, size, ipath, strlen(ipath));
+            strcpy_s(buffer, size, ipath);
+
             return true;
         }
 
