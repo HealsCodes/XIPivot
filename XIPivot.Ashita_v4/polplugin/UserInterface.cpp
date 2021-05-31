@@ -392,8 +392,8 @@ namespace XiPivot
 		void UserInterface::RenderMemCacheConfigUI(IGuiManager* const imgui)
 		{
 			imgui->Checkbox(u8"use cache", &m_guiState.flags.cacheEnable);
-			imgui->SliderInt(u8"reserved size", &m_guiState.values.cacheSizeMB, 1, 4096, "%.0f mb");
-			imgui->SliderInt(u8"purge interval", &m_guiState.values.cachePurgeDelay, 1, 600, "%.0f sec");
+			imgui->SliderInt(u8"reserved size", &m_guiState.values.cacheSizeMB, 1, 4096, "%d mb");
+			imgui->SliderInt(u8"purge interval", &m_guiState.values.cachePurgeDelay, 1, 600, "%d sec");
 
 			imgui->Separator();
 			if (imgui->Button(u8"apply##cache settings", ImVec2(500, 0)))
