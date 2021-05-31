@@ -93,6 +93,7 @@ namespace XiPivot
 						bool showConfigWindow;
 						bool showCacheOverlay;
 						bool applyCacheChanges;
+						bool applyCLIChanges;
 
 						int  activeTab;
 					} state;

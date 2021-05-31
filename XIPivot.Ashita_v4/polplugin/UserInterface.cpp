@@ -39,6 +39,9 @@ namespace XiPivot
 	{
 		UserInterface::UserInterface()
 		{
+			memset(&m_guiState, 0, sizeof(m_guiState));
+			m_cacheNextPurge = 0;
+			m_cachePurgeDelay = 0;
 		}
 
 		UserInterface::~UserInterface()
@@ -75,6 +78,7 @@ namespace XiPivot
 						m_guiState.state.addOverlayName.clear();
 						m_guiState.state.deleteOverlayName.clear();
 						m_guiState.state.applyCacheChanges = false;
+						m_guiState.state.applyCLIChanges = false;
 					}
 					break;
 
@@ -103,11 +107,25 @@ namespace XiPivot
 						
 							chat->AddChatMessage(1, false, msg.str().c_str());
 						}
+						else
+						{
+							std::ostringstream msg;
+							msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Message("Overlay registered");
+						
+							chat->AddChatMessage(1, false, msg.str().c_str());
+							m_guiState.state.applyCLIChanges = true;
+						}
 					}
 
 					IS_PARAM(args.at(0), u8"r", u8"remove")
 					{
+						std::ostringstream msg;
+						msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Message("Overlay removed");
+
+						chat->AddChatMessage(1, false, msg.str().c_str());
+
 						Core::Redirector::instance().removeOverlay(args.at(1));
+						m_guiState.state.applyCLIChanges = true;
 					}
 					break;
 
@@ -190,6 +208,13 @@ namespace XiPivot
 					m_cacheNextPurge = now + m_cachePurgeDelay;
 					memCache.purgeCacheObjects(m_cachePurgeDelay);
 				}
+			}
+
+			/* handle changes made through the CLI */
+			if (m_guiState.state.applyCLIChanges == true)
+			{
+				m_guiState.state.applyCacheChanges = false;
+				settingsChanged = true;
 			}
 
 			/* copy the current live cache stats and overlays for RenderUI */
