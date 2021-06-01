@@ -39,7 +39,6 @@ namespace XiPivot
 	{
 		UserInterface::UserInterface()
 		{
-			memset(&m_guiState, 0, sizeof(m_guiState));
 			m_cacheNextPurge = 0;
 			m_cachePurgeDelay = 0;
 		}
@@ -336,23 +335,38 @@ namespace XiPivot
 			imgui->Text(u8"active overlays:");
 			imgui->BeginChild(u8"overlay_list", ImVec2(0, 200));
 			{
-				if (m_guiState.state.deleteOverlayName.empty() == true)
+				if (imgui->BeginTable("active_overlays_table", 3, ImGuiTableFlags_NoSavedSettings))
 				{
-					int prio = 0;
-					for (const auto& path : m_guiState.constants.activeOverlays)
+
+					imgui->TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 0);
+					imgui->TableSetupColumn("Priority", ImGuiTableColumnFlags_WidthFixed, 0);
+					imgui->TableSetupColumn("Overlay", ImGuiTableColumnFlags_WidthStretch, 1);
+					imgui->TableHeadersRow();
+
+					if (m_guiState.state.deleteOverlayName.empty() == true)
 					{
-						/* each button in imgui needs a unique id (title##id)
-						 * since this list is generated at runtime button IDs default to ASCII 'a' + prio
-						 * this way the first list button will be ' - ##a', the second ' - ##b' and so on.
-						 */
-						char btnId[] = { ' ', '-', ' ', '#', '#', static_cast<char>(prio + 'a') };
-						if (imgui->Button(btnId))
+						int prio = 0;
+						for (const auto& path : m_guiState.constants.activeOverlays)
 						{
-							m_guiState.state.deleteOverlayName = path;
+							/* each button in imgui needs a unique id (title##id)
+							 * since this list is generated at runtime button IDs default to ASCII 'a' + prio
+							 * this way the first list button will be ' - ##a', the second ' - ##b' and so on.
+							 */
+							char btnId[] = { ' ', '-', ' ', '#', '#', static_cast<char>(prio + 'a') };
+							imgui->TableNextColumn();
+							if (imgui->Button(btnId))
+							{
+								m_guiState.state.deleteOverlayName = path;
+							}
+
+							imgui->TableNextColumn();
+							imgui->Text(u8"%02d", prio++);
+
+							imgui->TableNextColumn();
+							imgui->Text(path.c_str());
 						}
-						imgui->SameLine();
-						imgui->Text(u8"[%02d] %s", prio++, path.c_str());
 					}
+					imgui->EndTable();
 				}
 			}
 			imgui->EndChild();
@@ -361,25 +375,36 @@ namespace XiPivot
 			imgui->Text(u8"available overlays:");
 			imgui->BeginChild(u8"available_overlays", ImVec2(0, 200));
 			{
-				if (m_guiState.state.addOverlayName.empty() == true)
+				if (imgui->BeginTable("available_overlays_table", 2, ImGuiTableFlags_NoSavedSettings))
 				{
-					int n = 0;
-					const auto l = m_guiState.constants.activeOverlays;
-					for (const auto& path : m_guiState.constants.allOverlays)
+					imgui->TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, 0);
+					imgui->TableSetupColumn("Overlay", ImGuiTableColumnFlags_WidthStretch, 1);
+					imgui->TableHeadersRow();
+
+					if (m_guiState.state.addOverlayName.empty() == true)
 					{
-						if (std::find(l.begin(), l.end(), path) == l.end())
+						int n = 0;
+						const auto l = m_guiState.constants.activeOverlays;
+						for (const auto& path : m_guiState.constants.allOverlays)
 						{
-							// n is the index of the overlay in the list of all overlays which should be constant
-							char btnId[] = { ' ', '+', ' ', '#', '#', static_cast<char>(n + 'a') };
-							if (imgui->Button(btnId))
+							if (std::find(l.begin(), l.end(), path) == l.end())
 							{
-								m_guiState.state.addOverlayName = path;
+								// n is the index of the overlay in the list of all overlays which should be constant
+								char btnId[] = { ' ', '+', ' ', '#', '#', static_cast<char>(n + 'a') };
+
+								imgui->TableNextColumn();
+								if (imgui->Button(btnId))
+								{
+									m_guiState.state.addOverlayName = path;
+								}
+
+								imgui->TableNextColumn();
+								imgui->Text(path.c_str());
 							}
-							imgui->SameLine();
-							imgui->Text(path.c_str());
+							++n;
 						}
-						++n;
 					}
+					imgui->EndTable();
 				}
 			}
 			imgui->EndChild();
