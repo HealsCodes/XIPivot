@@ -74,8 +74,13 @@ namespace XiPivot
 			void logMessageF(Core::ILogProvider::LogLevel level, std::string msg, ...);
 
 		private:
+
+			bool CreateConfigPath(const std::string& path, const std::string& moveOld);
+
 			struct Settings
 			{
+				static constexpr auto ConfigPath = "pivot\\pivot.ini";
+
 				Settings();
 
 				bool load(IConfigurationManager* config);
