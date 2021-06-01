@@ -30,6 +30,7 @@
 #include "MemCache.h"
 
 #include <regex>
+#include <iostream>
 
 namespace XiPivot
 {
@@ -66,6 +67,12 @@ namespace XiPivot
 			auto config = m_ashitaCore->GetConfigurationManager();
 			if (config != nullptr)
 			{
+				if (!CreateConfigPath(std::string(m_ashitaCore->GetInstallPath()) + "config\\pivot",
+									  std::string(m_ashitaCore->GetInstallPath()) + "config\\pivot.ini"))
+				{
+					return false;
+				}
+
 				if (!m_settings.load(config))
 				{
 					logMessageF(LogLevel::Warn, "Failed to load config file, saving defaults instead");
@@ -201,6 +208,65 @@ namespace XiPivot
 
 		/* private parts below */
 
+		bool AshitaInterface::CreateConfigPath(const std::string& path, const std::string& moveOld)
+		{
+			std::istringstream pathReader(path);
+			std::stringstream pathPos;
+			std::string dirName;
+
+			while (std::getline(pathReader, dirName, '\\')) {
+				if (dirName.empty()) {
+					break;
+				}
+
+				if (pathPos.str().empty()) 
+				{
+					// drive letter 
+					pathPos << dirName;
+				}
+				else
+				{
+					pathPos << "\\" << dirName;
+				}
+
+				auto attrib = GetFileAttributesA(pathPos.str().c_str());
+				if (attrib == INVALID_FILE_ATTRIBUTES) 
+				{
+					logMessageF(LogLevel::Debug, "trying to create directory '%s'", pathPos.str().c_str());
+					if (CreateDirectoryA(pathPos.str().c_str(), nullptr) != TRUE)
+					{
+						logMessageF(LogLevel::Error, "unable to create directory '%s'", pathPos.str().c_str());
+						return false;
+					}
+				}
+				else if (!(attrib & FILE_ATTRIBUTE_DIRECTORY))
+				{
+					logMessageF(LogLevel::Error, "path '%s' already exists and is not a directory", pathPos.str().c_str());
+					return false;
+				}
+			}
+
+			if (!moveOld.empty())
+			{
+				auto attrib = GetFileAttributesA(moveOld.c_str());
+				if (attrib != INVALID_FILE_ATTRIBUTES && !(attrib & FILE_ATTRIBUTE_DIRECTORY))
+				{
+					auto newPath = path + moveOld.substr(moveOld.rfind('\\'));
+
+					if (GetFileAttributesA(newPath.c_str()) == INVALID_FILE_ATTRIBUTES)
+					{
+						logMessageF(LogLevel::Debug, "moving existing configuration '%s' to '%s'", moveOld.c_str(), newPath.c_str());
+						MoveFileA(moveOld.c_str(), newPath.c_str());
+					}
+					else
+					{
+						logMessageF(LogLevel::Debug, "unable to move existing configuration '%s' to '%s' (file exists)", moveOld.c_str(), newPath.c_str());
+					}
+				}
+			}
+			return true;
+		}
+
 		AshitaInterface::Settings::Settings()
 		{
 			char workPath[MAX_PATH];
@@ -220,7 +286,7 @@ namespace XiPivot
 		bool AshitaInterface::Settings::load(IConfigurationManager* config)
 		{
 			dirty = false;
-			if (config->Load(PluginName, PluginName))
+			if (config->Load(PluginName, ConfigPath))
 			{
 				const char* rP = config->GetString(PluginName, "settings", "root_path");
 				const bool dbg = config->GetBool(PluginName, "settings", "debug_log", true);
@@ -278,7 +344,7 @@ namespace XiPivot
 			snprintf(val, 31, "%u", cachePurgeDelay);
 			config->SetValue(PluginName, "cache", "max_age", val);
 
-			config->Save(PluginName, PluginName);
+			config->Save(PluginName, ConfigPath);
 			dirty = false;
 		}
 	}
