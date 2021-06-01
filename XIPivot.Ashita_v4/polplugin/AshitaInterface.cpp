@@ -64,6 +64,8 @@ namespace XiPivot
 
 			redirector.setLogProvider(this);
 
+			m_settingsPath = std::string(m_ashitaCore->GetInstallPath()) + "config\\pivot\\pivot.ini";
+
 			auto config = m_ashitaCore->GetConfigurationManager();
 			if (config != nullptr)
 			{
@@ -76,7 +78,7 @@ namespace XiPivot
 				if (!m_settings.load(config))
 				{
 					logMessageF(LogLevel::Warn, "Failed to load config file, saving defaults instead");
-					m_settings.save(config);
+					m_settings.save(config, m_settingsPath);
 				}
 
 				redirector.setDebugLog(m_settings.debugLog);
@@ -94,7 +96,7 @@ namespace XiPivot
 					memCache.setDebugLog(m_settings.debugLog);
 					memCache.setCacheAllocation(m_settings.cacheSize);
 				}
-				m_settings.save(config);
+				m_settings.save(config, m_settingsPath);
 			}
 
 			if (m_settings.cacheEnabled)
@@ -148,7 +150,7 @@ namespace XiPivot
 					m_settings.cacheSize       = Core::MemCache::instance().getCacheAllocation();
 					m_settings.cachePurgeDelay = static_cast<uint32_t>(m_ui.getCachePurgeDelay());
 
-					m_settings.save(m_ashitaCore->GetConfigurationManager());
+					m_settings.save(m_ashitaCore->GetConfigurationManager(), m_settingsPath);
 				}
 
 				m_ui.ProcessUI(m_settings.dirty);
@@ -320,7 +322,7 @@ namespace XiPivot
 			return false;
 		}
 
-		void AshitaInterface::Settings::save(IConfigurationManager* config)
+		void AshitaInterface::Settings::save(IConfigurationManager* config, const std::string& absPath)
 		{
 			config->Delete(PluginName);
 
@@ -343,6 +345,11 @@ namespace XiPivot
 
 			snprintf(val, 31, "%u", cachePurgeDelay);
 			config->SetValue(PluginName, "cache", "max_age", val);
+
+			if (GetFileAttributesA(absPath.c_str()) != INVALID_FILE_ATTRIBUTES)
+			{
+				DeleteFileA(absPath.c_str());
+			}
 
 			config->Save(PluginName, ConfigPath);
 			dirty = false;

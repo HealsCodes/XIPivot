@@ -16,7 +16,7 @@ The goals behind XIPivot are simple:
 ## Setup
 
 - 1) Add 'pivot' to the list of plugins to load in your ashita profile's `[ashita.polplugins]` section
-- 2) If this is your first time setting up pivot rename `pivot.sample.ini` in Ashita's `config/` directory to `pivot.ini`.
+- 2) If this is your first time setting up pivot rename `pivot.sample.ini` in Ashita's `config/pivot/` directory to `pivot.ini`.
 - 3) Create a subdirectory inside the `polplugin\DATs\` folder for each overlay you want to use
 - 4) -- manual approach -- jump to 6 for in-game GUI version
    - Edit `pivot.ini`:
@@ -34,7 +34,8 @@ Directory structure:
 ```
 <Ashita Install>
    +-- config/
-   |    +-- pivot.ini
+   |    +-- pivot/
+   |         +-- pivot.ini
    |
    +-- docs/
    |    +-- pivot/
