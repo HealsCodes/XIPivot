@@ -226,7 +226,7 @@ namespace Ashita::Threading
         {
             this->m_EventStart.Reset();
             this->m_EventEnd.Reset();
-            this->m_Handle = ::CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)ThreadCallback, (LPVOID)this, 0, &this->m_Id);
+            this->m_Handle = ::CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)ThreadCallback, this, 0, &this->m_Id);
         }
 
         /**
@@ -353,8 +353,7 @@ namespace Ashita::Threading
          */
         static uint32_t __stdcall ThreadCallback(const LPVOID param)
         {
-            const auto thread = (Ashita::Threading::Thread*)param;
-            if (thread != nullptr)
+            if (const auto thread = (Ashita::Threading::Thread*)param; thread != nullptr)
                 return thread->InternalEntry();
 
             return 0;
