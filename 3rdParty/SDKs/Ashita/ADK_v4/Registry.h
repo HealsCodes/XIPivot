@@ -82,8 +82,8 @@ namespace Ashita
                 buffer == nullptr || size == 0)
                 return false;
 
-            const char tags[4][255] = {"US", "", "US", "EU"};
-            const char path[4][255] = {"1000", "0001", "0002", "0015"};
+            constexpr char tags[4][255] = {"US", "", "US", "EU"};
+            constexpr char path[4][255] = {"1000", "0001", "0002", "0015"};
 
             // Build the initial registry key path to the install folder information..
             char regpath[MAX_PATH]{};
@@ -95,7 +95,7 @@ namespace Ashita
                 return false;
 
             // Read the install path from the registry..
-            char ipath[MAX_PATH]{};
+            const char ipath[MAX_PATH]{};
             DWORD ksize = MAX_PATH;
             auto ktype  = REG_DWORD;
             if (!(::RegQueryValueExA(key, path[(uint32_t)gid], nullptr, &ktype, (LPBYTE)ipath, &ksize) == ERROR_SUCCESS))
@@ -129,7 +129,7 @@ namespace Ashita
             if ((uint32_t)lid < 0 || lid >= LanguageId::MaxValue)
                 return 0;
 
-            const char tags[4][255] = {"US", "", "US", "EU"};
+            constexpr char tags[4][255] = {"US", "", "US", "EU"};
 
             // Build the path to the registry value..
             char regpath[MAX_PATH]{};
@@ -169,7 +169,7 @@ namespace Ashita
             if ((uint32_t)lid < 0 || lid >= LanguageId::MaxValue)
                 return false;
 
-            const char tags[4][255] = {"US", "", "US", "EU"};
+            constexpr char tags[4][255] = {"US", "", "US", "EU"};
 
             // Build the path to the registry value..
             char regpath[MAX_PATH]{};

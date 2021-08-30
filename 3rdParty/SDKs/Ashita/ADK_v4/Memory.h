@@ -33,6 +33,8 @@
 
 #include "ErrorHandling.h"
 
+// ReSharper disable CppTooWideScopeInitStatement
+
 namespace Ashita
 {
     /**
@@ -105,8 +107,7 @@ namespace Ashita
             for (size_t x = 0, y = len / 2; x < y; x++)
             {
                 // Convert the current byte into the vectored pattern data..
-                std::stringstream stream(std::string(pattern + (x * 2), 2));
-                if (stream.str() == "??")
+                if (std::stringstream stream(std::string(pattern + (x * 2), 2)); stream.str() == "??")
                     vpattern.push_back(std::make_pair((uint8_t)0, false));
                 else
                 {
@@ -236,14 +237,14 @@ namespace Ashita
         {
             const auto translator = Ashita::ErrorHandling::ScopedTranslator();
 
-            uintptr_t pointer = 0;
-
             // Validate the base address..
             if (base == 0)
                 return 0;
 
             try
             {
+                uintptr_t pointer = 0;
+
                 // Handle based offset differently..
                 if (firstOffsetBased)
                 {

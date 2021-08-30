@@ -132,7 +132,7 @@ namespace Ashita::ErrorHandling
          */
         const char* what(void) const
         {
-            return (const char*)this->m_Message;
+            return this->m_Message;
         }
 
         /**

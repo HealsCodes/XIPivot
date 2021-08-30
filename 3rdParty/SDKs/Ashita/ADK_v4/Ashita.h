@@ -65,7 +65,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-constexpr auto ASHITA_INTERFACE_VERSION = 4.0;
+constexpr auto ASHITA_INTERFACE_VERSION = 4.04;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -1353,9 +1353,10 @@ interface IResourceManager
     virtual D3DXIMAGE_INFO GetTextureInfo(const char* name) const = 0;
 
     // Helpers
-    virtual uint32_t GetAbilityRange(uint32_t abilityId, bool useAreaRange) const = 0;
-    virtual uint32_t GetAbilityType(uint32_t type) const                          = 0;
-    virtual uint32_t GetSpellRange(uint32_t spellId, bool useAreaRange) const     = 0;
+    virtual uint32_t GetFilePath(uint32_t fileId, char* buffer, uint32_t bufferSize) = 0;
+    virtual uint32_t GetAbilityRange(uint32_t abilityId, bool useAreaRange) const    = 0;
+    virtual uint32_t GetAbilityType(uint32_t type) const                             = 0;
+    virtual uint32_t GetSpellRange(uint32_t spellId, bool useAreaRange) const        = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1367,11 +1368,12 @@ interface IResourceManager
 interface IPrimitiveObject
 {
     // Methods
-    virtual bool SetTextureFromFile(const char* path)                                     = 0;
-    virtual bool SetTextureFromMemory(const void* data, uint32_t size, D3DCOLOR colorKey) = 0;
-    virtual bool SetTextureFromResource(const char* moduleName, const char* resName)      = 0;
-    virtual bool SetTextureFromResourceCache(const char* name)                            = 0;
-    virtual bool HitTest(int32_t x, int32_t y) const                                      = 0;
+    virtual bool SetTextureFromFile(const char* path)                                                = 0;
+    virtual bool SetTextureFromMemory(const void* data, uint32_t size, D3DCOLOR colorKey)            = 0;
+    virtual bool SetTextureFromResource(const char* moduleName, const char* resName)                 = 0;
+    virtual bool SetTextureFromResourceCache(const char* name)                                       = 0;
+    virtual bool SetTextureFromTexture(IDirect3DTexture8 * texture, uint32_t width, uint32_t height) = 0;
+    virtual bool HitTest(int32_t x, int32_t y) const                                                 = 0;
 
     // Properties
     virtual const char* GetAlias(void) const                   = 0;
@@ -1617,20 +1619,42 @@ interface IAshitaCore
     virtual IPrimitiveManager* GetPrimitiveManager(void) const         = 0;
     virtual IResourceManager* GetResourceManager(void) const           = 0;
 
-    // Methods (API Hook Forwards)
-    virtual HWND GetForegroundWindow(void)                                                       = 0;
-    virtual HWND GetFocus(void)                                                                  = 0;
-    virtual int GetSystemMetrics(int nIndex)                                                     = 0;
-    virtual ATOM RegisterClassA(CONST WNDCLASSA * lpWndClass)                                    = 0;
-    virtual ATOM RegisterClassW(CONST WNDCLASSW * lpWndClass)                                    = 0;
-    virtual ATOM RegisterClassExA(CONST WNDCLASSEXA * lpWndClass)                                = 0;
-    virtual ATOM RegisterClassExW(CONST WNDCLASSEXW * lpWndClass)                                = 0;
-    virtual BOOL RemoveMenu(HMENU hMenu, UINT uPosition, UINT uFlags)                            = 0;
-    virtual LRESULT SendMessageA(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)             = 0;
-    virtual BOOL SetCursorPos(int X, int Y)                                                      = 0;
-    virtual HWND SetFocus(HWND hWnd)                                                             = 0;
-    virtual BOOL SetForegroundWindow(HWND hWnd)                                                  = 0;
-    virtual HHOOK SetWindowsHookExA(int idHook, HOOKPROC lpfn, HINSTANCE hmod, DWORD dwThreadId) = 0;
+    // Methods (API Hook Forwards - DirectX)
+    virtual IDirect3D8* Direct3DCreate8(UINT SDKVersion)                                                                       = 0;
+    virtual HRESULT DirectInput8Create(HINSTANCE hinst, DWORD dwVersion, REFIID riidltf, LPVOID * ppvOut, LPUNKNOWN punkOuter) = 0;
+
+    // Methods (API Hook Forwards - Mutex)
+    virtual HANDLE CreateMutexA(LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, LPCSTR lpName)  = 0;
+    virtual HANDLE CreateMutexW(LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, LPCWSTR lpName) = 0;
+    virtual HANDLE OpenMutexA(DWORD dwDesiredAccess, BOOL bInheritHandle, LPCSTR lpName)                     = 0;
+    virtual HANDLE OpenMutexW(DWORD dwDesiredAccess, BOOL bInheritHandle, LPCWSTR lpName)                    = 0;
+
+    // Methods (API Hook Forwards - Registry)
+    virtual LSTATUS RegQueryValueExA(HKEY hKey, LPCSTR lpValueName, LPDWORD lpReserved, LPDWORD lpType, LPBYTE lpData, LPDWORD lpcbData) = 0;
+
+    // Methods (API Hook Forwards - Window)
+    virtual HWND CreateWindowExA(DWORD dwExStyle, LPCSTR lpClassName, LPCSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam)   = 0;
+    virtual HWND CreateWindowExW(DWORD dwExStyle, LPCWSTR lpClassName, LPCWSTR lpWindowName, DWORD dwStyle, int X, int Y, int nWidth, int nHeight, HWND hWndParent, HMENU hMenu, HINSTANCE hInstance, LPVOID lpParam) = 0;
+    virtual void ExitProcess(UINT uExitCode)                                                                                                                                                                          = 0;
+    virtual HWND GetForegroundWindow(void)                                                                                                                                                                            = 0;
+    virtual HWND GetFocus(void)                                                                                                                                                                                       = 0;
+    virtual int GetSystemMetrics(int nIndex)                                                                                                                                                                          = 0;
+    virtual int GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)                                                                                                                                              = 0;
+    virtual int GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)                                                                                                                                             = 0;
+    virtual HBITMAP LoadBitmapW(HINSTANCE hInstance, LPCWSTR lpBitmapName)                                                                                                                                            = 0;
+    virtual ATOM RegisterClassA(CONST WNDCLASSA * lpWndClass)                                                                                                                                                         = 0;
+    virtual ATOM RegisterClassW(CONST WNDCLASSW * lpWndClass)                                                                                                                                                         = 0;
+    virtual ATOM RegisterClassExA(CONST WNDCLASSEXA * lpWndClass)                                                                                                                                                     = 0;
+    virtual ATOM RegisterClassExW(CONST WNDCLASSEXW * lpWndClass)                                                                                                                                                     = 0;
+    virtual BOOL RemoveMenu(HMENU hMenu, UINT uPosition, UINT uFlags)                                                                                                                                                 = 0;
+    virtual LRESULT SendMessageA(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)                                                                                                                                  = 0;
+    virtual BOOL SetCursorPos(int X, int Y)                                                                                                                                                                           = 0;
+    virtual HWND SetFocus(HWND hWnd)                                                                                                                                                                                  = 0;
+    virtual BOOL SetForegroundWindow(HWND hWnd)                                                                                                                                                                       = 0;
+    virtual BOOL SetPriorityClass(HANDLE hProcess, DWORD dwPriorityClass)                                                                                                                                             = 0;
+    virtual HHOOK SetWindowsHookExA(int idHook, HOOKPROC lpfn, HINSTANCE hmod, DWORD dwThreadId)                                                                                                                      = 0;
+    virtual BOOL SetWindowTextA(HWND hWnd, LPCSTR lpString)                                                                                                                                                           = 0;
+    virtual BOOL SetWindowTextW(HWND hWnd, LPCWSTR lpString)                                                                                                                                                          = 0;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

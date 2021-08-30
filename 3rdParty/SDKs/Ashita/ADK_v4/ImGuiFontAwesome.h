@@ -54,8 +54,8 @@
 /**
  * fa-regular-400.ttf
  */
-static const uint32_t ImGuiFont_FontAwesome_Regular_400_Compressed_Size = 22262;
-static const uint32_t ImGuiFont_FontAwesome_Regular_400_Compressed_Data[5566] =
+static constexpr uint32_t ImGuiFont_FontAwesome_Regular_400_Compressed_Size = 22262;
+static constexpr uint32_t ImGuiFont_FontAwesome_Regular_400_Compressed_Data[5566] =
 {
     0x0000bc57, 0x00000000, 0x04850000, 0x00000400, 0x00010037, 0x000d0000, 0x00030080, 0x54464650, 0xc834934d, 0x84000023, 0x281582e8, 0x4544471c, 
     0x002a0046, 0x200f82a0, 0x2c0f82c8, 0x2f534f1e, 0x53924132, 0x0100001b, 0x360f8258, 0x616d6360, 0xc8a0c770, 0x040000f4, 0x0300000c, 0x736167da, 
@@ -526,8 +526,8 @@ static const uint32_t ImGuiFont_FontAwesome_Regular_400_Compressed_Data[5566] =
 /**
  * fa-brands-400.ttf
  */
-static const uint32_t ImGuiFont_FontAwesome_Brands_400_Compressed_Size = 122868;
-static const uint32_t ImGuiFont_FontAwesome_Brands_400_Compressed_Data[30717] =
+static constexpr uint32_t ImGuiFont_FontAwesome_Brands_400_Compressed_Size = 122868;
+static constexpr uint32_t ImGuiFont_FontAwesome_Brands_400_Compressed_Data[30717] =
 {
     0x0000bc57, 0x00000000, 0x44150200, 0x00000400, 0x00010037, 0x000d0000, 0x00030080, 0x54464650, 0xc834934d, 0x15020023, 0x28158228, 0x4544471c, 
     0x012a0046, 0x200f82d2, 0x2c0f8208, 0x2f534f1e, 0x56953132, 0x0100003a, 0x360f8258, 0x616d6360, 0x71218270, 0x080000e7, 0x050000e8, 0x736167f2, 
@@ -3094,8 +3094,8 @@ static const uint32_t ImGuiFont_FontAwesome_Brands_400_Compressed_Data[30717] =
 /**
  * fa-solid-900.ttf
  */
-static const uint32_t ImGuiFont_FontAwesome_Solid_900_Compressed_Size = 144852;
-static const uint32_t ImGuiFont_FontAwesome_Solid_900_Compressed_Data[36213] =
+static constexpr uint32_t ImGuiFont_FontAwesome_Solid_900_Compressed_Size = 144852;
+static constexpr uint32_t ImGuiFont_FontAwesome_Solid_900_Compressed_Data[36213] =
 {
     0x0000bc57, 0x00000000, 0xf01e0300, 0x00000400, 0x00010037, 0x000d0000, 0x00030080, 0x54464650, 0xc834934d, 0x1e030024, 0x281582d4, 0x4544471c, 
     0x032a0046, 0x200f82f2, 0x2c0f82b4, 0x2f534f1e, 0x56873332, 0x01000060, 0x360f8258, 0x616d6360, 0xfe6af170, 0x11000034, 0x0c000068, 0x736167ce, 

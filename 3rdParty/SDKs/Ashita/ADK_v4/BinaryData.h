@@ -67,7 +67,7 @@ namespace Ashita
             // Pack the data based on the size (type)..
             if (len + bitOffset <= 8)
             {
-                const auto ptr  = (uint8_t*)&data[byteOffset];
+                const auto ptr  = &data[byteOffset];
                 const auto mask = (uint8_t)bitmask;
                 const auto val  = (uint8_t)value;
                 *ptr &= mask;
@@ -208,7 +208,7 @@ namespace Ashita
             uint64_t ret;
             if (len + bitOffset <= 8)
             {
-                const auto ptr = (uint8_t*)&data[byteOffset];
+                const auto ptr = &data[byteOffset];
                 ret            = (*ptr & (uint8_t)bitmask) >> bitOffset;
             }
             else if (len + bitOffset <= 16)
@@ -224,7 +224,7 @@ namespace Ashita
             else if (len + bitOffset <= 64)
             {
                 const auto ptr = (uint64_t*)&data[byteOffset];
-                ret            = (*ptr & (uint64_t)bitmask) >> bitOffset;
+                ret            = (*ptr & bitmask) >> bitOffset;
             }
             else
             {
@@ -288,7 +288,7 @@ namespace Ashita
             if (bytesNeeded == 1)
             {
                 const uint8_t mask = 0xFF >> bitOffset;
-                ret                = (modified[0] & mask) >> (8 - (len + bitOffset));
+                ret                = (uint64_t)(modified[0] & mask) >> (8 - (len + bitOffset));
             }
             else
             {

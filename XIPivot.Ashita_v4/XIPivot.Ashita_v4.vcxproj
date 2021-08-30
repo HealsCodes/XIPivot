@@ -162,7 +162,7 @@ rmdir /S /Q "$(SolutionDir)build\$(Configuration)\Ashita_v4"</Command>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)XIPivot.Ashita_v4\shared;$(SolutionDir)XIPivot.Core\src;$(SolutionDir)3rdParty\SDKs\Ashita\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <ExceptionHandling>Async</ExceptionHandling>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

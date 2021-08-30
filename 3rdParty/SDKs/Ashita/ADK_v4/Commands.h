@@ -27,6 +27,7 @@
 #endif
 
 // ReSharper disable CppInconsistentNaming
+// ReSharper disable CppRedundantControlFlowJump
 // ReSharper disable CppUnusedIncludeDirective
 
 #include <algorithm>
@@ -53,7 +54,7 @@ namespace Ashita::Commands
         if (cmd.size() == 0 || cmds.size() == 0)
             return false;
 
-        return std::any_of(cmds.begin(), cmds.end(), [&cmd](const std::string& s) -> bool {
+        return std::ranges::any_of(cmds, [&cmd](const std::string& s) -> bool {
             return _stricmp(cmd.c_str(), s.c_str()) == 0;
         });
     }
