@@ -48,7 +48,7 @@ namespace Ashita
             {
                 this->m_EventHandle = ::CreateEvent(nullptr, manualReset, FALSE, nullptr);
             }
-            virtual AS_Event::~AS_Event(void)
+            virtual ~AS_Event(void)
             {
                 if (this->m_EventHandle != nullptr)
                     ::CloseHandle(this->m_EventHandle);

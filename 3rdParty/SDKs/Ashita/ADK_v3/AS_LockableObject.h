@@ -51,7 +51,7 @@ namespace Ashita
             {
                 ::InitializeCriticalSection(&this->m_CriticalSection);
             }
-            virtual AS_LockableObject::~AS_LockableObject(void)
+            virtual ~AS_LockableObject(void)
             {
                 ::DeleteCriticalSection(&this->m_CriticalSection);
             }
