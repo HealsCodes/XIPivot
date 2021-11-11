@@ -1,5 +1,5 @@
 /**
- * Ashita - Copyright (c) 2014 - 2017 atom0s [atom0s@live.com]
+ * Ashita - Copyright (c) 2014 - 2021 atom0s [atom0s@live.com]
  *
  * This work is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/ or send a letter to
@@ -31,8 +31,8 @@
 #endif
 
 #include <Windows.h>
-#include <vector>
 #include <string>
+#include <vector>
 
 // Helper Macros
 #define HANDLECOMMAND_GA(arg1, arg2, arg3, arg4, arg5, arg6, ...) arg6

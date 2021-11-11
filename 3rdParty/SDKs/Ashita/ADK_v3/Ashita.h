@@ -1,5 +1,5 @@
 /**
- * Ashita - Copyright (c) 2014 - 2017 atom0s [atom0s@live.com]
+ * Ashita - Copyright (c) 2014 - 2021 atom0s [atom0s@live.com]
  *
  * This work is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/ or send a letter to
@@ -30,29 +30,29 @@
 #pragma once
 #endif
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// ReSharper Specific Disables (Please do not edit these!)
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// ReSharper disable CppUnusedIncludeDirective
-// ReSharper disable CppPolymorphicClassWithNonVirtualPublicDestructor
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////
+ ////////////////////////////////////////////////////////////////////////////////////////////////////
+ //
+ // ReSharper Specific Disables (Please do not edit these!)
+ //
+ ////////////////////////////////////////////////////////////////////////////////////////////////////
+ //
+ // ReSharper disable CppUnusedIncludeDirective
+ // ReSharper disable CppPolymorphicClassWithNonVirtualPublicDestructor
+ //
+ ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-// Ashita Interface Version
-//
-// Defines the current interface version that Ashita is compiled against. This version must match
-// when a plugin is loaded for it to work properly. Invalid versions will result in the plugin
-// not loading and printing an error.
-//
-// DO NOT EDIT THIS!
-//
-////////////////////////////////////////////////////////////////////////////////////////////////////
-#define ASHITA_INTERFACE_VERSION 3.0
+ ////////////////////////////////////////////////////////////////////////////////////////////////////
+ //
+ // Ashita Interface Version
+ //
+ // Defines the current interface version that Ashita is compiled against. This version must match
+ // when a plugin is loaded for it to work properly. Invalid versions will result in the plugin
+ // not loading and printing an error.
+ //
+ // DO NOT EDIT THIS!
+ //
+ ////////////////////////////////////////////////////////////////////////////////////////////////////
+#define ASHITA_INTERFACE_VERSION 3.1
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -962,17 +962,44 @@ interface IPlayer
     virtual uint16_t GetTitle(void) const = 0;
     virtual uint16_t GetRank(void) const = 0;
     virtual uint16_t GetRankPoints(void) const = 0;
+    virtual uint16_t GetHomepoint(void) const = 0;
     virtual uint8_t GetNation(void) const = 0;
     virtual uint8_t GetResidence(void) const = 0;
-    virtual uint32_t GetHomepoint(void) const = 0;
+    virtual uint16_t GetSuLevel(void) const = 0;
+    virtual uint8_t GetHighestItemLevel(void) const = 0;
+    virtual uint8_t GetItemLevel(void) const = 0;
+    virtual uint8_t GetMainHandItemLevel(void) const = 0;
+    virtual uint32_t GetUnityFaction(void) const = 0;
+    virtual uint32_t GetUnityPoints(void) const = 0;
+    virtual uint16_t GetUnityPartialPersonalEvalutionPoints(void) const = 0;
+    virtual uint16_t GetUnityPersonalEvaluationPoints(void) const = 0;
+    virtual uint32_t GetUnityChatColorFlag(void) const = 0;
+    virtual uint8_t GetMasteryJob(void) const = 0;
+    virtual uint8_t GetMasteryJobLevel(void) const = 0;
+    virtual uint8_t GetMasteryFlags(void) const = 0;
+    virtual uint8_t GetMasteryUnknown0000(void) const = 0;
+    virtual uint32_t GetMasteryExp(void) const = 0;
+    virtual uint32_t GetMasteryExpNeeded(void) const = 0;
     virtual Ashita::FFXI::combatskill_t GetCombatSkill(uint32_t skill) const = 0;
     virtual Ashita::FFXI::craftskill_t GetCraftSkill(uint32_t skill) const = 0;
     virtual uint16_t GetAbilityRecast(uint32_t index) const = 0;
     virtual uint16_t GetAbilityRecastTimerId(uint32_t index) const = 0;
+    virtual uint32_t GetMountRecast(void) const = 0;
+    virtual uint32_t GetMountRecastTimerId(void) const = 0;
+    virtual uint8_t GetDataLoadedFlags(void) const = 0;
     virtual uint16_t GetLimitPoints(void) const = 0;
     virtual uint8_t GetMeritPoints(void) const = 0;
     virtual uint8_t GetLimitMode(void) const = 0;
     virtual uint32_t GetMeritPointsMax(void) const = 0;
+    virtual uint8_t* GetHomepointMasks(void) const = 0;
+    virtual uint32_t GetIsZoning(void) const = 0;
+
+    // Get Properties (Job Points)
+    virtual uint16_t GetCapacityPoints(uint32_t jobid) const = 0;
+    virtual uint16_t GetJobPoints(uint32_t jobid) const = 0;
+    virtual uint16_t GetJobPointsSpent(uint32_t jobid) const = 0;
+
+    // Get Properties (Status Icons / Buffs)
     virtual int16_t* GetStatusIcons(void) const = 0;
     virtual int32_t* GetStatusTimers(void) const = 0;
     virtual int16_t* GetBuffs(void) const = 0;

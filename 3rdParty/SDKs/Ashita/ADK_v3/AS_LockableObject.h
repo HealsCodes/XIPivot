@@ -1,5 +1,5 @@
 /**
- * Ashita - Copyright (c) 2014 - 2017 atom0s [atom0s@live.com]
+ * Ashita - Copyright (c) 2014 - 2021 atom0s [atom0s@live.com]
  *
  * This work is licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
  * To view a copy of this license, visit http://creativecommons.org/licenses/by-nc-nd/4.0/ or send a letter to
@@ -51,7 +51,7 @@ namespace Ashita
             {
                 ::InitializeCriticalSection(&this->m_CriticalSection);
             }
-            virtual ~AS_LockableObject(void)
+            virtual AS_LockableObject::~AS_LockableObject(void)
             {
                 ::DeleteCriticalSection(&this->m_CriticalSection);
             }
