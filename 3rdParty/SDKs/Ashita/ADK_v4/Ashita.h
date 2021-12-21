@@ -65,7 +65,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-constexpr auto ASHITA_INTERFACE_VERSION = 4.08;
+constexpr auto ASHITA_INTERFACE_VERSION = 4.09;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -1072,7 +1072,10 @@ interface IPlayer
     virtual uint8_t GetDataLoadedFlags(void) const                         = 0;
     virtual uint16_t GetLimitPoints(void) const                            = 0;
     virtual uint8_t GetMeritPoints(void) const                             = 0;
-    virtual uint8_t GetLimitMode(void) const                               = 0;
+    virtual uint8_t GetAssimilationPoints(void) const                      = 0;
+    virtual bool GetIsLimitBreaker(void) const                             = 0;
+    virtual bool GetIsExperiencePointsLocked(void) const                   = 0;
+    virtual bool GetIsLimitModeEnabled(void) const                         = 0;
     virtual uint8_t GetMeritPointsMax(void) const                          = 0;
     virtual uint8_t* GetHomepointMasks(void) const                         = 0;
     virtual uint32_t GetIsZoning(void) const                               = 0;
@@ -1083,9 +1086,9 @@ interface IPlayer
     virtual uint16_t GetJobPointsSpent(uint32_t jobid) const = 0;
 
     // Get Properties (Status Icons / Buffs)
-    virtual int16_t* GetStatusIcons(void) const  = 0;
-    virtual int32_t* GetStatusTimers(void) const = 0;
-    virtual int16_t* GetBuffs(void) const        = 0;
+    virtual int16_t* GetStatusIcons(void) const   = 0;
+    virtual uint32_t* GetStatusTimers(void) const = 0;
+    virtual int16_t* GetBuffs(void) const         = 0;
 
     // Get Properties (Pet Info)
     virtual uint8_t GetPetMPPercent(void) const = 0;

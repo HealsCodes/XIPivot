@@ -227,15 +227,18 @@ namespace Ashita::FFXI
         uint8_t         DataLoadedFlags;                        // Flags that control what player information has been populated. Controls text visiiblity in player menus, unity information, etc.
         uint8_t         Unknown0002;                            // Unknown [Padding?]
         uint16_t        LimitPoints;                            // The players current limit points.
-        uint8_t         MeritPoints;                            // The players current merit points.
-        uint8_t         LimitMode;                              // The players current limit mode. (Controls mode, text color, etc.)
+        uint16_t        MeritPoints: 7;                         // The players current merit points.
+        uint16_t        AssimilationPoints: 6;                  // The players assimilation points.
+        uint16_t        IsLimitBreaker: 1;                      // Flag if the player has unlocked earning merit points.
+        uint16_t        IsExperiencePointsLocked: 1;            // Flag if the player has max experience points. (Also set to 1 if limit mode is enabled.)
+        uint16_t        IsLimitModeEnabled: 1;                  // Flag if the player has limit mode enabled.
         uint8_t         MeritPointsMax;                         // The players max merits.
         uint8_t         Unknown0003[3];                         // Unknown [Set with MeritPointsMax, looks to be just junk.]
         uint16_t        Unknown0004;                            // Unknown (Set from 0x63 packet. Offset: 0x0C) [Never read, just set.]
         jobpointsinfo_t JobPoints;                              // The players current job point information.
         uint8_t         HomepointMasks[64];                     // The players known homepoints. [Bitpacked masks.]
         int16_t         StatusIcons[32];                        // The players status icons used for status timers.
-        int32_t         StatusTimers[32];                       // The players status timers.
+        uint32_t        StatusTimers[32];                       // The players status timers.
         uint8_t         Unknown0005[32];                        // Unknown [Set from 0x63 packet, case 0x0A.]
         uint32_t        IsZoning;                               // Flag if the player is zoning and the client should send an 0x0C request.
         float           Unknown0006;                            // Unknown [Client uses these when the player entity status is 29 or 30.]
