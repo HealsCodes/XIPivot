@@ -293,6 +293,12 @@ namespace XiPivot
 								for (const auto &dat : datFiles)
 								{
 									int32_t romIndex = pathToIndex(strstr(dat.c_str(), "//ROM"));
+									if (romIndex == -1)
+									{
+										m_logger->logMessageF(ILogProvider::LogLevel::Info, "Ignoring '%s' - invalid filename", dat.c_str());
+										continue;
+									}
+
 									if (m_resolvedPaths.find(romIndex) == m_resolvedPaths.end())
 									{
 										m_logger->logMessageF(m_logDebug, "emplace %8d : '%s'", romIndex, dat.c_str());
@@ -328,6 +334,11 @@ namespace XiPivot
 								{
 									std::transform(sfx.begin(), sfx.end(), sfx.begin(), [](unsigned char c) { return std::tolower(c); });
 									int32_t sfxIndex = pathToIndexAudio(&strstr(sfx.c_str(), "/win/se/")[-1]);
+									if (sfxIndex == -1)
+									{
+										m_logger->logMessageF(ILogProvider::LogLevel::Info, "Ignoring '%s' - invalid filename", sfx.c_str());
+										continue;
+									}
 									if (m_resolvedPaths.find(sfxIndex) == m_resolvedPaths.end())
 									{
 										m_logger->logMessageF(m_logDebug, "emplace %8d : '%s'", sfxIndex, sfx.c_str());
@@ -346,6 +357,11 @@ namespace XiPivot
 						{
 							std::transform(bgw.begin(), bgw.end(), bgw.begin(), [](unsigned char c) { return std::tolower(c); });
 							int32_t bgwIndex = pathToIndexAudio(&strstr(bgw.c_str(), "/win/music/")[-1]);
+							if (bgwIndex == -1)
+							{
+								m_logger->logMessageF(ILogProvider::LogLevel::Info, "Ignoring '%s' - invalid filename", bgw.c_str());
+								continue;
+							}
 							if (m_resolvedPaths.find(bgwIndex) == m_resolvedPaths.end())
 							{
 								m_logger->logMessageF(m_logDebug, "emplace %8d : '%s'", bgwIndex, bgw.c_str());
@@ -523,6 +539,13 @@ namespace XiPivot
 				{
 					soundIndex += (soundPath[0] - '0') * 1000000;
 				}
+
+				if (!isdigit(soundPath[17]) || !isdigit(soundPath[18]) || !isdigit(soundPath[19]) ||
+					!isdigit(soundPath[20]) || !isdigit(soundPath[21]) || !isdigit(soundPath[22]))
+				{
+					return -1;
+				}
+
 				/* cut out the 6 digits of the filename, they contain the subdir anyway 
 				* 9/win/se/seAAA/seAAABBB.spw
 				*/
@@ -545,6 +568,12 @@ namespace XiPivot
 				{
 					soundIndex += (soundPath[0] - '0') * 1000000;
 				}
+
+				if (!isdigit(soundPath[22]) || !isdigit(soundPath[23]) || !isdigit(soundPath[24]))
+				{
+					return -1;
+				}
+
 				/* cut out the 3 digits of the filename
 				 * 9\win\music\data\music058.bgw
 				 */
