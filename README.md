@@ -24,16 +24,21 @@ XIPivot works together with [Ashita v3](https://www.ashitaxi.com) as well as [Wi
 - Head over to the [Releases page](https://github.com/Shirk/XIPivot/releases) and pick the ZIP that matches your launcher
 - Follow the README.md inside the archive  for setup and configuration instructions
 
-- [Latest release for Windower](https://github.com/Shirk/XIPivot/releases/tag/v0.3.2)
-- [Latest release for Ashita](https://github.com/Shirk/XIPivot/releases/tag/v0.4.2)
+- [Latest release for Windower](https://github.com/Shirk/XIPivot/releases/tag/v0.4.6)
+- [Latest release for Ashita](https://github.com/Shirk/XIPivot/releases/tag/v0.4.5)
+- [Latest pre-release for Ashita v4 beta](https://github.com/Shirk/XIPivot/releases/tag/v4.0.902)
 
 #### Ashita Install
 
 The latest version of XIPivot can always be installed from the plugins list in Ashita and will be updated automatically.
 
+### Ashita v4 (beta) Install
+
+Follow the steps for manual installation for now.
+
 ## Modifications / Contribution
 
-If you would like to build XIPivot from source you need the Visual Studio 2017.
+If you would like to build XIPivot from source you need the Visual Studio 2019.
 The Community Edition is available for free from [Microsoft](https://visualstudio.microsoft.com/vs/community/).
 
 Otherwise it's just these three steps:
@@ -43,9 +48,6 @@ Otherwise it's just these three steps:
 - chose "Build -> Rebuild Solution" .
 
 The addon and plugin versions will be placed inside the directory `build\Release\Windower` and `build\Release\Ashita`.
-
-**NOTE: Builds require VS2015 toolchain as well as the Windows 8.1 SDK**
-**NOTE: Chose "no" if Visual Studio offers to upgrade the project elements to Windows 10 SDK targets **
 
 ## Disclaimer
 
