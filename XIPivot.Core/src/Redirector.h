@@ -105,6 +105,18 @@ namespace XiPivot
 			/* access or create the actual Redirector instance */
 			static Redirector& instance(void);
 
+			template <class T>
+			static T* instance(void) 
+			{
+				static_assert(std::is_base_of<Redirector, T>(), "Templated ::instance requires T to be derived from Core::Redirector");
+
+				if (Redirector::s_instance == nullptr)
+				{
+					Redirector::s_instance = new T();
+				}
+				return reinterpret_cast<T*>(Redirector::s_instance);
+			}
+
 			/* static callbacks used by the Detours library */
 			static HANDLE __stdcall dCreateFileA(LPCSTR a0, DWORD a1, DWORD a2, LPSECURITY_ATTRIBUTES a3, DWORD a4, DWORD a5, HANDLE a6);
 			static HANDLE __stdcall dFindFirstFileA(LPCSTR a0, LPWIN32_FIND_DATAA a2);

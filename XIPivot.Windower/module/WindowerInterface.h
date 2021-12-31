@@ -36,16 +36,20 @@ extern "C"
 #	include "lua.h"
 }
 
+#include <fstream>
+
 #include "Redirector.h"
+#include "LogProvider.h"
 
 namespace XiPivot
 {
 	/* a simple, mostly static interface addon-on to
 	 * provide interopperability with the LUA-C API 
 	 */
-	class WindowerInterface : public Core::Redirector
+	class WindowerInterface : public Core::Redirector, public Core::ILogProvider
 	{
 		public:
+			WindowerInterface(void) : Redirector() {};
 			~WindowerInterface(void) {};
 
 			static int registerInterface(lua_State *L);
@@ -65,6 +69,14 @@ namespace XiPivot
 			 * returns: a boolean representing the operation result
 			 */
 			static int lua_disable(lua_State *L);
+
+			/* internally calls Redirector::setLogger
+			 *
+			 * arguments: [1] - boolean: enable debug log
+			 * returns: a boolean representing the current log state
+			 */
+			static int lua_setDebug(lua_State *L);
+
 
 			/* internally calls Redirector::setRootPath
 			 *
@@ -115,8 +127,9 @@ namespace XiPivot
 			 */
 			static int lua_onTick(lua_State *L);
 
-		protected:
-			WindowerInterface(void) : Redirector() {};
+			/* ILogProvider */
+			virtual void logMessage(LogLevel level, std::string message) override;
+			virtual void logMessageF(LogLevel level, std::string fmt, ...) override;
 
 		private:
 			/* local backup of the cache state */
@@ -129,6 +142,8 @@ namespace XiPivot
 				time_t maxAge;      /* max time in seconds between purges / max object age */
 				time_t nextPurge;   /* timestamp of the next purge */
 			} m_cacheConfig;
+
+			std::ofstream m_logOut;
 	};
 }
 

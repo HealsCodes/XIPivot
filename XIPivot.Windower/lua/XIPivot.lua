@@ -28,7 +28,7 @@
 
 _addon.name = 'XIPivot'
 _addon.author = 'Heals'
-_addon.version = '0.4.5'
+_addon.version = '0.4.6'
 _addon.command = 'pivot'
 
 config = require('config')
@@ -39,6 +39,7 @@ require('lists')
 local addon_path = windower.addon_path:gsub('\\', '/')
 local root_path = addon_path .. 'data/DATs'
 defaults = T{}
+defaults.debug_log = false
 defaults.overlays  = L{}
 
 defaults.cache_enabled = false
@@ -62,6 +63,7 @@ config.register(settings, function(_settings)
 
 	-- setup things
 	_XIPivot.set_root_path(root_path)
+	_XIPivot.set_debug(_settings.debug_log)
 	for i,path in ipairs(_settings.overlays) do
 		if _XIPivot.add_overlay(path) == false then
 			windower.add_to_chat(8, 'failed to register overlay "' .. path .. '"')
@@ -99,6 +101,7 @@ windower.register_event('addon command', function(command, ...)
 		if _XIPivot.add_overlay(args[1]) == true then
 			list.append(settings.overlays, args[1])
 			config.save(settings)
+			windower.add_to_chat(8, 'registered overlay "' .. args[1] .. '"')
 		else
 			windower.add_to_chat(8, 'failed to add "' .. args[1] .. '"')
 		end
@@ -112,6 +115,7 @@ windower.register_event('addon command', function(command, ...)
 		for i,path in ipairs(settings.overlays) do
 			if path == args[1] then
 				list.remove(settings.overlays, i)
+				windower.add_to_chat(8, 'removed overlay "' .. args[1] .. '"')
 				break
 			end
 		end
