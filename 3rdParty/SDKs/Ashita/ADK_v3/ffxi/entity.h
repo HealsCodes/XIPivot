@@ -140,6 +140,7 @@ namespace Ashita
             uint16_t        ActionTimer1;
             uint16_t        ActionTimer2;
             render_t        Render;
+            uint32_t        Padding0000;
             float           Unknown0008;            // Fishing related.
             uint32_t        Unknown0009;            // Fade-in effect. (Valid values: 3 / 6)
             uint16_t        Unknown0010;            // Fade-in misc. (-1 gets reset to 0)

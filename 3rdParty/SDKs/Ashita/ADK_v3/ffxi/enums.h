@@ -77,8 +77,13 @@ namespace Ashita {
                 Wardrobe2 = 10,
                 Wardrobe3 = 11,
                 Wardrobe4 = 12,
+                Wardrobe5 = 13,
+                Wardrobe6 = 14,
+                Wardrobe7 = 15,
+                Wardrobe8 = 16,
+                Recycle = 17,
 
-                ContainerMax = 13
+                ContainerMax = 18
             };
 
             /**
