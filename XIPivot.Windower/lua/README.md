@@ -15,7 +15,7 @@ The goals behind XIPivot are simple:
 
 ## Prerequisites
 
-Besides a recent Windower installation XIPivot requires the Microsoft Visual C++ Runtime 2010 which you can download from [Microsoft](https://www.microsoft.com/en-us/download/details.aspx?id=5555)
+Besides a recent Windower installation XIPivot requires the Microsoft Visual C++ Runtime 2015 which you can download from [Microsoft](https://download.microsoft.com/download/C/6/D/C6D0FD4E-9E53-4897-9B91-836EBA2AACD3/vcredist_x86.exe)
 
 ## Setup
 
