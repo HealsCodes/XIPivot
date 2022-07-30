@@ -92,6 +92,7 @@ namespace XiPivot
 
 				unsigned cacheHits;
 				unsigned cacheMisses;
+				unsigned cacheIgnored;
 
 				unsigned activeObjects;
 			};

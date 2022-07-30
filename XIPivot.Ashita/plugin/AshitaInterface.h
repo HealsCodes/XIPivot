@@ -68,7 +68,6 @@ namespace XiPivot
 		/* helpers for GUI config */
 		void renderOverlayConfigUI(IGuiManager* imgui);
 		void renderMemCacheConfigUI(IGuiManager* imgui);
-		void renderAboutUI(IGuiManager* imgui);
 		void renderCacheStatsUI(IGuiManager* imgui);
 
 		std::vector<std::string> listAvailableOverlays() const;

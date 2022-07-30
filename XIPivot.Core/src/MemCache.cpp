@@ -38,6 +38,9 @@ namespace XiPivot
 	{
 		/* static member initialisation */
 
+		namespace {
+			static constexpr size_t sMaxCacheObjectSize = 104857599U; // 100MB -1byte
+		}
 		MemCache* MemCache::s_instance = nullptr;
 
 		MemCache::pFnReadFile    MemCache::s_procReadFile = ReadFile;
@@ -79,7 +82,7 @@ namespace XiPivot
 
 		MemCache::MemCache()
 			: m_hooksSet(false),
-			  m_stats({ 0, 0, 0, 0, 0 }),
+			  m_stats({ 0, 0, 0, 0, 0, 0 }),
 			  m_logDebug(ILogProvider::LogLevel::Discard)
 		{
 			m_logger = DummyLogProvider::instance();
@@ -214,6 +217,9 @@ namespace XiPivot
 					++it;
 				}
 			}
+
+			m_stats.cacheIgnored = 0;
+
 			return objectsPurged;
 		}
 
@@ -270,12 +276,20 @@ namespace XiPivot
 				return nullptr;
 			}
 
+			size_t size = GetFileSize(hRef, nullptr);
+			if (size > sMaxCacheObjectSize)
+			{
+				/* do NOT cache objects above sMaxCacheObjectSize lower the risk of "blackouts"
+				 * caused by XI running out of available memory */
+				m_logger->logMessageF(ILogProvider::LogLevel::Debug, "getCachedObject: object size exceeds limit, no cache object created.");
+				++m_stats.cacheIgnored;
+				return nullptr;
+			}
+
 			/* try and create a new object on the fly and store it */
 			CacheObject* obj = new (std::nothrow) CacheObject;
 			if (obj != nullptr)
 			{
-				size_t size = GetFileSize(hRef, nullptr);
-
 				if (m_stats.used + size <= m_stats.allocation)
 				{
 					memset(obj, 0, sizeof(CacheObject));

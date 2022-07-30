@@ -450,6 +450,7 @@ namespace XiPivot
 			imgui->LabelText("allocation", "%.2fmb", stats.allocation / 1048576.0f);
 			imgui->LabelText("used size", "%.2fmb", stats.used / 1048576.0f);
 			imgui->LabelText("objects", "%d", stats.activeObjects);
+			imgui->LabelText("ignored", "%d", stats.cacheIgnored);
 			imgui->Separator();
 
 			imgui->LabelText("next purge in", "%ds", m_cacheNextPurge - time(nullptr));
