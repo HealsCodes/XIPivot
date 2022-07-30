@@ -282,6 +282,34 @@ namespace XiPivot
 			{
 				for (const auto &p : romDirs)
 				{
+					std::vector<std::string> datTables;
+					if (collectDataFiles(p, "*.DAT", datTables))
+					{
+						for (const auto& table : datTables)
+						{
+							if (strstr(table.c_str(), "VTABLE") == nullptr && strstr(table.c_str(), "FTABLE") == nullptr)
+							{
+								m_logger->logMessageF(ILogProvider::LogLevel::Warn, "WARNING: ignoring invalid DAT (not VTABLE/FTABLE) '%s'", table.c_str());
+								continue;
+							}
+
+							int32_t romIndex = pathToIndex(strstr(table.c_str(), "//ROM"));
+							if (romIndex != -1)
+							{
+								if (m_resolvedPaths.find(romIndex) == m_resolvedPaths.end())
+								{
+									m_logger->logMessageF(m_logDebug, "emplace %8d : '%s'", romIndex, table.c_str());
+									m_resolvedPaths.emplace(romIndex, table);
+								}
+								else
+								{
+									m_logger->logMessageF(ILogProvider::LogLevel::Warn, "WARNING: %8d: ignoring '%s'", romIndex, table.c_str());
+								}
+								/* don't touch res here */
+							}
+						}
+					}
+
 					std::vector<std::string> subDirs;
 					if (collectSubPath(p, "/*", subDirs))
 					{
@@ -458,22 +486,27 @@ namespace XiPivot
 			 *
 			 * it's build on the current ROM layout and
 			 * **will break** if SE ever decides to add
-			 * more than 999 sub folders or 9 ROM roots.
+			 * more than 999 sub folders or 13 ROM roots.
 			 *
 			 * every numeric part of the ROM path will 
 			 * be extracted and added to the romIndex.
 			 * directory separators multiply the number
 			 * by 1000 and ensure the numbers don't collide.
+			 * 
+			 * VTABLE an FTABLE use the base 14000000 and 15000000.
 			 *
 			 * See the following paths and their resulting index:
 			 *
-			 * //ROM/0/0.DAT        =>        0
-			 * //ROM/0/1.DAT        =>        1
-			 * //ROM1/2/3.DAT       =>  1002003
-			 * //ROM1/22/33.DAT     =>  1022033
-			 * //ROM1/222/333.DAT   =>  1222333
-			 * //ROM9/999/999.DAT   =>  9999999
-			 * - anything invalid - =>       -1
+			 * //ROM/0/0.DAT        =>         0
+			 * //ROM/0/1.DAT        =>         1
+			 * //ROM1/2/3.DAT       =>   1002003
+			 * //ROM1/22/33.DAT     =>   1022033
+			 * //ROM1/222/333.DAT   =>   1222333
+			 * //ROM9/999/999.DAT   =>   9999999
+			 * //ROM10/999/999.DAT  => 109999999
+			 * //ROM10/VTABLE.DAT   => 140000010
+			 * //ROM10/FTABLE.DAT   => 150000010
+			 * - anything invalid - =>        -1
 			 */
 			int32_t romIndex = 0;
 
@@ -500,6 +533,18 @@ namespace XiPivot
 					romIndex *= 1000;
 					romIndex += subIndex;
 					++p;
+				}
+				else if (*p == 'V')
+				{
+					/* this is a VTABLE*.DAT */
+					romIndex += 14000000;
+					break;
+				}
+				else if (*p == 'F')
+				{
+					/* this is a FTABLE*.DAT */
+					romIndex += 15000000;
+					break;
 				}
 				else if (*p == '.')
 				{
@@ -532,7 +577,7 @@ namespace XiPivot
 			if (strstr(soundPath, "/win/music/data") == 0 && strstr(soundPath, "\\win\\music\\data") == 0)
 			{
 				/* sound subdir */
-				soundIndex = 10000000;
+				soundIndex = 20000000;
 
 				/* cut the sound directory number */
 				if (isdigit(soundPath[0]))
@@ -559,7 +604,7 @@ namespace XiPivot
 			else
 			{
 				/* music subdir */
-				soundIndex = 20000000;
+				soundIndex = 30000000;
 
 				/* cut the sound directory number 
 				 * 9\win\music\data\music058.bgw
