@@ -48,7 +48,7 @@ namespace XiPivot
 				void setCachePurgeDelay(time_t maxAge);
 				time_t getCachePurgeDelay(void) const { return m_cachePurgeDelay; }
 
-				bool HandleCommand(IChatManager* chat, std::vector<std::string>& args);
+				bool HandleCommand(IAshitaCore* const core, std::vector<std::string>& args);
 
 				void ProcessUI(bool &settingsChanged);
 				void RenderUI(IGuiManager* const imgui);

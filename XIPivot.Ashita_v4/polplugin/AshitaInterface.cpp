@@ -126,7 +126,7 @@ namespace XiPivot
 			HANDLECOMMAND("/pivot")
 			{
 				args.erase(args.begin());
-				return m_ui.HandleCommand(m_ashitaCore->GetChatManager(), args);
+				return m_ui.HandleCommand(m_ashitaCore, args);
 			}
 			return false;
 		}

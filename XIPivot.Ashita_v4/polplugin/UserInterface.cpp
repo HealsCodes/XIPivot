@@ -31,6 +31,8 @@
 #include "AshitaInterface.h"
 #include "Redirector.h"
 
+#include <fstream>
+
 #define IS_PARAM(arg, abbr, full) if((arg) == (abbr) || (arg) == (full))
 
 namespace XiPivot
@@ -54,8 +56,10 @@ namespace XiPivot
 			m_cacheNextPurge = time(nullptr) + m_cachePurgeDelay;
 		}
 
-		bool UserInterface::HandleCommand(IChatManager* const chat, std::vector<std::string>& args)
+		bool UserInterface::HandleCommand(IAshitaCore* const core, std::vector<std::string>& args)
 		{
+			const auto chat = core->GetChatManager();
+
 			switch (args.size())
 			{
 				case 0:
@@ -93,6 +97,62 @@ namespace XiPivot
 						{
 							m_guiState.state.showCacheOverlay = !m_guiState.state.showCacheOverlay;
 						}
+					}
+
+					IS_PARAM(args.at(0), "d", "dump")
+					{
+						std::ostringstream msg;
+						std::string dumpPath = std::string(core->GetInstallPath()) + "\\logs\\pivot-dump.txt";
+						std::fstream dumpFile;
+
+						dumpFile.open(dumpPath, std::ios_base::out | std::ios_base::trunc);
+						if (dumpFile.is_open())
+						{
+							const auto stats = m_guiState.values.cacheStats;
+
+							dumpFile << "-- pivot memory stats --" << std::endl;
+							if (Core::MemCache::instance().hooksActive()) 
+							{
+
+								dumpFile << "memCache: enabled" << std::endl
+								<< "max size  : " << (stats.allocation / 1048576.0f) << std::endl
+								<< "used size : " << (stats.used / 1048576.0f) << std::endl
+								<< "objects   : " << stats.activeObjects << std::endl
+								<< "ignored   : " << stats.cacheIgnored << std::endl;
+
+							}
+							else 
+							{
+								dumpFile << "memcache: disabled" << std::endl;
+							}
+							dumpFile << std::endl;
+
+							dumpFile << "-- pivot overlay stats --" << std::endl;
+							if (Core::Redirector::instance().hooksActive()) 
+							{
+								auto overlayList = XiPivot::Core::Redirector::instance().overlayList();
+								dumpFile << "redirector: enabled" << std::endl
+									     << "active overlays: " << overlayList.size() << std::endl;
+
+								for (const auto& overlay : overlayList)
+								{
+									dumpFile << "- '" << overlay << "'" << std::endl;
+								}
+							}
+							else
+							{
+								dumpFile << "redirector: disabled";
+							}
+
+							dumpFile.close();
+
+							msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Message("Dumped statistics to ") << Ashita::Chat::Message(dumpPath);
+						}
+						else
+						{
+							msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Error("Unable to write to ") << Ashita::Chat::Error(dumpPath);
+						}
+						chat->AddChatMessage(1, false, msg.str().c_str());
 					}
 					break;
 
@@ -319,8 +379,13 @@ namespace XiPivot
 			chat->AddChatMessage(1, false, msg.str().c_str());
 
 			msg.str("");
-			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x3, "c")         << "ache                  - open the cache stats overlay";
+			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x3, "c")         << "ache                  - open the cache stats overlay.";
 			chat->AddChatMessage(1, false, msg.str().c_str());
+
+			msg.str("");
+			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x3, "d")         << "ump                  - dump overlay and cache statistics to logs\\pivot-dump.txt.";
+			chat->AddChatMessage(1, false, msg.str().c_str());
+
 
 			msg.str("");
 			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x3, "<no args>") << "              - open the configuration UI.";
