@@ -226,9 +226,33 @@ namespace XiPivot
 		/* private stuff */
 		const char *Redirector::findRedirect(const char *realPath, int32_t &outPathKey)
 		{
+			/*
+			 * findRedirect relies on a very specific implementation detail in the game client.
+			 * Namely the fact that - probably based on the old PS2 code? - XI will use unix-style,
+			 * denormalised paths when attempting to read DAT/VTBALE and FTABLE files for engine use.
+			 * These paths are only used during gameplay, updates and the early launch as well as POL.exe
+			 * all use reguler, normalised paths.
+			 * 
+			 * With this in mind the scope of which files are attempted to be hooked can be kept as
+			 * narrow as possible by checking for the denormalised '/ROM*' path suffix.
+			 * 
+			 * This also - on purpose - prevents accidental hooking of addons or plugins that try to
+			 * read the original game files.
+			 * 
+			 * If an addon / plugin of any of the various interfaces needs a redirected path it SHOULD
+			 * ask for it the same way the game would do natively.
+			 * 
+			 * Yes, I'm aware that in case the developers at SE "fix" this pivot would have to be
+			 * patched in order to work and this would also imply adding checks for when a file is requested
+			 * and *from where in XIs code* in order to prevent unwanted redirection.
+			 * However.. this has been around for 20 years now and I have my doubts it will be changed
+			 * unless windows stops supporting denormalised paths.
+			 */
 			const char *romPath = strstr(realPath, "//ROM");
 			const char *sfxPath;
 
+			// FIXME: denormalised paths don't apply to music redirects with has the potential
+			// FIXME: to break music overlays in combination with the Ashita_v4 interface if there's an update to those. 
 			if (strstr(realPath, "\\win\\se\\") != nullptr || strstr(realPath, "\\win\\music\\") != nullptr)
 			{
 				sfxPath = &(strstr(realPath, "\\win\\")[-1]);
