@@ -307,7 +307,7 @@ namespace XiPivot
 				} while (overlayName != nullptr);
 
 				cacheEnabled = config->GetBool(PluginName, "cache", "enabled", false);
-				cacheSize = config->GetInt32(PluginName, "cache", "size", 2048) * 0x100000;
+				cacheSize = config->GetInt32(PluginName, "cache", "size", 128) * 0x100000;
 				cachePurgeDelay = config->GetInt32(PluginName, "cache", "max_age", 600);
 
 				return true;
