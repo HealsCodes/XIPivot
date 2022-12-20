@@ -26,19 +26,19 @@
  * 	SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "LogProvider.h"
+#include "Delegate.h"
 
 namespace XiPivot
 {
 	namespace Core
 	{
-		DummyLogProvider* DummyLogProvider::s_instance = nullptr;
+		DummyDelegate* DummyDelegate::s_instance = nullptr;
 
-		DummyLogProvider* DummyLogProvider::instance()
+		DummyDelegate* DummyDelegate::instance()
 		{
 			if (s_instance == nullptr)
 			{
-				s_instance = new DummyLogProvider();
+				s_instance = new DummyDelegate();
 			}
 			return s_instance;
 		}

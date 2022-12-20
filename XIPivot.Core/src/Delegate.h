@@ -34,7 +34,7 @@ namespace XiPivot
 {
 	namespace Core
 	{
-		class ILogProvider
+		class IDelegate
 		{
 		public:
 
@@ -49,21 +49,22 @@ namespace XiPivot
 
 			virtual void logMessage(LogLevel level, std::string message) = 0;
 			virtual void logMessageF(LogLevel level, std::string fmt, ...) = 0;
+			virtual bool runCFWHook(const wchar_t*) { return false; };
 		};
 
-		class DummyLogProvider : public ILogProvider
+		class DummyDelegate : public IDelegate
 		{
 		public:
 
-			virtual ~DummyLogProvider() {};
+			virtual ~DummyDelegate() {};
 
 			virtual void logMessage(LogLevel, std::string) {};
 			virtual void logMessageF(LogLevel, std::string, ...) {};
 
-			static DummyLogProvider* instance();
+			static DummyDelegate* instance();
 
 		private:
-			static DummyLogProvider* s_instance;
+			static DummyDelegate* s_instance;
 		};
 	}
 }

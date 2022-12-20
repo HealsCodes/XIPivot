@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include "LogProvider.h"
+#include "Delegate.h"
 
 #include <Windows.h>
 
@@ -107,13 +107,13 @@ namespace XiPivot
 			bool hooksActive(void) const { return m_hooksSet; };
 
 			/* change the active log provider */
-			void setLogProvider(ILogProvider *logProvider);
+			void setLogProvider(IDelegate *logProvider);
 
 			/* toggle debug logging on/off */
 			void setDebugLog(bool state);
 
 			/* get the current state of debug logging */
-			bool getDebugLog(void) const { return m_logDebug != ILogProvider::LogLevel::Discard; }
+			bool getDebugLog(void) const { return m_logDebug != IDelegate::LogLevel::Discard; }
 
 			/* change the maximum allowed cache size (in byte) */
 			void setCacheAllocation(size_t allocationSize);
@@ -175,8 +175,8 @@ namespace XiPivot
 			std::unordered_map<ptrdiff_t, CachePointer> m_cachePointers;
 			std::unordered_map<int32_t, CacheObject*>   m_cacheObjects;
 
-			ILogProvider::LogLevel                      m_logDebug;
-			ILogProvider*                               m_logger;
+			IDelegate::LogLevel                      m_logDebug;
+			IDelegate*                               m_logger;
 
 		};
 	}

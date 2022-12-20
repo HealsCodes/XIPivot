@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include "LogProvider.h"
+#include "Delegate.h"
 
 #include <Windows.h>
 
@@ -55,6 +55,16 @@ namespace XiPivot
 				HANDLE                hTemplateFile
 				);
 
+			typedef HANDLE(WINAPI* pFnCreateFileW)(
+				LPCWSTR               lpFileName,
+				DWORD                 dwDesiredAccess,
+				DWORD                 dwShareMode,
+				LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+				DWORD                 dwCreationDisposition,
+				DWORD                 dwFlagsAndAttributes,
+				HANDLE                hTemplateFile
+				);
+
 			typedef HANDLE(WINAPI * pFnFindFirstFileA)(
 				LPCSTR             lpFileName,
 				LPWIN32_FIND_DATAA lpFindFileData
@@ -71,13 +81,19 @@ namespace XiPivot
 			bool hooksActive(void) const { return m_hooksSet; };
 
 			/* change the active log provider reopining the log in the process */
-			void setLogProvider(ILogProvider *logProvider);
+			void setLogProvider(IDelegate *logProvider);
 
 			/* toggle debug logging on/off */
 			void setDebugLog(bool state);
 
 			/* get the current state for debug logging */
-			bool getDebugLog(void) const { return m_logDebug != ILogProvider::LogLevel::Discard; }
+			bool getDebugLog(void) const { return m_logDebug != IDelegate::LogLevel::Discard; }
+
+			/* toggle redirection of CreateFileW (has to be done before setupHooks) */
+			bool setRedirectCreateFileW(bool redirect);
+
+			/* get the current state CreateFileW redirect policy */
+			bool getRedirectCreateFileW() const { return m_hookCFWSet; }
 
 			/* setup or change the base directory used to search for overlays
 			 * initially this will be set to the processes current working directory
@@ -119,11 +135,13 @@ namespace XiPivot
 
 			/* static callbacks used by the Detours library */
 			static HANDLE __stdcall dCreateFileA(LPCSTR a0, DWORD a1, DWORD a2, LPSECURITY_ATTRIBUTES a3, DWORD a4, DWORD a5, HANDLE a6);
+			static HANDLE __stdcall dCreateFileW(LPCWSTR a0, DWORD a1, DWORD a2, LPSECURITY_ATTRIBUTES a3, DWORD a4, DWORD a5, HANDLE a6);
 			static HANDLE __stdcall dFindFirstFileA(LPCSTR a0, LPWIN32_FIND_DATAA a2);
 
 		private /* static */:
 
 			static pFnCreateFileA s_procCreateFileA;
+			static pFnCreateFileW s_procCreateFileW;
 			static pFnFindFirstFileA s_procFindFirstFileA;
 
 		protected:
@@ -135,12 +153,16 @@ namespace XiPivot
 			 */
 			explicit Redirector(void);
 
+			virtual bool checkCFWEnabled(const wchar_t* path);
+
 		private:
 			/* actual code to handle the intercept / redirect of file names */
 			HANDLE __stdcall interceptCreateFileA(LPCSTR a0, DWORD a1, DWORD a2, LPSECURITY_ATTRIBUTES a3, DWORD a4, DWORD a5, HANDLE a6);
+			HANDLE __stdcall interceptCreateFileW(LPCWSTR a0, DWORD a1, DWORD a2, LPSECURITY_ATTRIBUTES a3, DWORD a4, DWORD a5, HANDLE a6);
 			HANDLE __stdcall interceptFindFirstFileA(LPCSTR a0, LPWIN32_FIND_DATAA a2);
 
 			const char *findRedirect(const char *realPath, int32_t &outPathKey);
+			const char *findWCharRedirect(const wchar_t *realPath);
 
 			/* first-time scan of overlay directories - basically "find all dat paths and record them" */
 			bool scanOverlayPath(const std::string &overlayPath);
@@ -158,13 +180,15 @@ namespace XiPivot
 
 
 			bool                                     m_hooksSet;
+			bool                                     m_hookCFWSet;     // the flag state from setRedirect...()
+			bool                                     m_hookCFWEnabled; // the actual internal active but after setupHooks()
 
 			std::string                              m_rootPath;
 			std::vector<std::string>                 m_overlayPaths;
 			std::unordered_map<int32_t, std::string> m_resolvedPaths;
 
-			ILogProvider::LogLevel                   m_logDebug;
-			ILogProvider*                            m_logger;
+			IDelegate::LogLevel                   m_logDebug;
+			IDelegate*                            m_delegate;
 		};
 	}
 }

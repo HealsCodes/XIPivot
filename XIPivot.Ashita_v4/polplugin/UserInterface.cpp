@@ -71,6 +71,7 @@ namespace XiPivot
 						/* lazy update the GUI values */
 						m_guiState.flags.cacheEnable = Core::MemCache::instance().hooksActive();
 						m_guiState.flags.debugLog = Core::Redirector::instance().getDebugLog();
+						m_guiState.flags.redirectCFW = Core::Redirector::instance().getRedirectCreateFileW();
 
 						m_guiState.values.cachePurgeDelay = static_cast<int32_t>(m_cachePurgeDelay);
 						m_guiState.values.cacheSizeMB = Core::MemCache::instance().getCacheAllocation() / 0x100000;
@@ -295,7 +296,7 @@ namespace XiPivot
 
 				if (imgui->Begin("XiPivot Setup", &m_guiState.state.showConfigWindow, configWindowFlags) == true)
 				{
-					const char *tabTitles[] = { "overlays", "cache"/*, "about"*/, nullptr };
+					const char *tabTitles[] = { "overlays", "cache", "advanced", nullptr };
 					for (int i = 0; tabTitles[i] != nullptr; ++i)
 					{
 						imgui->PushStyleColor(ImGuiCol_Button, ImVec4(0.25f, 0.69f, 1.0f, m_guiState.state.activeTab == i ? 0.8f : 0.1f));
@@ -317,6 +318,10 @@ namespace XiPivot
 
 						case 1:
 							RenderMemCacheConfigUI(imgui);
+							break;
+
+						case 2:
+							RenderAdvancedConfigUI(imgui);
 							break;
 					}
 				}
@@ -505,6 +510,18 @@ namespace XiPivot
 
 				RenderCacheStatsUI(imgui);
 			}
+		}
+
+		void UserInterface::RenderAdvancedConfigUI(IGuiManager* const imgui)
+		{
+			imgui->Checkbox("redirect CreateFileW", &m_guiState.flags.redirectCFW);
+
+			imgui->NewLine();
+			imgui->TextDisabled("This flag causes pivot to try and redirect Ashita's access to DAT files.");
+			imgui->TextDisabled("It is mainly targeted at private servers that replace spell and abitily DATs.");
+			imgui->TextDisabled("You likely don't want to mess with this.");
+			imgui->NewLine();
+			imgui->TextDisabled("Changes require a restart of your client to take effect.");
 		}
 
 		void UserInterface::RenderCacheStatsUI(IGuiManager* const imgui)

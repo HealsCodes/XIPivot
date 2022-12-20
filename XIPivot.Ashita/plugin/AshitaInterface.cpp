@@ -313,37 +313,37 @@ namespace XiPivot
 		}
 	}
 
-	/* ILogProvider */
-	void AshitaInterface::logMessage(Core::ILogProvider::LogLevel level, std::string msg)
+	/* IDelegate */
+	void AshitaInterface::logMessage(Core::IDelegate::LogLevel level, std::string msg)
 	{
 		logMessageF(level, msg);
 	}
 
-	void AshitaInterface::logMessageF(Core::ILogProvider::LogLevel level, std::string msg, ...)
+	void AshitaInterface::logMessageF(Core::IDelegate::LogLevel level, std::string msg, ...)
 	{
-		if (level != Core::ILogProvider::LogLevel::Discard)
+		if (level != Core::IDelegate::LogLevel::Discard)
 		{
 			char msgBuf[512];
 			Ashita::LogLevel ashitaLevel = Ashita::LogLevel::None;
 
 			switch (level)
 			{
-				case Core::ILogProvider::LogLevel::Discard: /* never acutally reached */
+				case Core::IDelegate::LogLevel::Discard: /* never acutally reached */
 					return;
 
-				case Core::ILogProvider::LogLevel::Debug:
+				case Core::IDelegate::LogLevel::Debug:
 					ashitaLevel = Ashita::LogLevel::Debug;
 					break;
 
-				case Core::ILogProvider::LogLevel::Info:
+				case Core::IDelegate::LogLevel::Info:
 					ashitaLevel = Ashita::LogLevel::Information;
 					break;
 
-				case Core::ILogProvider::LogLevel::Warn:
+				case Core::IDelegate::LogLevel::Warn:
 					ashitaLevel = Ashita::LogLevel::Warning;
 					break;
 
-				case Core::ILogProvider::LogLevel::Error:
+				case Core::IDelegate::LogLevel::Error:
 					ashitaLevel = Ashita::LogLevel::Error;
 					break;
 			}

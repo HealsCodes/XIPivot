@@ -18,7 +18,7 @@
     <ClCompile Include="src\Redirector.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\LogProvider.cpp">
+    <ClCompile Include="src\Delegate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\MemCache.cpp">
@@ -29,7 +29,7 @@
     <ClInclude Include="src\Redirector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\LogProvider.h">
+    <ClInclude Include="src\Delegate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\MemCache.h">

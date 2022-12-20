@@ -39,14 +39,14 @@ extern "C"
 #include <fstream>
 
 #include "Redirector.h"
-#include "LogProvider.h"
+#include "Delegate.h"
 
 namespace XiPivot
 {
 	/* a simple, mostly static interface addon-on to
 	 * provide interopperability with the LUA-C API 
 	 */
-	class WindowerInterface : public Core::Redirector, public Core::ILogProvider
+	class WindowerInterface : public Core::Redirector, public Core::IDelegate
 	{
 		public:
 			WindowerInterface(void) : Redirector() {};
@@ -127,7 +127,7 @@ namespace XiPivot
 			 */
 			static int lua_onTick(lua_State *L);
 
-			/* ILogProvider */
+			/* IDelegate */
 			virtual void logMessage(LogLevel level, std::string message) override;
 			virtual void logMessageF(LogLevel level, std::string fmt, ...) override;
 

@@ -64,13 +64,13 @@ namespace XiPivot
 
 			redirector.setLogProvider(this);
 
-			m_settingsPath = std::string(m_ashitaCore->GetInstallPath()) + "config\\pivot\\pivot.ini";
+			m_settingsPath = std::filesystem::path(m_ashitaCore->GetInstallPath()) / "config" / "pivot" / "pivot.ini";
 
 			auto config = m_ashitaCore->GetConfigurationManager();
 			if (config != nullptr)
 			{
-				if (!CreateConfigPath(std::string(m_ashitaCore->GetInstallPath()) + "config\\pivot",
-									  std::string(m_ashitaCore->GetInstallPath()) + "config\\pivot.ini"))
+				if (!CreateConfigPath(m_settingsPath,
+									  std::filesystem::path(m_ashitaCore->GetInstallPath()) / "config" / "pivot.ini"))
 				{
 					return false;
 				}
@@ -80,9 +80,12 @@ namespace XiPivot
 					logMessageF(LogLevel::Warn, "Failed to load config file, saving defaults instead");
 					m_settings.save(config, m_settingsPath);
 				}
+				m_settings.dump(this);
 
 				redirector.setDebugLog(m_settings.debugLog);
-				redirector.setRootPath(m_settings.rootPath);
+				redirector.setRootPath(m_settings.rootPath.string());
+				redirector.setRedirectCreateFileW(m_settings.redirectCFW);
+
 				for (const auto& path : m_settings.overlays)
 				{
 					redirector.addOverlay(path);
@@ -141,16 +144,21 @@ namespace XiPivot
 			{
 				if (m_settings.dirty == true)
 				{
+					logMessageF(Core::IDelegate::LogLevel::Info, "settings changed, saving");
+
 					/* settings have changed during the last EndScene or Present */
 					m_settings.debugLog = Core::Redirector::instance().getDebugLog();
 					m_settings.rootPath = Core::Redirector::instance().rootPath();
 					m_settings.overlays = Core::Redirector::instance().overlayList();
+
+					m_settings.redirectCFW = Core::Redirector::instance().getRedirectCreateFileW();
 
 					m_settings.cacheEnabled    = Core::MemCache::instance().hooksActive();
 					m_settings.cacheSize       = Core::MemCache::instance().getCacheAllocation();
 					m_settings.cachePurgeDelay = static_cast<uint32_t>(m_ui.getCachePurgeDelay());
 
 					m_settings.save(m_ashitaCore->GetConfigurationManager(), m_settingsPath);
+					m_settings.dump(this);
 				}
 
 				m_ui.ProcessUI(m_settings.dirty);
@@ -162,38 +170,38 @@ namespace XiPivot
 			m_ui.RenderUI(m_ashitaCore->GetGuiManager());
 		}
 
-		/* ILogProvider */
+		/* IDelegate */
 
-		void AshitaInterface::logMessage(Core::ILogProvider::LogLevel level, std::string msg)
+		void AshitaInterface::logMessage(Core::IDelegate::LogLevel level, std::string msg)
 		{
 			logMessageF(level, msg);
 		}
 
-		void AshitaInterface::logMessageF(Core::ILogProvider::LogLevel level, std::string msg, ...)
+		void AshitaInterface::logMessageF(Core::IDelegate::LogLevel level, std::string msg, ...)
 		{
-			if (level != Core::ILogProvider::LogLevel::Discard)
+			if (level != Core::IDelegate::LogLevel::Discard)
 			{
 				char msgBuf[512];
 				Ashita::LogLevel ashitaLevel = Ashita::LogLevel::None;
 
 				switch (level)
 				{
-				case Core::ILogProvider::LogLevel::Discard: /* never acutally reached */
+				case Core::IDelegate::LogLevel::Discard: /* never acutally reached */
 					return;
 
-				case Core::ILogProvider::LogLevel::Debug:
+				case Core::IDelegate::LogLevel::Debug:
 					ashitaLevel = Ashita::LogLevel::Debug;
 					break;
 
-				case Core::ILogProvider::LogLevel::Info:
+				case Core::IDelegate::LogLevel::Info:
 					ashitaLevel = Ashita::LogLevel::Info;
 					break;
 
-				case Core::ILogProvider::LogLevel::Warn:
+				case Core::IDelegate::LogLevel::Warn:
 					ashitaLevel = Ashita::LogLevel::Warn;
 					break;
 
-				case Core::ILogProvider::LogLevel::Error:
+				case Core::IDelegate::LogLevel::Error:
 					ashitaLevel = Ashita::LogLevel::Error;
 					break;
 				}
@@ -208,61 +216,47 @@ namespace XiPivot
 			}
 		}
 
+		/* protected parts */
+
+		bool AshitaInterface::runCFWHook(const wchar_t*)
+		{
+			return m_ashitaCore->GetDirect3DDevice() != nullptr;
+		}
+
 		/* private parts below */
 
-		bool AshitaInterface::CreateConfigPath(const std::string& path, const std::string& moveOld)
+		bool AshitaInterface::CreateConfigPath(const std::filesystem::path& path, const std::filesystem::path& moveOld)
 		{
-			std::istringstream pathReader(path);
-			std::stringstream pathPos;
-			std::string dirName;
+			auto configDir = std::filesystem::path(path);
+			configDir.remove_filename();
 
-			while (std::getline(pathReader, dirName, '\\')) {
-				if (dirName.empty()) {
-					break;
-				}
-
-				if (pathPos.str().empty()) 
+			if (std::filesystem::is_directory(configDir) == false)
+			{
+				if (std::filesystem::exists(configDir))
 				{
-					// drive letter 
-					pathPos << dirName;
-				}
-				else
-				{
-					pathPos << "\\" << dirName;
+					logMessageF(LogLevel::Error, "path '%s' already exists and is not a directory", configDir.string().c_str());
+					return false;
 				}
 
-				auto attrib = GetFileAttributesA(pathPos.str().c_str());
-				if (attrib == INVALID_FILE_ATTRIBUTES) 
+				if (std::filesystem::create_directories(configDir) == false)
 				{
-					logMessageF(LogLevel::Debug, "trying to create directory '%s'", pathPos.str().c_str());
-					if (CreateDirectoryA(pathPos.str().c_str(), nullptr) != TRUE)
-					{
-						logMessageF(LogLevel::Error, "unable to create directory '%s'", pathPos.str().c_str());
-						return false;
-					}
-				}
-				else if (!(attrib & FILE_ATTRIBUTE_DIRECTORY))
-				{
-					logMessageF(LogLevel::Error, "path '%s' already exists and is not a directory", pathPos.str().c_str());
+					logMessageF(LogLevel::Error, "unable to create directory '%s'", configDir.string().c_str());
 					return false;
 				}
 			}
 
 			if (!moveOld.empty())
 			{
-				auto attrib = GetFileAttributesA(moveOld.c_str());
-				if (attrib != INVALID_FILE_ATTRIBUTES && !(attrib & FILE_ATTRIBUTE_DIRECTORY))
+				if (std::filesystem::exists(moveOld))
 				{
-					auto newPath = path + moveOld.substr(moveOld.rfind('\\'));
-
-					if (GetFileAttributesA(newPath.c_str()) == INVALID_FILE_ATTRIBUTES)
+					if (std::filesystem::exists(path))
 					{
-						logMessageF(LogLevel::Debug, "moving existing configuration '%s' to '%s'", moveOld.c_str(), newPath.c_str());
-						MoveFileA(moveOld.c_str(), newPath.c_str());
+						logMessageF(LogLevel::Debug, "unable to move existing configuration '%s' to '%s' (file exists)", moveOld.string().c_str(), path.string().c_str());
 					}
 					else
 					{
-						logMessageF(LogLevel::Debug, "unable to move existing configuration '%s' to '%s' (file exists)", moveOld.c_str(), newPath.c_str());
+						logMessageF(LogLevel::Debug, "moving existing configuration '%s' to '%s'", moveOld.string().c_str(), path.string().c_str());
+						std::filesystem::rename(moveOld, path);
 					}
 				}
 			}
@@ -271,14 +265,11 @@ namespace XiPivot
 
 		AshitaInterface::Settings::Settings()
 		{
-			char workPath[MAX_PATH];
-
-			GetCurrentDirectoryA(MAX_PATH, static_cast<LPSTR>(workPath));
-
 			/* default to "plugin location"\\DATs */
-			rootPath = std::string(workPath) + "\\DATs";
+			rootPath = std::filesystem::current_path() / "DATs";
 			overlays.clear();
 			debugLog = false;
+			redirectCFW = false;
 			cacheEnabled = false;
 			cacheSize = 0;
 			cachePurgeDelay = 600;
@@ -290,11 +281,13 @@ namespace XiPivot
 			dirty = false;
 			if (config->Load(PluginName, ConfigPath))
 			{
-				const char* rP = config->GetString(PluginName, "settings", "root_path");
-				const bool dbg = config->GetBool(PluginName, "settings", "debug_log", true);
+				const char* rP  = config->GetString(PluginName, "settings", "root_path");
+				const bool dbg  = config->GetBool(PluginName, "settings", "debug_log", false);
+				const bool rCFW = config->GetBool(PluginName, "settings", "redirect_cfw", false);
 
 				debugLog = dbg;
 				rootPath = (rP ? rP : rootPath);
+				redirectCFW = rCFW;
 
 				overlays.clear();
 
@@ -322,12 +315,32 @@ namespace XiPivot
 			return false;
 		}
 
-		void AshitaInterface::Settings::save(IConfigurationManager* config, const std::string& absPath)
+		void AshitaInterface::Settings::dump(IDelegate* log)
+		{
+			log->logMessage(Core::IDelegate::LogLevel::Debug, ">> pivot settings <<");
+			log->logMessageF(Core::IDelegate::LogLevel::Debug, "root_path %s", rootPath.string().c_str());
+			log->logMessageF(Core::IDelegate::LogLevel::Debug, "debug_log %s", debugLog ? "true" : "false");
+			log->logMessageF(Core::IDelegate::LogLevel::Debug, "redirect_cfw %s", redirectCFW ? "true" : "false");
+			log->logMessage(Core::IDelegate::LogLevel::Debug, "overlays:");
+
+			for (unsigned i = 0; i < overlays.size(); ++i)
+			{
+				log->logMessageF(Core::IDelegate::LogLevel::Debug, "[%02d] %s", i, overlays[i].c_str());
+			}
+
+			log->logMessageF(Core::IDelegate::LogLevel::Debug, "cache: %s", cacheEnabled ? "true" : "false");
+			log->logMessageF(Core::IDelegate::LogLevel::Debug, "cache_size: %u", cacheSize);
+			log->logMessageF(Core::IDelegate::LogLevel::Debug, "cache_max_age: %u", cachePurgeDelay);
+			log->logMessageF(Core::IDelegate::LogLevel::Debug, "");
+		}
+
+		void AshitaInterface::Settings::save(IConfigurationManager* config, const std::filesystem::path& absPath)
 		{
 			config->Delete(PluginName);
 
-			config->SetValue(PluginName, "settings", "root_path", rootPath.c_str());
+			config->SetValue(PluginName, "settings", "root_path", rootPath.string().c_str());
 			config->SetValue(PluginName, "settings", "debug_log", debugLog ? "true" : "false");
+			config->SetValue(PluginName, "settings", "redirect_cfw", redirectCFW ? "true" : "false");
 
 			for (unsigned i = 0; i < overlays.size(); ++i)
 			{
@@ -346,9 +359,9 @@ namespace XiPivot
 			snprintf(val, 31, "%u", cachePurgeDelay);
 			config->SetValue(PluginName, "cache", "max_age", val);
 
-			if (GetFileAttributesA(absPath.c_str()) != INVALID_FILE_ATTRIBUTES)
+			if (std::filesystem::exists(absPath))
 			{
-				DeleteFileA(absPath.c_str());
+				std::filesystem::remove(absPath);
 			}
 
 			config->Save(PluginName, ConfigPath);

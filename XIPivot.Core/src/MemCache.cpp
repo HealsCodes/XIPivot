@@ -83,9 +83,9 @@ namespace XiPivot
 		MemCache::MemCache()
 			: m_hooksSet(false),
 			  m_stats({ 0, 0, 0, 0, 0, 0 }),
-			  m_logDebug(ILogProvider::LogLevel::Discard)
+			  m_logDebug(IDelegate::LogLevel::Discard)
 		{
-			m_logger = DummyLogProvider::instance();
+			m_logger = DummyDelegate::instance();
 		}
 
 		MemCache::~MemCache()
@@ -98,7 +98,7 @@ namespace XiPivot
 			m_cacheObjects.clear();
 		}
 
-		void MemCache::setLogProvider(ILogProvider* newLogProvider)
+		void MemCache::setLogProvider(IDelegate* newLogProvider)
 		{
 			if (newLogProvider == nullptr)
 			{
@@ -121,7 +121,7 @@ namespace XiPivot
 
 				m_hooksSet = DetourTransactionCommit() == NO_ERROR;
 
-				m_logger->logMessageF(ILogProvider::LogLevel::Info, "m_hooksSet = %s", m_hooksSet ? "true" : "false");
+				m_logger->logMessageF(IDelegate::LogLevel::Info, "m_hooksSet = %s", m_hooksSet ? "true" : "false");
 				return m_hooksSet;
 			}
 			m_logger->logMessage(m_logDebug, "hooks already set");
@@ -141,7 +141,7 @@ namespace XiPivot
 
 				m_hooksSet = (DetourTransactionCommit() == NO_ERROR) ? false : true;
 
-				m_logger->logMessageF(ILogProvider::LogLevel::Info, "m_hooksSet = %s", m_hooksSet ? "true" : "false");
+				m_logger->logMessageF(IDelegate::LogLevel::Info, "m_hooksSet = %s", m_hooksSet ? "true" : "false");
 				return m_hooksSet;
 			}
 			m_logger->logMessage(m_logDebug, "hooks already removed");
@@ -150,14 +150,14 @@ namespace XiPivot
 
 		void MemCache::setDebugLog(bool state)
 		{
-			m_logDebug = (state) ? ILogProvider::LogLevel::Debug : ILogProvider::LogLevel::Discard;
-			m_logger->logMessageF(ILogProvider::LogLevel::Info, "m_logDebug = %s", state ? "Debug" : "Discard");
+			m_logDebug = (state) ? IDelegate::LogLevel::Debug : IDelegate::LogLevel::Discard;
+			m_logger->logMessageF(IDelegate::LogLevel::Info, "m_logDebug = %s", state ? "Debug" : "Discard");
 		}
 
 		void MemCache::setCacheAllocation(size_t allocationSize)
 		{
 			/* this changes the allowed allocation but it does not trigger a cache purge */
-			m_logger->logMessageF(ILogProvider::LogLevel::Info, "changing cache allocation to %dMB", allocationSize / 0x100000);
+			m_logger->logMessageF(IDelegate::LogLevel::Info, "changing cache allocation to %dMB", allocationSize / 0x100000);
 			m_stats.allocation = allocationSize;
 		}
 	
@@ -281,7 +281,7 @@ namespace XiPivot
 			{
 				/* do NOT cache objects above sMaxCacheObjectSize lower the risk of "blackouts"
 				 * caused by XI running out of available memory */
-				m_logger->logMessageF(ILogProvider::LogLevel::Debug, "getCachedObject: object size exceeds limit, no cache object created.");
+				m_logger->logMessageF(IDelegate::LogLevel::Debug, "getCachedObject: object size exceeds limit, no cache object created.");
 				++m_stats.cacheIgnored;
 				return nullptr;
 			}
@@ -320,7 +320,7 @@ namespace XiPivot
 				}
 				else
 				{
-					m_logger->logMessageF(ILogProvider::LogLevel::Warn, "getCachedObject: cache limit exceeded");
+					m_logger->logMessageF(IDelegate::LogLevel::Warn, "getCachedObject: cache limit exceeded");
 				}
 				delete obj;
 			}
@@ -343,7 +343,7 @@ namespace XiPivot
 				DWORD bytesRead = 0;
 				if (MemCache::s_procReadFile(hRef, &obj.data[readSize], obj.size - readSize, &bytesRead, nullptr) == FALSE)
 				{
-					m_logger->logMessageF(ILogProvider::LogLevel::Warn, "readObjectData: aborting read with %zd / %zd bytes", readSize, obj.size);
+					m_logger->logMessageF(IDelegate::LogLevel::Warn, "readObjectData: aborting read with %zd / %zd bytes", readSize, obj.size);
 					break;
 				}
 
@@ -377,7 +377,7 @@ namespace XiPivot
 			if (cacheObj == nullptr)
 			{
 				/* tracked but no longer cached -- this should actually NEVER EVER HAPPEN */
-				m_logger->logMessageF(ILogProvider::LogLevel::Error, "performCachedRead: cache object for %p (%d) vanished, untracking HANDLE.", hRef, pointer->second.pathKey);
+				m_logger->logMessageF(IDelegate::LogLevel::Error, "performCachedRead: cache object for %p (%d) vanished, untracking HANDLE.", hRef, pointer->second.pathKey);
 				m_cachePointers.erase(pointer);
 
 				return MemCache::s_procReadFile(hRef, lpBuffer, bytesToRead, bytesRead, nullptr) == TRUE;

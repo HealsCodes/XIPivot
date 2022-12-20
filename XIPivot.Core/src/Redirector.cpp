@@ -33,6 +33,56 @@
 #include <cctype>
 #include <algorithm>
 
+namespace
+{
+	char* strstr_r(char* heystack, const char* needle)
+	{
+		char* res = nullptr;
+
+		if (needle == nullptr ||heystack == nullptr)
+		{
+			return heystack;
+		}
+
+		while (true)
+		{
+			char* tmp = strstr(heystack, needle);
+			if (tmp == nullptr)
+			{
+				break;
+			}
+			res = tmp++;
+			heystack = tmp;
+		}
+		return res;
+	}
+
+	bool denormalised_ansi_path(const wchar_t* wcPath, char* ansiPath, size_t ansiPathMax)
+	{
+		char pathBuf[MAX_PATH + 2];
+		memset(pathBuf, 0, sizeof(pathBuf));
+
+		if (WideCharToMultiByte(CP_ACP, 0, wcPath, -1, pathBuf, MAX_PATH, nullptr, nullptr) == 0)
+		{
+			return false;
+		}
+
+		char* romSuffix = strstr_r(pathBuf, "\\ROM");
+		if (romSuffix != nullptr)
+		{
+			size_t suffixLen = 0;
+			for (; romSuffix[suffixLen]; ++suffixLen)
+			{
+				romSuffix[suffixLen] = romSuffix[suffixLen] == '\\' ? '/' : romSuffix[suffixLen];
+			}
+			memmove(&romSuffix[1], &romSuffix[0], suffixLen);
+			romSuffix[0] = '/';
+		}
+		memcpy(ansiPath, pathBuf, (ansiPathMax < sizeof(pathBuf) ? ansiPathMax : sizeof(pathBuf)));
+		return true;
+	}
+}
+
 namespace XiPivot
 {
 	namespace Core
@@ -42,6 +92,7 @@ namespace XiPivot
 		Redirector* Redirector::s_instance = nullptr;
 
 		Redirector::pFnCreateFileA    Redirector::s_procCreateFileA = CreateFileA;
+		Redirector::pFnCreateFileW    Redirector::s_procCreateFileW = CreateFileW;
 		Redirector::pFnFindFirstFileA Redirector::s_procFindFirstFileA = FindFirstFileA;
 
 		/* static interface */
@@ -66,6 +117,18 @@ namespace XiPivot
 			return Redirector::s_procCreateFileA(a0, a1, a2, a3, a4, a5, a6);
 		}
 
+		HANDLE __stdcall Redirector::dCreateFileW(LPCWSTR a0, DWORD a1, DWORD a2, LPSECURITY_ATTRIBUTES a3, DWORD a4, DWORD a5, HANDLE a6)
+		{
+			/* don't use the Singleton access here;
+			 * if for whatever reason the global object is gone we don't want a new one
+			 */
+			if (Redirector::s_instance != nullptr)
+			{
+				return Redirector::s_instance->interceptCreateFileW(a0, a1, a2, a3, a4, a5, a6);
+			}
+			return Redirector::s_procCreateFileW(a0, a1, a2, a3, a4, a5, a6);
+		}
+
 		HANDLE __stdcall Redirector::dFindFirstFileA(LPCSTR a0, LPWIN32_FIND_DATAA a1)
 		{
 			/* don't use the Singleton access here;
@@ -80,6 +143,8 @@ namespace XiPivot
 
 		Redirector::Redirector()
 			: m_hooksSet(false)
+			, m_hookCFWSet(false)
+			, m_hookCFWEnabled(false)
 		{
 			char workDir[MAX_PATH];
 
@@ -89,7 +154,7 @@ namespace XiPivot
 			GetCurrentDirectoryA(sizeof(workDir), workDir);
 
 			m_rootPath = workDir;
-			m_logger = DummyLogProvider::instance();
+			m_delegate = DummyDelegate::instance();
 		}
 
 		Redirector::~Redirector()
@@ -97,13 +162,13 @@ namespace XiPivot
 			releaseHooks(); // just in case
 		}
 
-		void Redirector::setLogProvider(ILogProvider* newLogProvider)
+		void Redirector::setLogProvider(IDelegate* newLogProvider)
 		{
 			if (newLogProvider == nullptr)
 			{
 				return;
 			}
-			m_logger = newLogProvider;
+			m_delegate = newLogProvider;
 		}
 
 		bool Redirector::setupHooks(void)
@@ -117,13 +182,18 @@ namespace XiPivot
 
 				DetourAttach(&(PVOID&)Redirector::s_procCreateFileA, Redirector::dCreateFileA);
 				DetourAttach(&(PVOID&)Redirector::s_procFindFirstFileA, Redirector::dFindFirstFileA);
+				if (m_hookCFWEnabled)
+				{
+					m_delegate->logMessage(IDelegate::LogLevel::Info, "enabling CreateFileW hook");
+					DetourAttach(&(PVOID&)Redirector::s_procCreateFileW, Redirector::dCreateFileW);
+				}
 
 				m_hooksSet = DetourTransactionCommit() == NO_ERROR;
 
-				m_logger->logMessageF(ILogProvider::LogLevel::Info, "m_hooksSet = %s", m_hooksSet ? "true" : "false");
+				m_delegate->logMessageF(IDelegate::LogLevel::Info, "m_hooksSet = %s", m_hooksSet ? "true" : "false");
 				return m_hooksSet;
 			}
-			m_logger->logMessage(m_logDebug, "hooks already set");
+			m_delegate->logMessage(m_logDebug, "hooks already set");
 			return false;
 		}
 
@@ -137,20 +207,34 @@ namespace XiPivot
 
 				DetourDetach(&(PVOID&)Redirector::s_procCreateFileA, Redirector::dCreateFileA);
 				DetourDetach(&(PVOID&)Redirector::s_procFindFirstFileA, Redirector::dFindFirstFileA);
+				if (m_hookCFWEnabled)
+				{
+					DetourDetach(&(PVOID&)Redirector::s_procCreateFileW, Redirector::dCreateFileW);
+				}
 
 				m_hooksSet = (DetourTransactionCommit() == NO_ERROR) ? false : true;
 
-				m_logger->logMessageF(ILogProvider::LogLevel::Info, "m_hooksSet = %s", m_hooksSet ? "true" : "false");
+				m_delegate->logMessageF(IDelegate::LogLevel::Info, "m_hooksSet = %s", m_hooksSet ? "true" : "false");
 				return m_hooksSet;
 			}
-			m_logger->logMessage(m_logDebug, "hooks already removed");
+			m_delegate->logMessage(m_logDebug, "hooks already removed");
 			return false;
 		}
 
 		void Redirector::setDebugLog(bool state)
 		{
-			m_logDebug = (state) ? ILogProvider::LogLevel::Debug : ILogProvider::LogLevel::Discard;
-			m_logger->logMessageF(ILogProvider::LogLevel::Info, "m_logDebug = %s", state ? "Debug" : "Discard");
+			m_logDebug = (state) ? IDelegate::LogLevel::Debug : IDelegate::LogLevel::Discard;
+			m_delegate->logMessageF(IDelegate::LogLevel::Info, "m_logDebug = %s", state ? "Debug" : "Discard");
+		}
+
+		bool Redirector::setRedirectCreateFileW(bool state)
+		{
+			m_hookCFWSet = state;
+			if (!m_hooksSet)
+			{
+				m_hookCFWEnabled = state;
+			}
+			return m_hookCFWEnabled;
 		}
 
 		void Redirector::setRootPath(const std::string &newRoot)
@@ -158,7 +242,7 @@ namespace XiPivot
 			m_rootPath = newRoot;
 			m_resolvedPaths.clear();
 
-			m_logger->logMessageF(ILogProvider::LogLevel::Info, "m_rootPath = '%s'", m_rootPath.c_str());
+			m_delegate->logMessageF(IDelegate::LogLevel::Info, "m_rootPath = '%s'", m_rootPath.c_str());
 			for (const auto& overlay : m_overlayPaths)
 			{
 				std::string localPath = m_rootPath + "/" + overlay;
@@ -168,18 +252,18 @@ namespace XiPivot
 
 		bool Redirector::addOverlay(const std::string &overlayPath)
 		{
-			m_logger->logMessageF(ILogProvider::LogLevel::Info, "addOverlay: '%s'", overlayPath.c_str());
+			m_delegate->logMessageF(IDelegate::LogLevel::Info, "addOverlay: '%s'", overlayPath.c_str());
 			if (std::find(m_overlayPaths.begin(), m_overlayPaths.end(), overlayPath) == m_overlayPaths.end())
 			{
 				std::string localPath = m_rootPath + "/" + overlayPath;
 				if (scanOverlayPath(localPath))
 				{
 					m_overlayPaths.emplace_back(overlayPath);
-					m_logger->logMessage(ILogProvider::LogLevel::Info, "=> success");
+					m_delegate->logMessage(IDelegate::LogLevel::Info, "=> success");
 					return true;
 				}
 			}
-			m_logger->logMessage(ILogProvider::LogLevel::Error, "=> failed");
+			m_delegate->logMessage(IDelegate::LogLevel::Error, "=> failed");
 			return false;
 		}
 
@@ -187,7 +271,7 @@ namespace XiPivot
 		{
 			auto it = std::find(m_overlayPaths.begin(), m_overlayPaths.end(), overlayPath);
 
-			m_logger->logMessageF(ILogProvider::LogLevel::Info, "removeOverlay: '%s'", overlayPath.c_str());
+			m_delegate->logMessageF(IDelegate::LogLevel::Info, "removeOverlay: '%s'", overlayPath.c_str());
 			if (it != m_overlayPaths.end())
 			{
 				m_resolvedPaths.clear();
@@ -197,7 +281,7 @@ namespace XiPivot
 					std::string localPath = m_rootPath + "/" + path;
 					scanOverlayPath(localPath);
 				}
-				m_logger->logMessage(ILogProvider::LogLevel::Info, "=> found, and removed");
+				m_delegate->logMessage(IDelegate::LogLevel::Info, "=> found, and removed");
 			}
 		}
 
@@ -206,7 +290,7 @@ namespace XiPivot
 		HANDLE __stdcall
 			Redirector::interceptCreateFileA(LPCSTR a0, DWORD a1, DWORD a2, LPSECURITY_ATTRIBUTES a3, DWORD a4, DWORD a5, HANDLE a6)
 		{
-			m_logger->logMessageF(m_logDebug, "lpFileName = '%s'", static_cast<const char*>(a0));
+			m_delegate->logMessageF(m_logDebug, "lpFileName = '%s'", static_cast<const char*>(a0));
 
 			int32_t pathKey = -1;
 			const char* path = findRedirect(a0, pathKey);
@@ -214,9 +298,25 @@ namespace XiPivot
 		}
 
 		HANDLE __stdcall
+			Redirector::interceptCreateFileW(LPCWSTR a0, DWORD a1, DWORD a2, LPSECURITY_ATTRIBUTES a3, DWORD a4, DWORD a5, HANDLE a6)
+		{
+			if (checkCFWEnabled(a0))
+			{
+				m_delegate->logMessageF(m_logDebug, "lpFileName = [wchar] '%ls'", static_cast<const wchar_t*>(a0));
+				const char* path = findWCharRedirect(a0);
+				if (path != nullptr)
+				{
+					return Redirector::s_procCreateFileA(path, a1, a2, a3, a4, a5, a6);
+				}
+			}
+
+			return Redirector::s_procCreateFileW(a0, a1, a2, a3, a4, a5, a6);
+		}
+
+		HANDLE __stdcall
 			Redirector::interceptFindFirstFileA(LPCSTR a0, LPWIN32_FIND_DATAA a1)
 		{
-			m_logger->logMessageF(m_logDebug, "lpFileName = '%s'", static_cast<const char*>(a0));
+			m_delegate->logMessageF(m_logDebug, "lpFileName = '%s'", static_cast<const char*>(a0));
 
 			int32_t _unusedPathKey = -1;
 			const char* path = findRedirect(a0, _unusedPathKey);
@@ -262,7 +362,7 @@ namespace XiPivot
 				sfxPath = nullptr;
 			}
 
-			m_logger->logMessageF(m_logDebug, "romPath = %d, sfxPath = %d\n", romPath != nullptr, sfxPath != nullptr);
+			m_delegate->logMessageF(m_logDebug, "romPath = %d, sfxPath = %d\n", romPath != nullptr, sfxPath != nullptr);
 
 			if (romPath != nullptr)
 			{
@@ -272,7 +372,7 @@ namespace XiPivot
 				outPathKey = romIndex;
 				if(res != m_resolvedPaths.end())
 				{
-					m_logger->logMessageF(m_logDebug, "using overlay '%s'\n", (*res).second.c_str());
+					m_delegate->logMessageF(m_logDebug, "using overlay '%s'\n", (*res).second.c_str());
 					return (*res).second.c_str();
 				}
 			}
@@ -285,11 +385,28 @@ namespace XiPivot
 				outPathKey = sfxIndex;
 				if(res != m_resolvedPaths.end())
 				{
-					m_logger->logMessageF(m_logDebug, "using overlay '%s'\n", (*res).second.c_str());
+					m_delegate->logMessageF(m_logDebug, "using overlay '%s'\n", (*res).second.c_str());
 					return (*res).second.c_str();
 				}
 			}
 			return realPath;
+		}
+
+		const char *Redirector::findWCharRedirect(const wchar_t* realPath)
+		{
+			char ansiPath[MAX_PATH + 2];
+			if (denormalised_ansi_path(realPath, ansiPath, MAX_PATH))
+			{
+				m_delegate->logMessageF(m_logDebug, "denormalised: '%s'", ansiPath);
+				int32_t redirectFound = -1;
+				const char* redirect = findRedirect(ansiPath, redirectFound);
+				if (redirectFound != -1)
+				{
+					return redirect;
+				}
+
+			}
+			return nullptr;
 		}
 
 		bool Redirector::scanOverlayPath(const std::string &basePath)
@@ -299,7 +416,7 @@ namespace XiPivot
 			 */
 			bool res = false;
 
-			m_logger->logMessageF(m_logDebug, "scanOverlayPath '%s'", basePath.c_str());
+			m_delegate->logMessageF(m_logDebug, "scanOverlayPath '%s'", basePath.c_str());
 
 			std::vector<std::string> romDirs;
 			if (collectSubPath(basePath, "//ROM*", romDirs, true))
@@ -313,7 +430,7 @@ namespace XiPivot
 						{
 							if (strstr(table.c_str(), "VTABLE") == nullptr && strstr(table.c_str(), "FTABLE") == nullptr)
 							{
-								m_logger->logMessageF(ILogProvider::LogLevel::Warn, "WARNING: ignoring invalid DAT (not VTABLE/FTABLE) '%s'", table.c_str());
+								m_delegate->logMessageF(IDelegate::LogLevel::Warn, "WARNING: ignoring invalid DAT (not VTABLE/FTABLE) '%s'", table.c_str());
 								continue;
 							}
 
@@ -322,12 +439,12 @@ namespace XiPivot
 							{
 								if (m_resolvedPaths.find(romIndex) == m_resolvedPaths.end())
 								{
-									m_logger->logMessageF(m_logDebug, "emplace %8d : '%s'", romIndex, table.c_str());
+									m_delegate->logMessageF(m_logDebug, "emplace %8d : '%s'", romIndex, table.c_str());
 									m_resolvedPaths.emplace(romIndex, table);
 								}
 								else
 								{
-									m_logger->logMessageF(ILogProvider::LogLevel::Warn, "WARNING: %8d: ignoring '%s'", romIndex, table.c_str());
+									m_delegate->logMessageF(IDelegate::LogLevel::Warn, "WARNING: %8d: ignoring '%s'", romIndex, table.c_str());
 								}
 								/* don't touch res here */
 							}
@@ -347,18 +464,18 @@ namespace XiPivot
 									int32_t romIndex = pathToIndex(strstr(dat.c_str(), "//ROM"));
 									if (romIndex == -1)
 									{
-										m_logger->logMessageF(ILogProvider::LogLevel::Info, "Ignoring '%s' - invalid filename", dat.c_str());
+										m_delegate->logMessageF(IDelegate::LogLevel::Info, "Ignoring '%s' - invalid filename", dat.c_str());
 										continue;
 									}
 
 									if (m_resolvedPaths.find(romIndex) == m_resolvedPaths.end())
 									{
-										m_logger->logMessageF(m_logDebug, "emplace %8d : '%s'", romIndex, dat.c_str());
+										m_delegate->logMessageF(m_logDebug, "emplace %8d : '%s'", romIndex, dat.c_str());
 										m_resolvedPaths.emplace(romIndex, dat);
 									}
 									else
 									{
-										m_logger->logMessageF(ILogProvider::LogLevel::Warn, "WARNING: %8d: ignoring '%s'", romIndex, dat.c_str());
+										m_delegate->logMessageF(IDelegate::LogLevel::Warn, "WARNING: %8d: ignoring '%s'", romIndex, dat.c_str());
 									}
 								}
 								/* at least one overlay file */
@@ -388,12 +505,12 @@ namespace XiPivot
 									int32_t sfxIndex = pathToIndexAudio(&strstr(sfx.c_str(), "/win/se/")[-1]);
 									if (sfxIndex == -1)
 									{
-										m_logger->logMessageF(ILogProvider::LogLevel::Info, "Ignoring '%s' - invalid filename", sfx.c_str());
+										m_delegate->logMessageF(IDelegate::LogLevel::Info, "Ignoring '%s' - invalid filename", sfx.c_str());
 										continue;
 									}
 									if (m_resolvedPaths.find(sfxIndex) == m_resolvedPaths.end())
 									{
-										m_logger->logMessageF(m_logDebug, "emplace %8d : '%s'", sfxIndex, sfx.c_str());
+										m_delegate->logMessageF(m_logDebug, "emplace %8d : '%s'", sfxIndex, sfx.c_str());
 										m_resolvedPaths.emplace(sfxIndex, sfx);
 									}
 								}
@@ -411,12 +528,12 @@ namespace XiPivot
 							int32_t bgwIndex = pathToIndexAudio(&strstr(bgw.c_str(), "/win/music/")[-1]);
 							if (bgwIndex == -1)
 							{
-								m_logger->logMessageF(ILogProvider::LogLevel::Info, "Ignoring '%s' - invalid filename", bgw.c_str());
+								m_delegate->logMessageF(IDelegate::LogLevel::Info, "Ignoring '%s' - invalid filename", bgw.c_str());
 								continue;
 							}
 							if (m_resolvedPaths.find(bgwIndex) == m_resolvedPaths.end())
 							{
-								m_logger->logMessageF(m_logDebug, "emplace %8d : '%s'", bgwIndex, bgw.c_str());
+								m_delegate->logMessageF(m_logDebug, "emplace %8d : '%s'", bgwIndex, bgw.c_str());
 								m_resolvedPaths.emplace(bgwIndex, bgw);
 							}
 							res = true;
@@ -439,7 +556,7 @@ namespace XiPivot
 
 			std::string searchPath = basePath + midPath + pattern;
 		
-			m_logger->logMessageF(m_logDebug, "'%s', '%s', '%s', '%d' (%s)", basePath.c_str(), midPath.c_str(), pattern.c_str(), doubleDirSep, searchPath.c_str());
+			m_delegate->logMessageF(m_logDebug, "'%s', '%s', '%s', '%d' (%s)", basePath.c_str(), midPath.c_str(), pattern.c_str(), doubleDirSep, searchPath.c_str());
 
 			results.clear();
 			handle = Redirector::s_procFindFirstFileA((LPCSTR)searchPath.c_str(), &attrs);
@@ -454,18 +571,18 @@ namespace XiPivot
 						if (doubleDirSep)
 						{
 							/* this is only used to keep the same //ROM notation XI uses */
-							m_logger->logMessageF(m_logDebug, "=> '%s'", (basePath + midPath + "//" + attrs.cFileName).c_str());
+							m_delegate->logMessageF(m_logDebug, "=> '%s'", (basePath + midPath + "//" + attrs.cFileName).c_str());
 							results.emplace_back(basePath + midPath + "//" + attrs.cFileName);
 						}
 						else
 						{
-							m_logger->logMessageF(m_logDebug, "=> '%s'", (basePath + midPath + "/" + attrs.cFileName).c_str());
+							m_delegate->logMessageF(m_logDebug, "=> '%s'", (basePath + midPath + "/" + attrs.cFileName).c_str());
 							results.emplace_back(basePath + midPath + "/" + attrs.cFileName);
 						}
 					}
 				} while (FindNextFileA(handle, &attrs));
 			}
-			m_logger->logMessageF(m_logDebug, "results.size() = %d", results.size());
+			m_delegate->logMessageF(m_logDebug, "results.size() = %d", results.size());
 			return results.size() != 0;
 		}
 
@@ -481,7 +598,7 @@ namespace XiPivot
 
 			std::string searchPath = parentPath + midPath + "/" + pattern;
 
-			m_logger->logMessageF(m_logDebug, "'%s', '%s', '%s' => (%s)", parentPath.c_str(), midPath.c_str(), pattern.c_str(), searchPath.c_str());
+			m_delegate->logMessageF(m_logDebug, "'%s', '%s', '%s' => (%s)", parentPath.c_str(), midPath.c_str(), pattern.c_str(), searchPath.c_str());
 
 			results.clear();
 			handle = Redirector::s_procFindFirstFileA((LPCSTR)searchPath.c_str(), &attrs);
@@ -494,12 +611,12 @@ namespace XiPivot
 						std::string finalPath = parentPath + midPath + "/" + attrs.cFileName;
 						std::transform(finalPath.begin(), finalPath.end(), finalPath.begin(), [](unsigned char c) { return std::toupper(c); });
 
-						m_logger->logMessageF(m_logDebug, "=> '%s'", finalPath.c_str());
+						m_delegate->logMessageF(m_logDebug, "=> '%s'", finalPath.c_str());
 						results.emplace_back(finalPath);
 					}
 				} while (FindNextFileA(handle, &attrs));
 			}
-			m_logger->logMessageF(m_logDebug, "results.size() = %d", results.size());
+			m_delegate->logMessageF(m_logDebug, "results.size() = %d", results.size());
 			return results.size() != 0;
 		}
 
@@ -651,6 +768,16 @@ namespace XiPivot
 				soundIndex += (soundPath[24] - '0') * 1;
 			}
 			return soundIndex;
+		}
+
+
+		bool Redirector::checkCFWEnabled(const wchar_t* path)
+		{
+			if (m_hookCFWEnabled)
+			{
+				return wmemcmp(path, L"\\\\?\\", 4) != 0 && m_delegate->runCFWHook(path);
+			}
+			return false;
 		}
 	}
 }

@@ -33,7 +33,7 @@
 
 namespace XiPivot
 {
-	class AshitaInterface : public IPlugin, public Core::ILogProvider, private Core::Redirector
+	class AshitaInterface : public IPlugin, public Core::IDelegate, private Core::Redirector
 	{
 
 	public:
@@ -53,9 +53,9 @@ namespace XiPivot
 		void Direct3DPreRender() override;
 		void Direct3DRender() override;
 
-		/* ILogProvider */
-		void logMessage(Core::ILogProvider::LogLevel level, std::string msg);
-		void logMessageF(Core::ILogProvider::LogLevel level, std::string msg, ...);
+		/* IDelegate */
+		void logMessage(Core::IDelegate::LogLevel level, std::string msg);
+		void logMessageF(Core::IDelegate::LogLevel level, std::string msg, ...);
 
 	public:
 		static plugininfo_t *s_pluginInfo;

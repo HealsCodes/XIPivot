@@ -32,6 +32,7 @@
 
 #include "Redirector.h"
 #include "UserInterface.h"
+#include <filesystem>
 
 namespace XiPivot
 {
@@ -44,7 +45,7 @@ namespace XiPivot
 		static constexpr auto PluginDescr = "Runtime DAT, sfx and bgm replacement manager.";
 		static constexpr auto PluginCommand = "pivot";
 
-		class AshitaInterface : public IPolPlugin, public Core::ILogProvider
+		class AshitaInterface : public IPolPlugin, public Core::IDelegate
 		{
 		public:
 			AshitaInterface(const char* args);
@@ -69,13 +70,16 @@ namespace XiPivot
 			void Direct3DEndScene(bool isRenderingBackBuffer) override;
 			void Direct3DPresent(const RECT* pSourceRect, const RECT* pDestRect, HWND hDestWindowOverride, const RGNDATA* pDirtyRegion) override;
 
-			/* ILogProvider */
-			void logMessage(Core::ILogProvider::LogLevel level, std::string msg);
-			void logMessageF(Core::ILogProvider::LogLevel level, std::string msg, ...);
+			/* IDelegate */
+			void logMessage(Core::IDelegate::LogLevel level, std::string msg) override;
+			void logMessageF(Core::IDelegate::LogLevel level, std::string msg, ...) override;
+
+		protected:
+			virtual bool runCFWHook(const wchar_t* path) override;
 
 		private:
 
-			bool CreateConfigPath(const std::string& path, const std::string& moveOld);
+			bool CreateConfigPath(const std::filesystem::path& path, const std::filesystem::path& moveOld);
 
 			struct Settings
 			{
@@ -84,26 +88,29 @@ namespace XiPivot
 				Settings();
 
 				bool load(IConfigurationManager* config);
-				void save(IConfigurationManager* config, const std::string& absPath);
+				void save(IConfigurationManager* config, const std::filesystem::path& absPath);
+				void dump(Core::IDelegate* log);
 
 				bool debugLog;
-				std::string rootPath;
+				std::filesystem::path rootPath;
 				std::vector<std::string> overlays;
 
 				bool cacheEnabled;
 				uint32_t cacheSize;
 				uint32_t cachePurgeDelay;
 
+				bool redirectCFW;
+
 				bool dirty;
 			};
 
-			IAshitaCore*  m_ashitaCore = nullptr;
-			ILogManager*  m_logManager = nullptr;
+			IAshitaCore*          m_ashitaCore = nullptr;
+			ILogManager*          m_logManager = nullptr;
 
-			std::string   m_pluginArgs;
-			std::string   m_settingsPath;
-			Settings      m_settings;
-			UserInterface m_ui;
+			std::string           m_pluginArgs;
+			std::filesystem::path m_settingsPath;
+			Settings              m_settings;
+			UserInterface         m_ui;
 		};
 	}
 }

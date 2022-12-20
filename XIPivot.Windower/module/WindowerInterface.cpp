@@ -34,15 +34,15 @@
 
 namespace
 {
-	inline std::string logPrefix(XiPivot::Core::ILogProvider::LogLevel level)
+	inline std::string logPrefix(XiPivot::Core::IDelegate::LogLevel level)
 	{
 		switch (level)
 		{
-			case XiPivot::Core::ILogProvider::LogLevel::Discard: return { "" };
-			case XiPivot::Core::ILogProvider::LogLevel::Debug:   return { "DEBUG:" };
-			case XiPivot::Core::ILogProvider::LogLevel::Info:    return { "INFO :" };
-			case XiPivot::Core::ILogProvider::LogLevel::Warn:    return { "WARN :" };
-			case XiPivot::Core::ILogProvider::LogLevel::Error:   return { "ERROR:" };
+			case XiPivot::Core::IDelegate::LogLevel::Discard: return { "" };
+			case XiPivot::Core::IDelegate::LogLevel::Debug:   return { "DEBUG:" };
+			case XiPivot::Core::IDelegate::LogLevel::Info:    return { "INFO :" };
+			case XiPivot::Core::IDelegate::LogLevel::Warn:    return { "WARN :" };
+			case XiPivot::Core::IDelegate::LogLevel::Error:   return { "ERROR:" };
 		}
 		return { "?????:" };
 	}
@@ -141,7 +141,7 @@ namespace XiPivot
 		}
 		else
 		{
-			instance<WindowerInterface>()->setLogProvider(Core::DummyLogProvider::instance());
+			instance<WindowerInterface>()->setLogProvider(Core::DummyDelegate::instance());
 			instance<WindowerInterface>()->setDebugLog(false);
 
 			if (self->m_logOut.is_open())

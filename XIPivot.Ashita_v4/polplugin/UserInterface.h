@@ -60,6 +60,7 @@ namespace XiPivot
 
 				void RenderOverlayConfigUI(IGuiManager* const imgui);
 				void RenderMemCacheConfigUI(IGuiManager* const imgui);
+				void RenderAdvancedConfigUI(IGuiManager* const imgui);
 				void RenderCacheStatsUI(IGuiManager* const imgui);
 
 			private:
@@ -69,6 +70,7 @@ namespace XiPivot
 					{
 						bool debugLog;
 						bool cacheEnable;
+						bool redirectCFW;
 					} flags;
 
 					struct

@@ -20,12 +20,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\MemCache.cpp" />
-    <ClCompile Include="src\LogProvider.cpp" />
+    <ClCompile Include="src\Delegate.cpp" />
     <ClCompile Include="src\Redirector.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\MemCache.h" />
-    <ClInclude Include="src\LogProvider.h" />
+    <ClInclude Include="src\Delegate.h" />
     <ClInclude Include="src\Redirector.h" />
   </ItemGroup>
   <ItemGroup>
