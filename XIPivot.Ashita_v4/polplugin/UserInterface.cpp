@@ -195,67 +195,70 @@ namespace XiPivot
 			return true;
 		}
 
-		void UserInterface::ProcessUI(bool &settingsChanged)
+		void UserInterface::ProcessUI(bool& settingsChanged)
 		{
 			/* Apply any parameter changes and actions that were made
 			 * as a result of the last RenderUI call.
 			 */
 
-			auto& memCache   = Core::MemCache::instance();
+			auto& memCache = Core::MemCache::instance();
 			auto& redirector = Core::Redirector::instance();
 
-			if (redirector.getDebugLog() != m_guiState.flags.debugLog)
+			if (m_guiState.state.showConfigWindow)
 			{
-				/* update debug log states */
-				redirector.setDebugLog(m_guiState.flags.debugLog);
-				memCache.setDebugLog(m_guiState.flags.debugLog);
-
-				settingsChanged = true;
-			}
-
-			if (m_guiState.state.deleteOverlayName.empty() == false)
-			{
-				/* remove overlays if any */
-				redirector.removeOverlay(m_guiState.state.deleteOverlayName);
-				m_guiState.state.deleteOverlayName.clear();
-
-				settingsChanged = true;
-			}
-
-			if (m_guiState.state.addOverlayName.empty() == false)
-			{
-				/* add overlays if any */
-				redirector.addOverlay(m_guiState.state.addOverlayName);
-				m_guiState.state.addOverlayName.clear();
-
-				settingsChanged = true;
-			}
-
-			if (m_guiState.state.applyCacheChanges == true)
-			{
-				/* apply changes to the memory cache (alwasy happens bundled for all changes) */
-				m_guiState.state.applyCacheChanges = false;
-
-				if (memCache.hooksActive() != m_guiState.flags.cacheEnable)
+				if (redirector.getDebugLog() != m_guiState.flags.debugLog)
 				{
-					/* load or unload the memory cache */
-					if (m_guiState.flags.cacheEnable == true)
-					{
-						memCache.setupHooks();
-					}
-					else
-					{
-						memCache.releaseHooks();
-					}
+					/* update debug log states */
+					redirector.setDebugLog(m_guiState.flags.debugLog);
+					memCache.setDebugLog(m_guiState.flags.debugLog);
+
+					settingsChanged = true;
 				}
 
-				memCache.setCacheAllocation(m_guiState.values.cacheSizeMB * 0x100000);
-
-				if (static_cast<time_t>(m_guiState.values.cachePurgeDelay) != m_cachePurgeDelay)
+				if (m_guiState.state.deleteOverlayName.empty() == false)
 				{
-					setCachePurgeDelay(static_cast<time_t>(m_guiState.values.cachePurgeDelay));
+					/* remove overlays if any */
+					redirector.removeOverlay(m_guiState.state.deleteOverlayName);
+					m_guiState.state.deleteOverlayName.clear();
+
+					settingsChanged = true;
 				}
-				settingsChanged = true;
+
+				if (m_guiState.state.addOverlayName.empty() == false)
+				{
+					/* add overlays if any */
+					redirector.addOverlay(m_guiState.state.addOverlayName);
+					m_guiState.state.addOverlayName.clear();
+
+					settingsChanged = true;
+				}
+
+				if (m_guiState.state.applyCacheChanges == true)
+				{
+					/* apply changes to the memory cache (alwasy happens bundled for all changes) */
+					m_guiState.state.applyCacheChanges = false;
+
+					if (memCache.hooksActive() != m_guiState.flags.cacheEnable)
+					{
+						/* load or unload the memory cache */
+						if (m_guiState.flags.cacheEnable == true)
+						{
+							memCache.setupHooks();
+						}
+						else
+						{
+							memCache.releaseHooks();
+						}
+					}
+
+					memCache.setCacheAllocation(m_guiState.values.cacheSizeMB * 0x100000);
+
+					if (static_cast<time_t>(m_guiState.values.cachePurgeDelay) != m_cachePurgeDelay)
+					{
+						setCachePurgeDelay(static_cast<time_t>(m_guiState.values.cachePurgeDelay));
+					}
+					settingsChanged = true;
+				}
 			}
 
 			/* handle cache purges as part of the cyclic process call */
