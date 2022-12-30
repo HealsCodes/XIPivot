@@ -27,6 +27,17 @@ The goals behind XIPivot are simple:
 - 5) -- OPTIONAL --
    - Instead of following 4) you can use the command `/pivot` in-game to open the configuration GUI
 
+## Using a custom configuration in your ashita profile
+
+If required you can specify the basename for pivots configuration file (the default is 'pivot').
+This can be used to have different pivot settings for different Ashita .ini files:
+
+- 1) Open your ashita profile and find the section `[ashita.polplugins.args]`
+- 2) add a line like this: `pivot = foobar`
+
+In this case `foobar` is the name of your custom configuration and pivot will look for `<ashita>\config\pivot\foobar.ini`.
+
+
 ### Example - XI-View, XI-Vision and Ammelila's HD-Remake:
 
 Directory structure:
@@ -75,10 +86,10 @@ debug_log=false
 [cache]
 enabled=true
 max_age=600
-size=512
+size=128
 ```
 
-XIPivot defaults to look for your overlays inside the `DATs/` directory next to the `pivot.dll`.
+Pivot defaults to look for your overlays inside the `DATs/` directory next to the `pivot.dll`.
 If you prefer a different path you can add the key `'root_path'` to `pivot.ini` like so:
 
 ```ini
@@ -92,17 +103,17 @@ root_path=C:\my\awesome\addons
 2=FFXI-HD
 
 [cache]
-enabled=true
+enabled=false
 max_age=600
-size=512
+size=128
 ```
 
-This instructs to XIPivot to search for overlays inside `"C:\my\awesome\addons"` instead.
+This instructs to pivot to search for overlays inside `"C:\my\awesome\addons"` instead.
 (If you're unsure **don't set this parameter** and things should just work).
 
 ## In-Game commands
 
-XIPivot makes the in-game command `/pivot` available to load and unload overlays at runtime.
+Pivot makes the in-game command `/pivot` available to load and unload overlays at runtime.
 If the command `/pivot` is used without parameters it will open an in-game GUI for configuration.
 
 The following parameters are supported:
@@ -147,6 +158,6 @@ Currently none known
 
 ## Disclaimer
 
-I tested XIPivot to the best of my capabilities but I can not guarantee that it works without bugs for 100% of the time.
+I tested Pivot to the best of my capabilities but I can not guarantee that it works without bugs for 100% of the time.
 Use at your own discretion, I take no responsibility for any client crashes or data loss.
 

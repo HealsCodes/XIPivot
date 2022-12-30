@@ -83,12 +83,10 @@ namespace XiPivot
 
 			struct Settings
 			{
-				static constexpr auto ConfigPath = "pivot\\pivot.ini";
-
 				Settings();
 
-				bool load(IConfigurationManager* config);
-				void save(IConfigurationManager* config, const std::filesystem::path& absPath);
+				bool load(IConfigurationManager* config, const std::filesystem::path& relPath);
+				void save(IConfigurationManager* config, const std::filesystem::path& relPath, const std::filesystem::path& absPath);
 				void dump(Core::IDelegate* log);
 
 				bool debugLog;
@@ -104,13 +102,14 @@ namespace XiPivot
 				bool dirty;
 			};
 
-			IAshitaCore*          m_ashitaCore = nullptr;
-			ILogManager*          m_logManager = nullptr;
+			IAshitaCore*             m_ashitaCore = nullptr;
+			ILogManager*             m_logManager = nullptr;
 
-			std::string           m_pluginArgs;
-			std::filesystem::path m_settingsPath;
-			Settings              m_settings;
-			UserInterface         m_ui;
+			std::vector<std::string> m_pluginArgs;
+			std::filesystem::path    m_settingsRelPath;
+			std::filesystem::path    m_settingsPath;
+			Settings                 m_settings;
+			UserInterface            m_ui;
 		};
 	}
 }

@@ -31,15 +31,29 @@
 
 #include <regex>
 #include <iostream>
+#include <string>
 
 namespace XiPivot
 {
 	namespace Pol
 	{
 		AshitaInterface::AshitaInterface(const char* args)
-			: IPolPlugin(),
-			m_pluginArgs(args ? args : "")
+			: IPolPlugin()
 		{
+			if (args != nullptr)
+			{
+				const std::string arg_string(args);
+				std::stringstream arg_stream(arg_string);
+				std::istream_iterator<std::string> args_begin(arg_stream);
+				std::istream_iterator<std::string> args_end;
+
+				m_pluginArgs = std::vector<std::string>(args_begin, args_end);
+				
+			}
+			if (m_pluginArgs.empty())
+			{
+					m_pluginArgs = { "pivot" };
+			}
 		}
 
 		const char* AshitaInterface::GetName(void) const        { return PluginName; }
@@ -64,7 +78,13 @@ namespace XiPivot
 
 			redirector.setLogProvider(this);
 
-			m_settingsPath = std::filesystem::path(m_ashitaCore->GetInstallPath()) / "config" / "pivot" / "pivot.ini";
+			// we support only a single argument which is the config file basename and defaults to 'pivot'
+			auto configFileName = std::filesystem::path(m_pluginArgs.at(0)).stem().replace_extension(".ini").string();
+
+			m_settingsRelPath = std::filesystem::path("pivot") / configFileName;
+			m_settingsPath = std::filesystem::path(m_ashitaCore->GetInstallPath()) / "config" / m_settingsRelPath;
+
+			logMessageF(LogLevel::Info, "Using config file: '%s'", m_settingsPath.string().c_str());
 
 			auto config = m_ashitaCore->GetConfigurationManager();
 			if (config != nullptr)
@@ -75,10 +95,10 @@ namespace XiPivot
 					return false;
 				}
 
-				if (!m_settings.load(config))
+				if (!m_settings.load(config, m_settingsRelPath))
 				{
 					logMessageF(LogLevel::Warn, "Failed to load config file, saving defaults instead");
-					m_settings.save(config, m_settingsPath);
+					m_settings.save(config, m_settingsRelPath, m_settingsPath);
 				}
 				m_settings.dump(this);
 
@@ -99,7 +119,7 @@ namespace XiPivot
 					memCache.setDebugLog(m_settings.debugLog);
 					memCache.setCacheAllocation(m_settings.cacheSize);
 				}
-				m_settings.save(config, m_settingsPath);
+				m_settings.save(config, m_settingsRelPath, m_settingsPath);
 			}
 
 			if (m_settings.cacheEnabled)
@@ -157,7 +177,7 @@ namespace XiPivot
 					m_settings.cacheSize       = Core::MemCache::instance().getCacheAllocation();
 					m_settings.cachePurgeDelay = static_cast<uint32_t>(m_ui.getCachePurgeDelay());
 
-					m_settings.save(m_ashitaCore->GetConfigurationManager(), m_settingsPath);
+					m_settings.save(m_ashitaCore->GetConfigurationManager(), m_settingsRelPath, m_settingsPath);
 					m_settings.dump(this);
 				}
 
@@ -276,10 +296,10 @@ namespace XiPivot
 			dirty = false;
 		}
 
-		bool AshitaInterface::Settings::load(IConfigurationManager* config)
+		bool AshitaInterface::Settings::load(IConfigurationManager* config, const std::filesystem::path& relPath)
 		{
 			dirty = false;
-			if (config->Load(PluginName, ConfigPath))
+			if (config->Load(PluginName, relPath.string().c_str()))
 			{
 				const char* rP  = config->GetString(PluginName, "settings", "root_path");
 				const bool dbg  = config->GetBool(PluginName, "settings", "debug_log", false);
@@ -334,7 +354,7 @@ namespace XiPivot
 			log->logMessageF(Core::IDelegate::LogLevel::Debug, "");
 		}
 
-		void AshitaInterface::Settings::save(IConfigurationManager* config, const std::filesystem::path& absPath)
+		void AshitaInterface::Settings::save(IConfigurationManager* config, const std::filesystem::path& relPath, const std::filesystem::path& absPath)
 		{
 			config->Delete(PluginName);
 
@@ -361,10 +381,18 @@ namespace XiPivot
 
 			if (std::filesystem::exists(absPath))
 			{
+				std::filesystem::permissions(absPath, 
+					std::filesystem::perms::owner_all | std::filesystem::perms::group_all, 
+					std::filesystem::perm_options::replace);
 				std::filesystem::remove(absPath);
 			}
 
-			config->Save(PluginName, ConfigPath);
+			config->Save(PluginName, relPath.string().c_str());
+
+			std::filesystem::permissions(absPath,
+				std::filesystem::perms::owner_write | std::filesystem::perms::group_write | std::filesystem::perms::others_write,
+				std::filesystem::perm_options::remove);
+
 			dirty = false;
 		}
 	}
