@@ -103,7 +103,7 @@ namespace XiPivot
 					IS_PARAM(args.at(0), "d", "dump")
 					{
 						std::ostringstream msg;
-						std::string dumpPath = std::string(core->GetInstallPath()) + "\\logs\\pivot-dump.txt";
+						std::string dumpPath = (std::filesystem::path(core->GetInstallPath()) / "logs" / "pivot-dump.txt").string();
 						std::fstream dumpFile;
 
 						dumpFile.open(dumpPath, std::ios_base::out | std::ios_base::trunc);
@@ -154,38 +154,6 @@ namespace XiPivot
 							msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Error("Unable to write to ") << Ashita::Chat::Error(dumpPath);
 						}
 						chat->AddChatMessage(1, false, msg.str().c_str());
-					}
-					break;
-
-				case 2:
-					IS_PARAM(args.at(0), "a", "add")
-					{
-						if (Core::Redirector::instance().addOverlay(args.at(1)) == false)
-						{
-							std::ostringstream msg;
-							msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Error("Failed to load overlay");
-						
-							chat->AddChatMessage(1, false, msg.str().c_str());
-						}
-						else
-						{
-							std::ostringstream msg;
-							msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Message("Overlay registered");
-						
-							chat->AddChatMessage(1, false, msg.str().c_str());
-							m_guiState.state.applyCLIChanges = true;
-						}
-					}
-
-					IS_PARAM(args.at(0), "r", "remove")
-					{
-						std::ostringstream msg;
-						msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Message("Overlay removed");
-
-						chat->AddChatMessage(1, false, msg.str().c_str());
-
-						Core::Redirector::instance().removeOverlay(args.at(1));
-						m_guiState.state.applyCLIChanges = true;
 					}
 					break;
 
@@ -373,18 +341,6 @@ namespace XiPivot
 			msg.str("");
 			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x6, PluginName) << " v" << Ashita::Chat::Color1(0x6, "%.3f") << " by " << Ashita::Chat::Color1(0x6, PluginAuthor);
 			chat->Writef(1, false, msg.str().c_str(), PluginVersion);
-
-			msg.str("");
-			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x3, "a")         << "dd overlay_name     - add 'overlay_name' to the list of active overlays.";
-			chat->AddChatMessage(1, false, msg.str().c_str());
-
-			msg.str("");
-			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x3, "r")         << "emove overlay_name - remove 'overlay_name' from the list of active overlays.";
-			chat->AddChatMessage(1, false, msg.str().c_str());
-
-			msg.str("");
-			msg << Ashita::Chat::Header(PluginCommand) << " - ";
-			chat->AddChatMessage(1, false, msg.str().c_str());
 
 			msg.str("");
 			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x3, "c")         << "ache                  - open the cache stats overlay.";

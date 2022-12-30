@@ -118,13 +118,12 @@ If the command `/pivot` is used without parameters it will open an in-game GUI f
 
 The following parameters are supported:
 
-- a/add overlay_path     -- will load 'overlay_name' as last entry to the overlay list
-- r/remove overlay_path  -- will unload 'overlay_name' and remove it from the overlay list
 - c/cache                -- will display a mini overlay with cache statistics
+- d/dump                 -- write the current overlay list and cache settungs to (`<Ashita>\logs\pivot-dump.txt`)
 - h/help                 -- print this text
 
-These commands all support a short first letter version (a/r/c/h).
-Changes made with add / remove will be reflected in `pivot.ini`.
+These commands all support a short first letter version (c/h).
+Changes made through the configuration UI will be reflected in `pivot.ini` automatically.
 
 
 Please note that adding and removing overlays way after the game launches can have side effects.
