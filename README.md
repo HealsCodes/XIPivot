@@ -25,10 +25,6 @@ the current beta version of [Ashita v4](https://github.com/AshitaXI/Ashita-v4bet
 - Head over to the [Releases page](https://github.com/Shirk/XIPivot/releases) and pick the ZIP that matches your launcher
 - Follow the README.md inside the archive  for setup and configuration instructions
 
-- [Latest release for Windower](https://github.com/Shirk/XIPivot/releases/tag/v0.4.7)
-- [Latest release for Ashita](https://github.com/Shirk/XIPivot/releases/tag/v0.4.7)
-- [Latest pre-release for Ashita v4 beta](https://github.com/Shirk/XIPivot/releases/tag/v4.1.104)
-
 #### Ashita Install
 
 The latest version of Pivot can always be installed from the plugins list in Ashita and will be updated automatically.
