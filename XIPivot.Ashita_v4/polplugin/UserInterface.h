@@ -68,36 +68,37 @@ namespace XiPivot
 				{
 					struct
 					{
-						bool debugLog;
-						bool cacheEnable;
-						bool redirectCFW;
+						bool debugLog = false;
+						bool cacheEnable = false;
+						bool redirectFOpenS = false;
 					} flags;
 
 					struct
 					{
-						int32_t                            cacheSizeMB;
-						int32_t                            cachePurgeDelay;
+						int32_t                            cacheSizeMB = 0;
+						int32_t                            cachePurgeDelay = 600;
 						struct Core::MemCache::CacheStatus cacheStats;
 					} values;
 
 					struct
 					{
-						std::string              rootPath;
-						std::vector<std::string> allOverlays;
-						std::vector<std::string> activeOverlays;
+						std::string              rootPath = "";
+						std::vector<std::string> allOverlays = {};
+						std::vector<std::string> activeOverlays = {};
 					} constants;
 
 					struct
 					{
-						std::string addOverlayName;
-						std::string deleteOverlayName;
+						std::string addOverlayName = "";
+						std::string deleteOverlayName = "";
 
-						bool showConfigWindow;
-						bool showCacheOverlay;
-						bool applyCacheChanges;
-						bool applyCLIChanges;
+						bool showConfigWindow = false;
+						bool showCacheOverlay = false;
+						bool applyCacheChanges = false;
+						bool applyCLIChanges = false;
+						bool showRestartNotice = false;
 
-						int  activeTab;
+						int  activeTab = 0;
 					} state;
 
 				} m_guiState;

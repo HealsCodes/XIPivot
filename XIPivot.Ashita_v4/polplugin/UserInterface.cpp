@@ -71,7 +71,7 @@ namespace XiPivot
 						/* lazy update the GUI values */
 						m_guiState.flags.cacheEnable = Core::MemCache::instance().hooksActive();
 						m_guiState.flags.debugLog = Core::Redirector::instance().getDebugLog();
-						m_guiState.flags.redirectCFW = Core::Redirector::instance().getRedirectCreateFileW();
+						m_guiState.flags.redirectFOpenS = Core::Redirector::instance().getRedirectFOpenS();
 
 						m_guiState.values.cachePurgeDelay = static_cast<int32_t>(m_cachePurgeDelay);
 						m_guiState.values.cacheSizeMB = Core::MemCache::instance().getCacheAllocation() / 0x100000;
@@ -228,6 +228,14 @@ namespace XiPivot
 					}
 					settingsChanged = true;
 				}
+
+				if (redirector.getRedirectFOpenS() != m_guiState.flags.redirectFOpenS)
+				{
+					redirector.setRedirectFOpenS(m_guiState.flags.redirectFOpenS);
+
+					m_guiState.state.showRestartNotice = true;
+					settingsChanged = true;
+				}
 			}
 
 			/* handle cache purges as part of the cyclic process call */
@@ -293,6 +301,14 @@ namespace XiPivot
 							break;
 					}
 				}
+
+				if (m_guiState.state.showRestartNotice)
+				{
+					imgui->NewLine();
+					imgui->TextColored(ImVec4(1.0, 0.75, 0.55, 1.0), "Please restart your client for changes to take effect.");
+					imgui->NewLine();
+				}
+
 				imgui->End();
 			}
 
@@ -470,7 +486,7 @@ namespace XiPivot
 
 		void UserInterface::RenderAdvancedConfigUI(IGuiManager* const imgui)
 		{
-			imgui->Checkbox("redirect CreateFileW", &m_guiState.flags.redirectCFW);
+			imgui->Checkbox("redirect Ashita ResourceManager", &m_guiState.flags.redirectFOpenS);
 
 			imgui->NewLine();
 			imgui->TextDisabled("This flag causes pivot to try and redirect Ashita's access to DAT files.");

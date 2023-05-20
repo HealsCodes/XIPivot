@@ -49,7 +49,7 @@ namespace XiPivot
 
 			virtual void logMessage(LogLevel level, std::string message) = 0;
 			virtual void logMessageF(LogLevel level, std::string fmt, ...) = 0;
-			virtual bool runCFWHook(const wchar_t*) { return false; };
+			virtual bool runFOpenSHook(const char*) { return false; };
 		};
 
 		class DummyDelegate : public IDelegate

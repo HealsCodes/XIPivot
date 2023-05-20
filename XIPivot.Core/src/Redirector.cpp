@@ -32,6 +32,7 @@
 
 #include <cctype>
 #include <algorithm>
+#include <filesystem>
 
 namespace
 {
@@ -57,15 +58,11 @@ namespace
 		return res;
 	}
 
-	bool denormalised_ansi_path(const wchar_t* wcPath, char* ansiPath, size_t ansiPathMax)
+	bool denormalised_ansi_path(const char* path, char* ansiPath, size_t ansiPathMax)
 	{
 		char pathBuf[MAX_PATH + 2];
 		memset(pathBuf, 0, sizeof(pathBuf));
-
-		if (WideCharToMultiByte(CP_ACP, 0, wcPath, -1, pathBuf, MAX_PATH, nullptr, nullptr) == 0)
-		{
-			return false;
-		}
+		strcpy_s(pathBuf, sizeof(pathBuf) - 2, path);
 
 		char* romSuffix = strstr_r(pathBuf, "\\ROM");
 		if (romSuffix != nullptr)
@@ -92,8 +89,8 @@ namespace XiPivot
 		Redirector* Redirector::s_instance = nullptr;
 
 		Redirector::pFnCreateFileA    Redirector::s_procCreateFileA = CreateFileA;
-		Redirector::pFnCreateFileW    Redirector::s_procCreateFileW = CreateFileW;
 		Redirector::pFnFindFirstFileA Redirector::s_procFindFirstFileA = FindFirstFileA;
+		Redirector::pFnFOpenS         Redirector::s_procFOpenS = fopen_s;
 
 		/* static interface */
 		Redirector& Redirector::instance(void)
@@ -117,18 +114,6 @@ namespace XiPivot
 			return Redirector::s_procCreateFileA(a0, a1, a2, a3, a4, a5, a6);
 		}
 
-		HANDLE __stdcall Redirector::dCreateFileW(LPCWSTR a0, DWORD a1, DWORD a2, LPSECURITY_ATTRIBUTES a3, DWORD a4, DWORD a5, HANDLE a6)
-		{
-			/* don't use the Singleton access here;
-			 * if for whatever reason the global object is gone we don't want a new one
-			 */
-			if (Redirector::s_instance != nullptr)
-			{
-				return Redirector::s_instance->interceptCreateFileW(a0, a1, a2, a3, a4, a5, a6);
-			}
-			return Redirector::s_procCreateFileW(a0, a1, a2, a3, a4, a5, a6);
-		}
-
 		HANDLE __stdcall Redirector::dFindFirstFileA(LPCSTR a0, LPWIN32_FIND_DATAA a1)
 		{
 			/* don't use the Singleton access here;
@@ -141,10 +126,22 @@ namespace XiPivot
 			return Redirector::s_procFindFirstFileA(a0, a1);
 		}
 
+		errno_t __cdecl Redirector::dFOpenS(FILE** a0, const char* a1, const char* a2)
+		{
+			/* don't use the Singleton access here;
+			 * if for whatever reason the global object is gone we don't want a new one
+			 */
+			if (Redirector::s_instance != nullptr)
+			{
+				return Redirector::s_instance->interceptFOpenS(a0, a1, a2);
+			}
+			return Redirector::s_procFOpenS(a0, a1, a2);
+		}
+
 		Redirector::Redirector()
 			: m_hooksSet(false)
-			, m_hookCFWSet(false)
-			, m_hookCFWEnabled(false)
+			, m_hookFOpenSet(false)
+			, m_hookFOpenEnabled(false)
 		{
 			char workDir[MAX_PATH];
 
@@ -182,10 +179,10 @@ namespace XiPivot
 
 				DetourAttach(&(PVOID&)Redirector::s_procCreateFileA, Redirector::dCreateFileA);
 				DetourAttach(&(PVOID&)Redirector::s_procFindFirstFileA, Redirector::dFindFirstFileA);
-				if (m_hookCFWEnabled)
+				if (m_hookFOpenEnabled)
 				{
-					m_delegate->logMessage(IDelegate::LogLevel::Info, "enabling CreateFileW hook");
-					DetourAttach(&(PVOID&)Redirector::s_procCreateFileW, Redirector::dCreateFileW);
+					m_delegate->logMessage(IDelegate::LogLevel::Info, "enabling fopen_s hook");
+					DetourAttach(&(PVOID&)Redirector::s_procFOpenS, Redirector::dFOpenS);
 				}
 
 				m_hooksSet = DetourTransactionCommit() == NO_ERROR;
@@ -207,9 +204,9 @@ namespace XiPivot
 
 				DetourDetach(&(PVOID&)Redirector::s_procCreateFileA, Redirector::dCreateFileA);
 				DetourDetach(&(PVOID&)Redirector::s_procFindFirstFileA, Redirector::dFindFirstFileA);
-				if (m_hookCFWEnabled)
+				if (m_hookFOpenEnabled)
 				{
-					DetourDetach(&(PVOID&)Redirector::s_procCreateFileW, Redirector::dCreateFileW);
+					DetourDetach(&(PVOID&)Redirector::s_procFOpenS, Redirector::dFOpenS);
 				}
 
 				m_hooksSet = (DetourTransactionCommit() == NO_ERROR) ? false : true;
@@ -227,14 +224,14 @@ namespace XiPivot
 			m_delegate->logMessageF(IDelegate::LogLevel::Info, "m_logDebug = %s", state ? "Debug" : "Discard");
 		}
 
-		bool Redirector::setRedirectCreateFileW(bool state)
+		bool Redirector::setRedirectFOpenS(bool state)
 		{
-			m_hookCFWSet = state;
+			m_hookFOpenSet = state;
 			if (!m_hooksSet)
 			{
-				m_hookCFWEnabled = state;
+				m_hookFOpenEnabled = state;
 			}
-			return m_hookCFWEnabled;
+			return m_hookFOpenEnabled;
 		}
 
 		void Redirector::setRootPath(const std::string &newRoot)
@@ -290,41 +287,52 @@ namespace XiPivot
 		HANDLE __stdcall
 			Redirector::interceptCreateFileA(LPCSTR a0, DWORD a1, DWORD a2, LPSECURITY_ATTRIBUTES a3, DWORD a4, DWORD a5, HANDLE a6)
 		{
-			m_delegate->logMessageF(m_logDebug, "lpFileName = '%s'", static_cast<const char*>(a0));
-
-			int32_t pathKey = -1;
-			const char* path = findRedirect(a0, pathKey);
-			return MemCache::instance().trackCacheObject(Redirector::s_procCreateFileA((LPCSTR)path, a1, a2, a3, a4, a5, a6), pathKey);
-		}
-
-		HANDLE __stdcall
-			Redirector::interceptCreateFileW(LPCWSTR a0, DWORD a1, DWORD a2, LPSECURITY_ATTRIBUTES a3, DWORD a4, DWORD a5, HANDLE a6)
-		{
-			if (checkCFWEnabled(a0))
+			if (shouldInterceptPath(a0))
 			{
-				m_delegate->logMessageF(m_logDebug, "lpFileName = [wchar] '%ls'", static_cast<const wchar_t*>(a0));
-				const char* path = findWCharRedirect(a0);
-				if (path != nullptr)
-				{
-					return Redirector::s_procCreateFileA(path, a1, a2, a3, a4, a5, a6);
-				}
-			}
+				//m_delegate->logMessageF(m_logDebug, "lpFileName = '%s'", static_cast<const char*>(a0));
 
-			return Redirector::s_procCreateFileW(a0, a1, a2, a3, a4, a5, a6);
+				int32_t pathKey = -1;
+				bool _unusedPathRedirected = false;
+				const char* path = findRedirect(a0, pathKey, _unusedPathRedirected);
+				return MemCache::instance().trackCacheObject(Redirector::s_procCreateFileA((LPCSTR)path, a1, a2, a3, a4, a5, a6), pathKey);
+			}
+			return Redirector::s_procCreateFileA(a0, a1, a2, a3, a4, a5, a6);
 		}
 
 		HANDLE __stdcall
 			Redirector::interceptFindFirstFileA(LPCSTR a0, LPWIN32_FIND_DATAA a1)
 		{
-			m_delegate->logMessageF(m_logDebug, "lpFileName = '%s'", static_cast<const char*>(a0));
+			if (shouldInterceptPath(a0))
+			{
+				m_delegate->logMessageF(m_logDebug, "lpFileName = '%s'", static_cast<const char*>(a0));
 
-			int32_t _unusedPathKey = -1;
-			const char* path = findRedirect(a0, _unusedPathKey);
-			return Redirector::s_procFindFirstFileA((LPCSTR)path, a1);
+				int32_t _unusedPathKey = -1;
+				bool _unusedPathRedirected = false;
+				const char* path = findRedirect(a0, _unusedPathKey, _unusedPathRedirected);
+				return Redirector::s_procFindFirstFileA((LPCSTR)path, a1);
+			}
+			return Redirector::s_procFindFirstFileA(a0, a1);
+		}
+
+		errno_t
+			Redirector::interceptFOpenS(FILE** a0, const char* a1, const char* a2)
+		{
+			if (shouldInterceptFOpenS(a1))
+			{
+				m_delegate->logMessageF(m_logDebug, "lpFileName = [fopen_s] '%s'", a1);
+				const char* path = findDenormalisedRedirect(a1);
+				if (path != nullptr)
+				{
+					auto normalised = std::filesystem::weakly_canonical(std::filesystem::path(path)).make_preferred().string();
+					return Redirector::s_procFOpenS(a0, normalised.c_str(), a2);
+				}
+			}
+
+			return Redirector::s_procFOpenS(a0, a1, a2);
 		}
 
 		/* private stuff */
-		const char *Redirector::findRedirect(const char *realPath, int32_t &outPathKey)
+		const char *Redirector::findRedirect(const char *realPath, int32_t &outPathKey, bool &pathRedirected)
 		{
 			/*
 			 * findRedirect relies on a very specific implementation detail in the game client.
@@ -362,7 +370,7 @@ namespace XiPivot
 				sfxPath = nullptr;
 			}
 
-			m_delegate->logMessageF(m_logDebug, "romPath = %d, sfxPath = %d\n", romPath != nullptr, sfxPath != nullptr);
+			m_delegate->logMessageF(m_logDebug, "romPath = %d, sfxPath = %d", romPath != nullptr, sfxPath != nullptr);
 
 			if (romPath != nullptr)
 			{
@@ -372,7 +380,8 @@ namespace XiPivot
 				outPathKey = romIndex;
 				if(res != m_resolvedPaths.end())
 				{
-					m_delegate->logMessageF(m_logDebug, "using overlay '%s'\n", (*res).second.c_str());
+					pathRedirected = true;
+					m_delegate->logMessageF(m_logDebug, "using overlay '%s'", (*res).second.c_str());
 					return (*res).second.c_str();
 				}
 			}
@@ -381,26 +390,27 @@ namespace XiPivot
 				int32_t sfxIndex = pathToIndexAudio(sfxPath);
 				const auto res = m_resolvedPaths.find(sfxIndex);
 			
-				// disabled for music until I have time to look into why it creates audio garbage.
 				outPathKey = sfxIndex;
 				if(res != m_resolvedPaths.end())
 				{
-					m_delegate->logMessageF(m_logDebug, "using overlay '%s'\n", (*res).second.c_str());
+					pathRedirected = true;
+					m_delegate->logMessageF(m_logDebug, "using overlay '%s'", (*res).second.c_str());
 					return (*res).second.c_str();
 				}
 			}
+			pathRedirected = false;
 			return realPath;
 		}
 
-		const char *Redirector::findWCharRedirect(const wchar_t* realPath)
+		const char *Redirector::findDenormalisedRedirect(const char* realPath)
 		{
 			char ansiPath[MAX_PATH + 2];
 			if (denormalised_ansi_path(realPath, ansiPath, MAX_PATH))
 			{
-				m_delegate->logMessageF(m_logDebug, "denormalised: '%s'", ansiPath);
-				int32_t redirectFound = -1;
-				const char* redirect = findRedirect(ansiPath, redirectFound);
-				if (redirectFound != -1)
+				int32_t _unusedPathKey = -1;
+				bool redirectFound = false;
+				const char* redirect = findRedirect(ansiPath, _unusedPathKey, redirectFound);
+				if (redirectFound)
 				{
 					return redirect;
 				}
@@ -771,13 +781,24 @@ namespace XiPivot
 		}
 
 
-		bool Redirector::checkCFWEnabled(const wchar_t* path)
+		bool Redirector::shouldInterceptFOpenS(const char* path)
 		{
-			if (m_hookCFWEnabled)
+			if (m_hookFOpenEnabled)
 			{
-				return wmemcmp(path, L"\\\\?\\", 4) != 0 && m_delegate->runCFWHook(path);
+				return shouldInterceptPath(path) && m_delegate->runFOpenSHook(path);
 			}
 			return false;
+		}
+
+		bool Redirector::shouldInterceptPath(const char* path)
+		{
+			return path != nullptr &&
+				(strncmp(path, "\\\\?\\", 4) != 0 || strncmp(path, "\\\\.\\", 4) != 0) &&
+				(
+					strstr(path, "/ROM") != nullptr || strstr(path, "\\ROM") != nullptr 
+					|| strstr(path, "/win/se/") != nullptr || strstr(path, "\\win\\se\\") != nullptr 
+					|| strstr(path, "/win/music/") != nullptr || strstr(path, "\\win\\music\\") != nullptr
+				);
 		}
 	}
 }

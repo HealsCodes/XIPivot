@@ -104,7 +104,7 @@ namespace XiPivot
 
 				redirector.setDebugLog(m_settings.debugLog);
 				redirector.setRootPath(m_settings.rootPath.string());
-				redirector.setRedirectCreateFileW(m_settings.redirectCFW);
+				redirector.setRedirectFOpenS(m_settings.redirectFOpenS);
 
 				for (const auto& path : m_settings.overlays)
 				{
@@ -171,7 +171,7 @@ namespace XiPivot
 					m_settings.rootPath = Core::Redirector::instance().rootPath();
 					m_settings.overlays = Core::Redirector::instance().overlayList();
 
-					m_settings.redirectCFW = Core::Redirector::instance().getRedirectCreateFileW();
+					m_settings.redirectFOpenS = Core::Redirector::instance().getRedirectFOpenS();
 
 					m_settings.cacheEnabled    = Core::MemCache::instance().hooksActive();
 					m_settings.cacheSize       = Core::MemCache::instance().getCacheAllocation();
@@ -238,7 +238,7 @@ namespace XiPivot
 
 		/* protected parts */
 
-		bool AshitaInterface::runCFWHook(const wchar_t*)
+		bool AshitaInterface::runFOpenSHook(const char*)
 		{
 			return m_ashitaCore->GetDirect3DDevice() != nullptr;
 		}
@@ -289,7 +289,7 @@ namespace XiPivot
 			rootPath = std::filesystem::current_path() / "DATs";
 			overlays.clear();
 			debugLog = false;
-			redirectCFW = false;
+			redirectFOpenS = true;
 			cacheEnabled = false;
 			cacheSize = 0;
 			cachePurgeDelay = 600;
@@ -303,11 +303,11 @@ namespace XiPivot
 			{
 				const char* rP  = config->GetString(PluginName, "settings", "root_path");
 				const bool dbg  = config->GetBool(PluginName, "settings", "debug_log", false);
-				const bool rCFW = config->GetBool(PluginName, "settings", "redirect_cfw", false);
+				const bool rFOS = config->GetBool(PluginName, "settings", "redirect_fopens", true);
 
 				debugLog = dbg;
 				rootPath = (rP ? rP : rootPath);
-				redirectCFW = rCFW;
+				redirectFOpenS = rFOS;
 
 				overlays.clear();
 
@@ -340,7 +340,7 @@ namespace XiPivot
 			log->logMessage(Core::IDelegate::LogLevel::Debug, ">> pivot settings <<");
 			log->logMessageF(Core::IDelegate::LogLevel::Debug, "root_path %s", rootPath.string().c_str());
 			log->logMessageF(Core::IDelegate::LogLevel::Debug, "debug_log %s", debugLog ? "true" : "false");
-			log->logMessageF(Core::IDelegate::LogLevel::Debug, "redirect_cfw %s", redirectCFW ? "true" : "false");
+			log->logMessageF(Core::IDelegate::LogLevel::Debug, "redirect_fopens %s", redirectFOpenS ? "true" : "false");
 			log->logMessage(Core::IDelegate::LogLevel::Debug, "overlays:");
 
 			for (unsigned i = 0; i < overlays.size(); ++i)
@@ -360,7 +360,7 @@ namespace XiPivot
 
 			config->SetValue(PluginName, "settings", "root_path", rootPath.string().c_str());
 			config->SetValue(PluginName, "settings", "debug_log", debugLog ? "true" : "false");
-			config->SetValue(PluginName, "settings", "redirect_cfw", redirectCFW ? "true" : "false");
+			config->SetValue(PluginName, "settings", "redirect_fopens", redirectFOpenS ? "true" : "false");
 
 			for (unsigned i = 0; i < overlays.size(); ++i)
 			{
