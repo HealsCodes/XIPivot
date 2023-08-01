@@ -40,7 +40,7 @@ namespace XiPivot
 	{
 		static constexpr auto PluginName = "pivot";
 		static constexpr auto PluginAuthor = "Heals";
-		static constexpr auto PluginVersion = 4.1502;
+		static constexpr auto PluginVersion = 4.1503;
 		static constexpr auto PluginUrl = "https://github.com/Shirk/XIPivot";
 		static constexpr auto PluginDescr = "Runtime DAT, sfx and bgm replacement manager.";
 		static constexpr auto PluginCommand = "pivot";

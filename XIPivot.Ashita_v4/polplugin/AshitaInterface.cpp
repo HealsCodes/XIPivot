@@ -380,7 +380,7 @@ namespace XiPivot
 			config->SetValue(PluginName, "cache", "max_age", val);
 
 			bool isDefaultINI = absPath.filename().string() == std::string("pivot.ini");
-
+#if 0
 			if (std::filesystem::exists(absPath) && isDefaultINI)
 			{
 				std::filesystem::permissions(absPath, 
@@ -388,15 +388,16 @@ namespace XiPivot
 					std::filesystem::perm_options::replace);
 				std::filesystem::remove(absPath);
 			}
-
+#endif
 			config->Save(PluginName, relPath.string().c_str());
-
+#if 0
 			if (isDefaultINI)
 			{
 				std::filesystem::permissions(absPath,
 					std::filesystem::perms::owner_write | std::filesystem::perms::group_write | std::filesystem::perms::others_write,
 					std::filesystem::perm_options::remove);
 			}
+#endif
 			dirty = false;
 		}
 	}
