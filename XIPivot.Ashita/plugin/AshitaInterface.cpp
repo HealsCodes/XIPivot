@@ -1,5 +1,5 @@
 /*
- * 	Copyright © 2019-2022, Renee Koecher
+ * 	Copyright (c) 2019-2024, Renee Koecher
 * 	All rights reserved.
  * 
  * 	Redistribution and use in source and binary forms, with or without

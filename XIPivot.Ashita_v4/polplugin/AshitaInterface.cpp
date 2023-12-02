@@ -1,5 +1,5 @@
 /*
- * 	Copyright © 2019-2022, Renee Koecher
+ * 	Copyright (c) 2019-2024, Renee Koecher
 * 	All rights reserved.
  * 
  * 	Redistribution and use in source and binary forms, with or without
@@ -380,7 +380,8 @@ namespace XiPivot
 			config->SetValue(PluginName, "cache", "max_age", val);
 
 			bool isDefaultINI = absPath.filename().string() == std::string("pivot.ini");
-#if 0
+
+			// ensure the file is at least writable by pivot
 			if (std::filesystem::exists(absPath) && isDefaultINI)
 			{
 				std::filesystem::permissions(absPath, 
@@ -388,7 +389,7 @@ namespace XiPivot
 					std::filesystem::perm_options::replace);
 				std::filesystem::remove(absPath);
 			}
-#endif
+
 			config->Save(PluginName, relPath.string().c_str());
 #if 0
 			if (isDefaultINI)
