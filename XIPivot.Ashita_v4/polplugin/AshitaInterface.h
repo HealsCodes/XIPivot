@@ -40,8 +40,8 @@ namespace XiPivot
 	{
 		static constexpr auto PluginName = "pivot";
 		static constexpr auto PluginAuthor = "Heals";
-		static constexpr auto PluginVersion = 4.1503;
-		static constexpr auto PluginUrl = "https://github.com/Shirk/XIPivot";
+		static constexpr auto PluginVersion = 4.1600;
+		static constexpr auto PluginUrl = "https://github.com/HealsCodes/XIPivot";
 		static constexpr auto PluginDescr = "Runtime DAT, sfx and bgm replacement manager.";
 		static constexpr auto PluginCommand = "pivot";
 
@@ -92,10 +92,6 @@ namespace XiPivot
 				bool debugLog;
 				std::filesystem::path rootPath;
 				std::vector<std::string> overlays;
-
-				bool cacheEnabled;
-				uint32_t cacheSize;
-				uint32_t cachePurgeDelay;
 
 				bool redirectFOpenS;
 

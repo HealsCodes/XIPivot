@@ -41,19 +41,10 @@ namespace XiPivot
 	{
 		UserInterface::UserInterface()
 		{
-			m_cacheNextPurge = 0;
-			m_cachePurgeDelay = 0;
 		}
 
 		UserInterface::~UserInterface()
 		{
-		}
-
-		void UserInterface::setCachePurgeDelay(time_t maxAge)
-		{
-			m_cachePurgeDelay = maxAge;
-			/* setting the delay automatically resets the purge timer */
-			m_cacheNextPurge = time(nullptr) + m_cachePurgeDelay;
 		}
 
 		bool UserInterface::HandleCommand(IAshitaCore* const core, std::vector<std::string>& args)
@@ -69,19 +60,14 @@ namespace XiPivot
 					if (m_guiState.state.showConfigWindow == true)
 					{
 						/* lazy update the GUI values */
-						m_guiState.flags.cacheEnable = Core::MemCache::instance().hooksActive();
 						m_guiState.flags.debugLog = Core::Redirector::instance().getDebugLog();
 						m_guiState.flags.redirectFOpenS = Core::Redirector::instance().getRedirectFOpenS();
-
-						m_guiState.values.cachePurgeDelay = static_cast<int32_t>(m_cachePurgeDelay);
-						m_guiState.values.cacheSizeMB = Core::MemCache::instance().getCacheAllocation() / 0x100000;
 
 						m_guiState.constants.rootPath = Core::Redirector::instance().rootPath();
 						m_guiState.constants.allOverlays = ListAllOverlays(m_guiState.constants.rootPath);
 
 						m_guiState.state.addOverlayName.clear();
 						m_guiState.state.deleteOverlayName.clear();
-						m_guiState.state.applyCacheChanges = false;
 						m_guiState.state.applyCLIChanges = false;
 					}
 					break;
@@ -90,14 +76,6 @@ namespace XiPivot
 					IS_PARAM(args.at(0), "h", "help")
 					{
 						PrintHelp(chat);
-					}
-
-					IS_PARAM(args.at(0), "c", "cache")
-					{
-						if (Core::MemCache::instance().hooksActive() == true)
-						{
-							m_guiState.state.showCacheOverlay = !m_guiState.state.showCacheOverlay;
-						}
 					}
 
 					IS_PARAM(args.at(0), "d", "dump")
@@ -109,25 +87,6 @@ namespace XiPivot
 						dumpFile.open(dumpPath, std::ios_base::out | std::ios_base::trunc);
 						if (dumpFile.is_open())
 						{
-							const auto stats = m_guiState.values.cacheStats;
-
-							dumpFile << "-- pivot memory stats --" << std::endl;
-							if (Core::MemCache::instance().hooksActive()) 
-							{
-
-								dumpFile << "memCache: enabled" << std::endl
-								<< "max size  : " << (stats.allocation / 1048576.0f) << std::endl
-								<< "used size : " << (stats.used / 1048576.0f) << std::endl
-								<< "objects   : " << stats.activeObjects << std::endl
-								<< "ignored   : " << stats.cacheIgnored << std::endl;
-
-							}
-							else 
-							{
-								dumpFile << "memcache: disabled" << std::endl;
-							}
-							dumpFile << std::endl;
-
 							dumpFile << "-- pivot overlay stats --" << std::endl;
 							if (Core::Redirector::instance().hooksActive()) 
 							{
@@ -170,7 +129,6 @@ namespace XiPivot
 			 * as a result of the last RenderUI call.
 			 */
 
-			auto& memCache = Core::MemCache::instance();
 			auto& redirector = Core::Redirector::instance();
 
 			if (m_guiState.state.showConfigWindow)
@@ -179,7 +137,6 @@ namespace XiPivot
 				{
 					/* update debug log states */
 					redirector.setDebugLog(m_guiState.flags.debugLog);
-					memCache.setDebugLog(m_guiState.flags.debugLog);
 
 					settingsChanged = true;
 				}
@@ -202,33 +159,6 @@ namespace XiPivot
 					settingsChanged = true;
 				}
 
-				if (m_guiState.state.applyCacheChanges == true)
-				{
-					/* apply changes to the memory cache (alwasy happens bundled for all changes) */
-					m_guiState.state.applyCacheChanges = false;
-
-					if (memCache.hooksActive() != m_guiState.flags.cacheEnable)
-					{
-						/* load or unload the memory cache */
-						if (m_guiState.flags.cacheEnable == true)
-						{
-							memCache.setupHooks();
-						}
-						else
-						{
-							memCache.releaseHooks();
-						}
-					}
-
-					memCache.setCacheAllocation(m_guiState.values.cacheSizeMB * 0x100000);
-
-					if (static_cast<time_t>(m_guiState.values.cachePurgeDelay) != m_cachePurgeDelay)
-					{
-						setCachePurgeDelay(static_cast<time_t>(m_guiState.values.cachePurgeDelay));
-					}
-					settingsChanged = true;
-				}
-
 				if (redirector.getRedirectFOpenS() != m_guiState.flags.redirectFOpenS)
 				{
 					redirector.setRedirectFOpenS(m_guiState.flags.redirectFOpenS);
@@ -238,26 +168,13 @@ namespace XiPivot
 				}
 			}
 
-			/* handle cache purges as part of the cyclic process call */
-			if (memCache.hooksActive() == true)
-			{
-				const time_t now = time(nullptr);
-				if (now > m_cacheNextPurge)
-				{
-					m_cacheNextPurge = now + m_cachePurgeDelay;
-					memCache.purgeCacheObjects(m_cachePurgeDelay);
-				}
-			}
-
 			/* handle changes made through the CLI */
 			if (m_guiState.state.applyCLIChanges == true)
 			{
-				m_guiState.state.applyCacheChanges = false;
 				settingsChanged = true;
 			}
 
 			/* copy the current live cache stats and overlays for RenderUI */
-			m_guiState.values.cacheStats = memCache.getCacheStats();
 			m_guiState.constants.activeOverlays = redirector.overlayList();
 		}
 
@@ -272,7 +189,7 @@ namespace XiPivot
 
 				if (imgui->Begin("XiPivot Setup", &m_guiState.state.showConfigWindow, configWindowFlags) == true)
 				{
-					const char *tabTitles[] = { "overlays", "cache", "advanced", nullptr };
+					const char *tabTitles[] = { "overlays", "advanced", nullptr };
 					for (int i = 0; tabTitles[i] != nullptr; ++i)
 					{
 						imgui->PushStyleColor(ImGuiCol_Button, ImVec4(0.25f, 0.69f, 1.0f, m_guiState.state.activeTab == i ? 0.8f : 0.1f));
@@ -293,10 +210,6 @@ namespace XiPivot
 							break;
 
 						case 1:
-							RenderMemCacheConfigUI(imgui);
-							break;
-
-						case 2:
 							RenderAdvancedConfigUI(imgui);
 							break;
 					}
@@ -309,18 +222,6 @@ namespace XiPivot
 					imgui->NewLine();
 				}
 
-				imgui->End();
-			}
-
-			if (m_guiState.state.showCacheOverlay == true)
-			{
-				const auto cacheWindowFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoTitleBar;
-
-				imgui->SetNextWindowBgAlpha(0.33f);
-				if (imgui->Begin("XiPivot Cache", &m_guiState.state.showCacheOverlay, cacheWindowFlags) == true)
-				{
-					RenderCacheStatsUI(imgui);
-				}
 				imgui->End();
 			}
 		}
@@ -357,10 +258,6 @@ namespace XiPivot
 			msg.str("");
 			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x6, PluginName) << " v" << Ashita::Chat::Color1(0x6, "%.3f") << " by " << Ashita::Chat::Color1(0x6, PluginAuthor);
 			chat->Writef(1, false, msg.str().c_str(), PluginVersion);
-
-			msg.str("");
-			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x3, "c")         << "ache                  - open the cache stats overlay.";
-			chat->AddChatMessage(1, false, msg.str().c_str());
 
 			msg.str("");
 			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x3, "d")         << "ump                  - dump overlay and cache statistics to logs\\pivot-dump.txt.";
@@ -459,31 +356,6 @@ namespace XiPivot
 			imgui->TextDisabled("You have been warned");
 		}
 
-		void UserInterface::RenderMemCacheConfigUI(IGuiManager* const imgui)
-		{
-			imgui->Checkbox("use cache", &m_guiState.flags.cacheEnable);
-			imgui->SliderInt("reserved size", &m_guiState.values.cacheSizeMB, 1, 4096, "%d mb");
-			imgui->SliderInt("purge interval", &m_guiState.values.cachePurgeDelay, 1, 600, "%d sec");
-
-			imgui->Separator();
-			if (imgui->Button("apply##cache settings", ImVec2(500, 0)))
-			{
-				m_guiState.state.applyCacheChanges = true;
-			}
-			imgui->NewLine();
-			imgui->TextDisabled("Reducing the cache size will not instantly take effect if the currently");
-			imgui->TextDisabled("used cache size is larger than the new maximum.");
-			imgui->TextDisabled("Cached files that have no open handle will be removed after the purge delay.");
-
-			if (m_guiState.flags.cacheEnable == true)
-			{
-				imgui->NewLine();
-				imgui->Separator();
-
-				RenderCacheStatsUI(imgui);
-			}
-		}
-
 		void UserInterface::RenderAdvancedConfigUI(IGuiManager* const imgui)
 		{
 			imgui->Checkbox("redirect Ashita ResourceManager", &m_guiState.flags.redirectFOpenS);
@@ -494,23 +366,6 @@ namespace XiPivot
 			imgui->TextDisabled("You likely don't want to mess with this.");
 			imgui->NewLine();
 			imgui->TextDisabled("Changes require a restart of your client to take effect.");
-		}
-
-		void UserInterface::RenderCacheStatsUI(IGuiManager* const imgui)
-		{
-			const auto stats = m_guiState.values.cacheStats;
-			if (stats.cacheHits != 0 || stats.cacheMisses != 0)
-			{
-				imgui->LabelText("cache hits", "%d%%", stats.cacheHits * 100 / (stats.cacheHits + stats.cacheMisses));
-				imgui->Separator();
-			}
-			imgui->LabelText("allocation", "%.2fmb", stats.allocation / 1048576.0f);
-			imgui->LabelText("used size", "%.2fmb", stats.used / 1048576.0f);
-			imgui->LabelText("objects", "%d", stats.activeObjects);
-			imgui->LabelText("ignored", "%d", stats.cacheIgnored);
-			imgui->Separator();
-
-			imgui->LabelText("next purge in", "%ds", m_cacheNextPurge - time(nullptr));
 		}
 	}
 }

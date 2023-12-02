@@ -33,7 +33,6 @@
 
 #include "ADK_v4/Ashita.h"
 
-#include "MemCache.h"
 
 namespace XiPivot
 {
@@ -44,9 +43,6 @@ namespace XiPivot
 			public:
 				UserInterface();
 				virtual ~UserInterface();
-
-				void setCachePurgeDelay(time_t maxAge);
-				time_t getCachePurgeDelay(void) const { return m_cachePurgeDelay; }
 
 				bool HandleCommand(IAshitaCore* const core, std::vector<std::string>& args);
 
@@ -59,9 +55,7 @@ namespace XiPivot
 				void PrintHelp(IChatManager* const chat);
 
 				void RenderOverlayConfigUI(IGuiManager* const imgui);
-				void RenderMemCacheConfigUI(IGuiManager* const imgui);
 				void RenderAdvancedConfigUI(IGuiManager* const imgui);
-				void RenderCacheStatsUI(IGuiManager* const imgui);
 
 			private:
 				struct
@@ -69,16 +63,8 @@ namespace XiPivot
 					struct
 					{
 						bool debugLog = false;
-						bool cacheEnable = false;
 						bool redirectFOpenS = false;
 					} flags;
-
-					struct
-					{
-						int32_t                            cacheSizeMB = 0;
-						int32_t                            cachePurgeDelay = 600;
-						struct Core::MemCache::CacheStatus cacheStats;
-					} values;
 
 					struct
 					{
@@ -93,8 +79,6 @@ namespace XiPivot
 						std::string deleteOverlayName = "";
 
 						bool showConfigWindow = false;
-						bool showCacheOverlay = false;
-						bool applyCacheChanges = false;
 						bool applyCLIChanges = false;
 						bool showRestartNotice = false;
 
@@ -102,9 +86,6 @@ namespace XiPivot
 					} state;
 
 				} m_guiState;
-
-				time_t m_cachePurgeDelay;
-				time_t m_cacheNextPurge;
 		};
 	}
 }

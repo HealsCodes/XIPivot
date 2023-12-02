@@ -164,7 +164,7 @@ namespace XiPivot
 		/* track and cache a file handle for a given key */
 		HANDLE MemCache::trackCacheObject(HANDLE hRef, int32_t pathKey)
 		{
-			if (m_stats.allocation != 0 && hRef != nullptr && pathKey != -1)
+			if (m_hooksSet && m_stats.allocation != 0 && hRef != nullptr && pathKey != -1)
 			{
 				if (m_cachePointers.find(reinterpret_cast<ptrdiff_t>(hRef)) == m_cachePointers.end())
 				{

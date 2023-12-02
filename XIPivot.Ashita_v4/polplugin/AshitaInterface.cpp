@@ -27,7 +27,6 @@
  */
 
 #include "AshitaInterface.h"
-#include "MemCache.h"
 
 #include <regex>
 #include <iostream>
@@ -68,7 +67,6 @@ namespace XiPivot
 		{
 			bool initialized = true;
 
-			auto& memCache   = Core::MemCache::instance();
 			auto& redirector = Core::Redirector::instance();
 
 			IPolPlugin::Initialize(core, log, id);
@@ -111,20 +109,7 @@ namespace XiPivot
 					redirector.addOverlay(path);
 				}
 
-				m_ui.setCachePurgeDelay(m_settings.cachePurgeDelay);
-
-				if (m_settings.cacheEnabled)
-				{
-					memCache.setLogProvider(this);
-					memCache.setDebugLog(m_settings.debugLog);
-					memCache.setCacheAllocation(m_settings.cacheSize);
-				}
 				m_settings.save(config, m_settingsRelPath, m_settingsPath);
-			}
-
-			if (m_settings.cacheEnabled)
-			{
-				initialized &= memCache.setupHooks();
 			}
 			initialized &= redirector.setupHooks();
 
@@ -133,10 +118,6 @@ namespace XiPivot
 
 		void AshitaInterface::Release(void)
 		{
-			if (Core::MemCache::instance().hooksActive() == true)
-			{
-				Core::MemCache::instance().releaseHooks();
-			}
 			Core::Redirector::instance().releaseHooks();
 			IPolPlugin::Release();
 		}
@@ -172,10 +153,6 @@ namespace XiPivot
 					m_settings.overlays = Core::Redirector::instance().overlayList();
 
 					m_settings.redirectFOpenS = Core::Redirector::instance().getRedirectFOpenS();
-
-					m_settings.cacheEnabled    = Core::MemCache::instance().hooksActive();
-					m_settings.cacheSize       = Core::MemCache::instance().getCacheAllocation();
-					m_settings.cachePurgeDelay = static_cast<uint32_t>(m_ui.getCachePurgeDelay());
 
 					m_settings.save(m_ashitaCore->GetConfigurationManager(), m_settingsRelPath, m_settingsPath);
 					m_settings.dump(this);
@@ -290,9 +267,6 @@ namespace XiPivot
 			overlays.clear();
 			debugLog = false;
 			redirectFOpenS = true;
-			cacheEnabled = false;
-			cacheSize = 0;
-			cachePurgeDelay = 600;
 			dirty = false;
 		}
 
@@ -326,10 +300,6 @@ namespace XiPivot
 					}
 				} while (overlayName != nullptr);
 
-				cacheEnabled = config->GetBool(PluginName, "cache", "enabled", false);
-				cacheSize = config->GetInt32(PluginName, "cache", "size", 128) * 0x100000;
-				cachePurgeDelay = config->GetInt32(PluginName, "cache", "max_age", 600);
-
 				return true;
 			}
 			return false;
@@ -348,9 +318,6 @@ namespace XiPivot
 				log->logMessageF(Core::IDelegate::LogLevel::Debug, "[%02d] %s", i, overlays[i].c_str());
 			}
 
-			log->logMessageF(Core::IDelegate::LogLevel::Debug, "cache: %s", cacheEnabled ? "true" : "false");
-			log->logMessageF(Core::IDelegate::LogLevel::Debug, "cache_size: %u", cacheSize);
-			log->logMessageF(Core::IDelegate::LogLevel::Debug, "cache_max_age: %u", cachePurgeDelay);
 			log->logMessageF(Core::IDelegate::LogLevel::Debug, "");
 		}
 
@@ -370,15 +337,6 @@ namespace XiPivot
 				config->SetValue(PluginName, "overlays", key, overlays.at(i).c_str());
 			}
 
-			config->SetValue(PluginName, "cache", "enabled", cacheEnabled ? "true" : "false");
-
-			char val[32];
-			snprintf(val, 31, "%u", cacheSize / 0x100000);
-			config->SetValue(PluginName, "cache", "size", val);
-
-			snprintf(val, 31, "%u", cachePurgeDelay);
-			config->SetValue(PluginName, "cache", "max_age", val);
-
 			bool isDefaultINI = absPath.filename().string() == std::string("pivot.ini");
 
 			// ensure the file is at least writable by pivot
@@ -391,14 +349,7 @@ namespace XiPivot
 			}
 
 			config->Save(PluginName, relPath.string().c_str());
-#if 0
-			if (isDefaultINI)
-			{
-				std::filesystem::permissions(absPath,
-					std::filesystem::perms::owner_write | std::filesystem::perms::group_write | std::filesystem::perms::others_write,
-					std::filesystem::perm_options::remove);
-			}
-#endif
+
 			dirty = false;
 		}
 	}
