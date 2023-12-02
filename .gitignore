@@ -9,3 +9,4 @@ build/
 *.vssscc
 *.exp
 *.zip
+*.DS_Store*
