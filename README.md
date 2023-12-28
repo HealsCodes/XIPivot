@@ -22,7 +22,7 @@ the current beta version of [Ashita v4](https://github.com/AshitaXI/Ashita-v4bet
 
 #### Manual and Windower Install
 
-- Head over to the [Releases page](https://github.com/Shirk/XIPivot/releases) and pick the ZIP that matches your launcher
+- Head over to the [Releases page](https://github.com/HealsCodes/XIPivot/releases) and pick the ZIP that matches your launcher
 - Follow the README.md inside the archive  for setup and configuration instructions
 
 #### Ashita Install
