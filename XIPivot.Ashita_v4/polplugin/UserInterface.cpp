@@ -116,6 +116,51 @@ namespace XiPivot
 					}
 					break;
 
+				case 2:
+					IS_PARAM(args.at(0), "q", "query")
+					{
+						const auto& redirector = XiPivot::Core::Redirector::instance();
+						std::ostringstream msg;
+						
+						msg << Ashita::Chat::Header(PluginCommand);
+						IS_PARAM(args.at(1), "a", "all")
+						{
+							std::vector<std::string> queryReport;
+							redirector.queryAll(queryReport);
+
+							std::fstream dumpFile;
+							std::string dumpPath = (std::filesystem::path(core->GetInstallPath()) / "logs" / "pivot-query.txt").string();
+							dumpFile.open(dumpPath, std::ios_base::out | std::ios_base::trunc);
+							if (dumpFile.is_open())
+							{
+								for (const auto& line : queryReport)
+								{
+									dumpFile << line << std::endl;
+								}
+								dumpFile.close();
+								msg << Ashita::Chat::Message("Query results written to ") << Ashita::Chat::Message(dumpPath);
+							}
+							else
+							{
+								msg << Ashita::Chat::Error("Unable to write to ") << Ashita::Chat::Message(dumpPath);
+							}
+							chat->AddChatMessage(1, false, msg.str().c_str());
+							break;
+						}
+
+						std::string overlayPath;
+						if (Core::Redirector::instance().queryPath(args.at(1), overlayPath))
+						{
+							msg << Ashita::Chat::Message(args.at(1)) << ": " << Ashita::Chat::Message(overlayPath);
+						}
+						else
+						{
+							msg << Ashita::Chat::Message(args.at(1)) << ": no redirect, original file";
+						}
+						chat->AddChatMessage(1, false, msg.str().c_str());
+					}
+					break;
+
 				default:
 					PrintHelp(chat);
 					break;
@@ -263,6 +308,13 @@ namespace XiPivot
 			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x3, "d")         << "ump                  - dump overlay and cache statistics to logs\\pivot-dump.txt.";
 			chat->AddChatMessage(1, false, msg.str().c_str());
 
+			msg.str("");
+			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x3, "q")         << "ery a[ll]            - dump all active redirects to logs\\pivot-query.txt.";
+			chat->AddChatMessage(1, false, msg.str().c_str());
+			
+			msg.str("");
+			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x3, "q")         << "ery <PATH>           - print the overlay <PATH> is redirected to (if any).";
+			chat->AddChatMessage(1, false, msg.str().c_str());
 
 			msg.str("");
 			msg << Ashita::Chat::Header(PluginCommand) << Ashita::Chat::Color1(0x3, "<no args>") << "              - open the configuration UI.";

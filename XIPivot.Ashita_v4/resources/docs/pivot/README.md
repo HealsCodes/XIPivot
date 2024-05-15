@@ -109,6 +109,8 @@ If the command `/pivot` is used without parameters it will open an in-game GUI f
 The following parameters are supported:
 
 - d/dump                 -- write the current overlay list and cache settungs to (`<Ashita>\logs\pivot-dump.txt`)
+- q/query a/all/PATH     -- query which overlay the file PATH belongs to.
+                            if used as 'query all' will write a report of all redirects to (`<Ashita>\logs\pivot-query.txt`) 
 - h/help                 -- print this text
 
 These commands all support a short first letter version (c/h).
