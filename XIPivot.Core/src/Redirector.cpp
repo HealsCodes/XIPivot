@@ -31,6 +31,7 @@
 #include "detours.h"
 
 #include <cctype>
+#include <fstream>
 #include <algorithm>
 #include <filesystem>
 
@@ -282,6 +283,86 @@ namespace XiPivot
 			}
 		}
 
+		void Redirector::queryAll(std::vector<std::string> &queryReport) const
+		{
+			const auto rootPath = std::filesystem::path(m_rootPath).make_preferred();
+
+			queryReport.clear();
+			queryReport.emplace_back("#pivot-dump;");
+			queryReport.emplace_back("#overlay-list;");
+			queryReport.insert(queryReport.end(), m_overlayPaths.begin(), m_overlayPaths.end());
+			queryReport.emplace_back("#redirects;");
+
+			std::list<int32_t> redirectKeys;
+			for (const auto& redirect : m_resolvedPaths)
+			{
+				redirectKeys.push_back(redirect.first);
+			}
+			/* this way the redirects will be sorted numerically
+			 * instead of alphabetic.
+			 */
+			redirectKeys.sort();
+
+			std::list<std::string> redirects;
+			for (const auto key : redirectKeys)
+			{
+				auto redirectPath = std::filesystem::relative(std::filesystem::path(m_resolvedPaths.at(key)), rootPath).make_preferred();
+				auto redirectOverlay = redirectPath.begin()->string();
+
+				auto redirectName = redirectPath.string();
+				auto index = redirectName.find("\\");
+				if (index != std::string::npos)
+				{
+					redirectName = redirectName.substr(index + 1);
+					/* otherwise we dump the full path - better than skipping a redirect. */
+				}
+
+				auto listEntry = redirectName + std::string(";") + redirectOverlay;
+				queryReport.emplace_back(listEntry);
+			}
+		}
+
+		bool Redirector::queryPath(const std::string& lookupPathStr, std::string& overlayName) const
+		{
+			auto rootPath = std::filesystem::path(m_rootPath).make_preferred();
+			auto lookupPath = std::filesystem::path(lookupPathStr).make_preferred();
+			auto lookupPathLowerStr = lookupPath.string();
+			std::transform(lookupPathLowerStr.begin(), lookupPathLowerStr.end(), lookupPathLowerStr.begin(),
+						   [](auto c) { return std::tolower(c); });
+
+			auto suffix = std::filesystem::path(lookupPathLowerStr).extension();
+			if (suffix != ".dat" && suffix != ".spw" && suffix != ".bgw")
+			{
+				overlayName = std::string("invalid argument");
+				return true;
+			}
+
+			for (const auto& redirect : m_resolvedPaths)
+			{
+				auto redirectPath = std::filesystem::path(redirect.second);
+				auto redirectPathLowerStr = redirectPath.make_preferred().string();
+				std::transform(redirectPathLowerStr.begin(), redirectPathLowerStr.end(), redirectPathLowerStr.begin(),
+					           [](auto c) { return std::tolower(c); });
+
+				if (redirectPathLowerStr.find(lookupPathLowerStr) != std::string::npos)
+				{
+					// this is assuming the caller has provided a path that ends in a filename
+					// otherwise we'll return the first path that contains whatever snippet
+					// they provided. 
+					auto lookupPathStr = std::filesystem::relative(redirectPath, rootPath).string();
+					auto index = lookupPathStr.find("\\");
+					if (index != std::string::npos)
+					{
+						overlayName = lookupPathStr.substr(0, index);
+						return true;
+					}
+					overlayName = lookupPathStr;
+					return true;
+				}
+			}
+			return false;
+		}
+
 		/* static hooks */
 
 		HANDLE __stdcall
@@ -332,7 +413,7 @@ namespace XiPivot
 		}
 
 		/* private stuff */
-		const char *Redirector::findRedirect(const char *realPath, int32_t &outPathKey, bool &pathRedirected)
+		const char *Redirector::findRedirect(const char *realPath, int32_t &outPathKey, bool &pathRedirected) const
 		{
 			/*
 			 * findRedirect relies on a very specific implementation detail in the game client.
@@ -402,7 +483,7 @@ namespace XiPivot
 			return realPath;
 		}
 
-		const char *Redirector::findDenormalisedRedirect(const char* realPath)
+		const char *Redirector::findDenormalisedRedirect(const char* realPath) const
 		{
 			char ansiPath[MAX_PATH + 2];
 			if (denormalised_ansi_path(realPath, ansiPath, MAX_PATH))
@@ -630,7 +711,7 @@ namespace XiPivot
 			return results.size() != 0;
 		}
 
-		int32_t Redirector::pathToIndex(const char *romPath)
+		int32_t Redirector::pathToIndex(const char *romPath) const
 		{
 			/* **very** tailored approach to get a fast,
 			 * unique index for every given //ROM* path
@@ -713,7 +794,7 @@ namespace XiPivot
 			return romIndex;
 		}
 
-		int32_t Redirector::pathToIndexAudio(const char *soundPath)
+		int32_t Redirector::pathToIndexAudio(const char *soundPath) const
 		{
 			int32_t soundIndex = 0;
 

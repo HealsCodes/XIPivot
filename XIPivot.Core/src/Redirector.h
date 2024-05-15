@@ -113,6 +113,44 @@ namespace XiPivot
 
 			const std::vector<std::string> &overlayList(void) const { return m_overlayPaths; };
 
+			/* query all active overlays and return a report
+			 * listing all redirects and the overlay they belong to.
+			 * 
+			 * the report consists of a list of lines with values separated
+			 * by a semicolon (;)
+			 * 
+			 * lines that have their first field start with a '#' sign
+			 * contain metadata.
+			 * 
+			 * the following metadata keys are currently defined:
+			 * 
+			 * #pivot-query  -- marks the start of the report
+			 * #overlay-list -- signals that the following lines 
+			 *                  contain one overlay name per line
+			 * #redirects    -- signals that the following lines 
+			 *                  contain one redirect;overlay-name pair per line
+			 * 
+			 * NOTE: *calling this method is expensive, results are not cached*
+			 * NOTE: *use this scarcely if at all*
+			 */
+			void queryAll(std::vector<std::string>& queryReport) const;
+
+			/* query for a specific file path and return it's redirect status
+			 * 
+			 * If the file is being redirected the overlayName parameter will be
+			 * set to the name of the overlay.
+			 * 
+			 * If the file is not redirected the overlayName parameter will be cleared
+			 * and the method returns `false`
+			 * 
+			 * Paths can be specified as absolute or relative and might be normalised
+			 * or using XI's denormalised form.
+			 * 
+			 * NOTE: *calling this method is expensive, results are not cached*
+			 * NOTE: *use this scarcely if at all*
+			 */
+			bool queryPath(const std::string& lookupPath, std::string& overlayName) const;
+
 		public:
 			/* access or create the actual Redirector instance */
 			static Redirector& instance(void);
@@ -159,8 +197,8 @@ namespace XiPivot
 			HANDLE __stdcall interceptFindFirstFileA(LPCSTR a0, LPWIN32_FIND_DATAA a2);
 			errno_t __cdecl  interceptFOpenS(FILE** a0, const char* a1, const char* a2);
 
-			const char *findRedirect(const char *realPath, int32_t &outPathKey, bool &pathRedirected);
-			const char *findDenormalisedRedirect(const char *realPath);
+			const char *findRedirect(const char *realPath, int32_t &outPathKey, bool &pathRedirected) const;
+			const char *findDenormalisedRedirect(const char *realPath) const;
 
 			/* first-time scan of overlay directories - basically "find all dat paths and record them" */
 			bool scanOverlayPath(const std::string &overlayPath);
@@ -172,9 +210,9 @@ namespace XiPivot
 			bool collectDataFiles(const std::string &parentPath, const std::string &midPath, const std::string &pattern, std::vector<std::string> &result);
 
 			/* an actual 32bit integer perfect hash for XI ROM paths >:3 */
-			int32_t pathToIndex(const char *romPath);
+			int32_t pathToIndex(const char *romPath) const;
 			/* and the same for sound / music files */
-			int32_t pathToIndexAudio(const char *soundPath);
+			int32_t pathToIndexAudio(const char *soundPath) const;
 
 
 			bool                                     m_hooksSet;
