@@ -39,7 +39,7 @@ extern "C" {
 		return new XiPivot::Pol::AshitaInterface(args);
 	}
 
-	__declspec(dllexport) auto __stdcall expDestroyPolPlugin(void* instance) -> void
+	__declspec(dllexport) auto __stdcall expDestroyPlugin(void* instance) -> void
 	{
 		delete static_cast<XiPivot::Pol::AshitaInterface*>(instance);
 	}
