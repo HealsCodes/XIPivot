@@ -1,5 +1,5 @@
 /**
- * Ashita SDK - Copyright (c) 2023 Ashita Development Team
+ * Ashita SDK - Copyright (c) 2025 Ashita Development Team
  * Contact: https://www.ashitaxi.com/
  * Contact: https://discord.gg/Ashita
  *
@@ -50,7 +50,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-constexpr auto ASHITA_INTERFACE_VERSION = 4.16;
+constexpr auto ASHITA_INTERFACE_VERSION = 4.30;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -435,6 +435,7 @@ typedef BOOL(__stdcall* keyboardcallback_f)(WPARAM, LPARAM, bool);
 typedef BOOL(__stdcall* mousecallback_f)(uint32_t, WPARAM, LPARAM, bool);
 typedef DWORD(__stdcall* xinputgetstatecallback_f)(DWORD, XINPUT_STATE*);
 typedef BOOL(__stdcall* xinputcallback_f)(uint8_t*, int16_t*, bool, bool);
+typedef void(__stdcall* queuepacketcallback_f)(uint8_t*, void*);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -810,6 +811,7 @@ struct IEntity
     virtual int16_t GetFishingRodCastTime(uint32_t index) const                     = 0;
     virtual int16_t GetFishingUnknown0002(uint32_t index) const                     = 0;
     virtual uint32_t GetLastActionId(uint32_t index) const                          = 0;
+    virtual uint32_t GetMogMotionId(uint32_t index) const                           = 0;
     virtual uintptr_t GetLastActionActorPointer(uint32_t index) const               = 0;
     virtual uint16_t GetTargetedIndex(uint32_t index) const                         = 0;
     virtual uint16_t GetPetTargetIndex(uint32_t index) const                        = 0;
@@ -945,6 +947,7 @@ struct IEntity
     virtual void SetFishingRodCastTime(uint32_t index, int16_t time) const                           = 0;
     virtual void SetFishingUnknown0002(uint32_t index, int16_t unknown) const                        = 0;
     virtual void SetLastActionId(uint32_t index, uint32_t action) const                              = 0;
+    virtual void SetMogMotionId(uint32_t index, uint32_t id) const                                   = 0;
     virtual void SetLastActionActorPointer(uint32_t index, uintptr_t pointer) const                  = 0;
     virtual void SetTargetedIndex(uint32_t index, uint16_t targetIndex) const                        = 0;
     virtual void SetPetTargetIndex(uint32_t index, uint16_t targetIndex) const                       = 0;
@@ -1060,6 +1063,7 @@ struct IParty
     virtual int8_t GetAlliancePartyMemberCount2(void) const      = 0;
     virtual int8_t GetAlliancePartyMemberCount3(void) const      = 0;
     virtual int8_t GetAllianceInvited(void) const                = 0;
+    virtual int8_t GetAllianceInviteParty(void) const            = 0;
 
     // Get Properties (Party Members)
     virtual uint8_t GetMemberIndex(uint32_t index) const                       = 0;
@@ -1085,6 +1089,8 @@ struct IParty
     virtual uint8_t GetMemberMainJobLevel(uint32_t index) const                = 0;
     virtual uint8_t GetMemberSubJob(uint32_t index) const                      = 0;
     virtual uint8_t GetMemberSubJobLevel(uint32_t index) const                 = 0;
+    virtual uint8_t GetMemberMasterLevel(uint32_t index) const                 = 0;
+    virtual uint8_t GetMemberMasterBreaker(uint32_t index) const               = 0;
     virtual uint32_t GetMemberServerId2(uint32_t index) const                  = 0;
     virtual uint8_t GetMemberHPPercent2(uint32_t index) const                  = 0;
     virtual uint8_t GetMemberMPPercent2(uint32_t index) const                  = 0;
@@ -1146,7 +1152,6 @@ struct IPlayer
     virtual uint8_t GetMasteryJob(void) const                              = 0;
     virtual uint8_t GetMasteryJobLevel(void) const                         = 0;
     virtual uint8_t GetMasteryFlags(void) const                            = 0;
-    virtual uint8_t GetMasteryUnknown0000(void) const                      = 0;
     virtual uint32_t GetMasteryExp(void) const                             = 0;
     virtual uint32_t GetMasteryExpNeeded(void) const                       = 0;
     virtual Ashita::FFXI::combatskill_t GetCombatSkill(uint32_t sid) const = 0;
@@ -1183,6 +1188,7 @@ struct IPlayer
     virtual float GetStatusOffset4Z(void) const                            = 0;
     virtual float GetStatusOffset4Y(void) const                            = 0;
     virtual float GetStatusOffset4W(void) const                            = 0;
+    virtual uint32_t GetSubMapNum(void) const                              = 0;
 
     // Get Properties (Job Points)
     virtual uint16_t GetCapacityPoints(uint32_t jobid) const = 0;
@@ -1261,6 +1267,7 @@ struct ITarget
     virtual uint8_t GetIsPlayerMoving(void) const        = 0;
     virtual uint32_t GetLockedOnFlags(void) const        = 0;
     virtual uint32_t GetSubTargetFlags(void) const       = 0;
+    virtual uint32_t GetOldNotice(void) const            = 0;
     virtual uint16_t GetDefaultMode(void) const          = 0;
     virtual uint16_t GetMenuTargetLock(void) const       = 0;
     virtual uint8_t GetActionTargetActive(void) const    = 0;
@@ -1336,10 +1343,10 @@ struct IController
 struct IKeyboard
 {
     // Methods (Keybinds)
-    virtual void Bind(uint32_t key, bool down, bool alt, bool apps, bool ctrl, bool shift, bool win, const char* command) = 0;
-    virtual void Unbind(uint32_t key, bool down, bool alt, bool apps, bool ctrl, bool shift, bool win)                    = 0;
-    virtual void UnbindAll(void)                                                                                          = 0;
-    virtual bool IsBound(uint32_t key, bool down, bool alt, bool apps, bool ctrl, bool shift, bool win)                   = 0;
+    virtual void Bind(uint32_t key, bool down, bool alt, bool apps, bool ctrl, bool shift, bool win, bool requireInputClosed, bool requireInputOpened, const char* command) = 0;
+    virtual void Unbind(uint32_t key, bool down, bool alt, bool apps, bool ctrl, bool shift, bool win, bool requireInputClosed, bool requireInputOpened)                    = 0;
+    virtual void UnbindAll(void)                                                                                                                                            = 0;
+    virtual bool IsBound(uint32_t key, bool down, bool alt, bool apps, bool ctrl, bool shift, bool win, bool requireInputClosed, bool requireInputOpened)                   = 0;
 
     // Methods (Callbacks)
     virtual void AddCallback(const char* alias, const getdevicedatacallback_f& datacb, const getdevicestatecallback_f& statecb, const keyboardcallback_f& keyboardcb) = 0;
@@ -1503,7 +1510,7 @@ struct IPacketManager
     virtual void AddOutgoingPacket(uint16_t id, uint32_t len, uint8_t* data) = 0;
 
     // Methods (Game Packet Queueing)
-    virtual bool QueueOutgoingPacket(uint16_t id, uint16_t len, uint16_t align, uint32_t pparam1, uint32_t pparam2, std::function<void(uint8_t*)> callback) const = 0;
+    virtual bool QueueOutgoingPacket(uint16_t id, uint16_t len, uint16_t align, uint32_t pparam1, uint32_t pparam2, queuepacketcallback_f callback, void* callback_args) const = 0;
 };
 
 struct IPluginManager
@@ -2568,6 +2575,10 @@ public:
 //      Exported function that returns a new instance of the plugins main class, which must inherit
 //      the IPlugin class. This is the main method used by Ashita to communicate with your plugin.
 //
+// export_DestroyPlugin_f           [Export As: expDestroyPlugin]
+//
+//      Exported function that is used to allow a plugin to destroy the created instance of itself.
+//
 // export_GetInterfaceVersion_f     [Export As: expGetInterfaceVersion]
 //
 //      Exported function that returns the Ashita interface version that the plugin was compiled
@@ -2577,6 +2588,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 typedef IPlugin* /**/ (__stdcall* export_CreatePlugin_f)(const char* args);
+typedef void /**/ (__stdcall* export_DestroyPlugin_f)(void* instance);
 typedef double /**/ (__stdcall* export_GetInterfaceVersion_f)(void);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2889,7 +2901,11 @@ public:
 //      Exported function that returns a new instance of the plugins main class, which must inherit
 //      the IPolPlugin class. This is the main method used by Ashita to communicate with your plugin.
 //
-// export_GetInterfaceVersion_f     [Export As: expGetInterfaceVersion]
+// export_DestroyPlugin_f               [Export As: expDestroyPlugin]
+//
+//      Exported function that is used to allow a plugin to destroy the created instance of itself.
+//
+// export_GetInterfaceVersion_f         [Export As: expGetInterfaceVersion]
 //
 //      Exported function that returns the Ashita interface version that the plugin was compiled
 //      against. This is used to determine if the plugin is 'safe' to load in the current Ashita
